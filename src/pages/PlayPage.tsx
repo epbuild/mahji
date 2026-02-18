@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { C, matsList, matB } from '../constants/colors';
-import { PT, Cnt, CardSel } from '../components/Layout';
+import { PT, SH, Cnt, Tabs, CardSel } from '../components/Layout';
 import { MiniTileBack } from '../components/TileComponents';
 
 function PlayPage() {

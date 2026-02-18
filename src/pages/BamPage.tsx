@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { C } from '../constants/colors';
 import { BirdIcon, I } from '../components/ui/Icons';
-import { PT, Cnt } from '../components/Layout';
+import { PT, SH, Cnt } from '../components/Layout';
 
 function BamPage() {
   const [msgs, setMsgs] = useState([
@@ -30,32 +30,6 @@ function BamPage() {
       </div>
     </div></>);
 }
-
-// Stat ring (SVG donut)
-const Ring = ({ val, max, label, color, size = 60 }) => {
-  const r = 22; const circ = 2*Math.PI*r; const pct = val/max; const offset = circ*(1-pct);
-  return (
-    <div style={{ textAlign: "center" }}>
-      <svg width={size} height={size} viewBox="0 0 54 54" style={{ display: "block", margin: "0 auto" }}>
-        <circle cx="27" cy="27" r={r} fill="none" stroke="rgba(200,190,215,0.15)" strokeWidth="4"/>
-        <circle cx="27" cy="27" r={r} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} transform="rotate(-90 27 27)" style={{ transition: "stroke-dashoffset 0.8s ease" }}/>
-        <text x="27" y="25" textAnchor="middle" style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600, fill: C.dark }}>{val}</text>
-        <text x="27" y="34" textAnchor="middle" style={{ fontSize: 7, fill: C.light }}>/ {max}</text>
-      </svg>
-      <div style={{ fontSize: 8, color: C.lavText, textTransform: "uppercase", letterSpacing: 1.2, fontWeight: 600, marginTop: 4 }}>{label}</div>
-    </div>
-  );
-};
-
-const Row = ({ icon, label, sub, danger, onClick }) => (
-  <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: C.white, border: `1px solid ${C.lavBorder}`, borderRadius: 14, marginBottom: 8, cursor: "pointer", transition: "all 0.3s" }}
-    onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";}}>
-    <div style={{ width: 16, height: 16, stroke: danger?"#D04050":C.lavDeep, strokeWidth: 1.3, fill: "none", display: "flex", flexShrink: 0 }}>{icon}</div>
-    <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: danger?"#D04050":C.dark }}>{label}</div>
-      {sub && <div style={{ fontSize: 10, color: C.light, marginTop: 1 }}>{sub}</div>}</div>
-    <div style={{ width: 14, height: 14, stroke: C.lavText, strokeWidth: 1.3, fill: "none", display: "flex" }}>{I.chevR}</div>
-  </div>
-);
 
 
 export default BamPage;
