@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Hide scrollbars globally */
+  *::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+
+  svg { display: block; }
+}
+
+@layer utilities {
+  @keyframes bfloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  .animate-bfloat {
+    animation: bfloat 3s ease-in-out infinite;
+  }
+}

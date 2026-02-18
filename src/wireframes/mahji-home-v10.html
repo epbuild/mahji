@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mahji — Home v10</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;0,6..96,800;0,6..96,900;1,6..96,400;1,6..96,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FDFCFE;
+
+    --lav-hint: #F5F2F9;
+    --lav-soft: #ECE7F3;
+    --lav-card: rgba(243, 239, 250, 0.5);
+    --lav-card-hover: rgba(236, 230, 247, 0.65);
+    --lav-border: rgba(196, 184, 218, 0.22);
+    --lav-border-hover: rgba(180, 165, 208, 0.32);
+    --lavender: #C0B2D4;
+    --lavender-mid: #A898BE;
+    --lavender-deep: #7E64A4;
+    --lavender-text: #9688AA;
+
+    /* Le Sirenuse / Mediterranean palette */
+    --cherry: #E03050;
+    --cherry-light: #E8566D;
+    --med-blue: #4A96B8;
+    --terracotta: #C0704A;
+    --gold-warm: #B08D3A;
+    --sage-deep: #5E8A6A;
+
+    /* For the decorative line */
+    --sage: #8BAF8B;
+    --sage-light: #A8C8A8;
+    --sage-soft: #C2D8C2;
+
+    --pale-blue: #D9ECF5;
+    --pale-blue-light: #EDF5FA;
+    --pale-blue-mid: #ADD4EC;
+    --cerulean-pastel: #8EC7E2;
+
+    --text-dark: #302040;
+    --text-mid: #5E4D6D;
+    --text-light: #9A8DAA;
+    --white: #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: #F0ECF2;
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .phone-frame {
+    width: 375px;
+    min-height: 812px;
+    background: linear-gradient(
+      180deg,
+      #FFFFFF 0%,
+      #FDFCFE 12%,
+      #FAF8FC 28%,
+      #F7F4FA 45%,
+      #F4F0F7 60%,
+      #F1ECF5 75%,
+      #EEE8F2 90%,
+      #ECE6F0 100%
+    );
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow:
+      0 20px 60px rgba(50, 35, 65, 0.08),
+      0 3px 16px rgba(50, 35, 65, 0.04),
+      inset 0 0 0 1px rgba(200, 190, 215, 0.18);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status-bar {
+    padding: 12px 26px 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 600; color: var(--text-dark);
+  }
+
+  .header {
+    padding: 4px 22px 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .home-link {
+    display: flex; align-items: center;
+    text-decoration: none; cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+  .home-link:hover { opacity: 0.65; }
+  .logo-tile { width: 26px; height: 34px; }
+  .logo-tile svg { width: 26px; height: 34px; }
+
+  .profile-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--lav-hint);
+    border: 1.5px solid var(--lavender);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s ease;
+  }
+  .profile-btn:hover { border-color: var(--cherry); }
+
+  .hero { text-align: center; padding: 18px 24px 4px; }
+  .hero-tagline {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 10px; font-weight: 400;
+    letter-spacing: 5px; color: var(--cherry);
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .hero-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 46px; font-weight: 700;
+    color: var(--cherry); letter-spacing: 8px;
+    line-height: 1; margin-bottom: 16px;
+  }
+
+  .deco-line-fancy {
+    width: 210px; height: 22px;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .deco-line-fancy svg { width: 210px; height: 22px; fill: none; }
+
+  .content {
+    flex: 1; padding: 0 18px;
+    overflow-y: auto; padding-bottom: 100px;
+  }
+
+  .stats-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .stat-pill {
+    flex: 1;
+    background: var(--lav-card);
+    border: 1px solid var(--lav-border);
+    border-radius: 14px; padding: 12px 10px;
+    text-align: center; transition: all 0.3s ease;
+  }
+  .stat-pill:hover { background: var(--lav-card-hover); border-color: var(--lav-border-hover); }
+  .stat-num {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 20px; font-weight: 600;
+    color: var(--lavender-deep); line-height: 1;
+  }
+  .stat-label {
+    font-size: 8px; color: var(--lavender-text);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-top: 3px; font-weight: 500;
+  }
+
+  .feature-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 16px;
+  }
+
+  /* Clean white cards with colored left accent */
+  .feature-card {
+    border-radius: 18px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    background: var(--white);
+    border: 1px solid rgba(200, 192, 216, 0.18);
+  }
+  .feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(125, 102, 153, 0.08);
+  }
+  /* Left accent bar */
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 1.5px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .card-icon {
+    width: 34px; height: 34px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-icon svg { width: 24px; height: 24px; fill: none; }
+
+  .feature-card h3 {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 2px; letter-spacing: 0.4px;
+  }
+  .feature-card p {
+    font-size: 11px; font-weight: 400;
+    line-height: 1.35; color: var(--text-light);
+  }
+
+  /* Learn — cherry red */
+  .card-learn::before { background: var(--cherry); }
+  .card-learn .card-icon svg { stroke: var(--cherry); stroke-width: 1.2; }
+  .card-learn h3 { color: var(--cherry); }
+
+  /* Practice — cherry red */
+  .card-practice::before { background: var(--cherry); }
+  .card-practice .card-icon svg { stroke: var(--cherry); stroke-width: 1.2; }
+  .card-practice h3 { color: var(--cherry); }
+
+  /* Shop — cherry red */
+  .card-shop::before { background: var(--cherry); }
+  .card-shop .card-icon svg { stroke: var(--cherry); stroke-width: 1.2; }
+  .card-shop h3 { color: var(--cherry); }
+
+  /* Ask Bam Bird — cherry red */
+  .card-bam::before { background: var(--cherry); }
+  .card-bam .card-icon svg { stroke: var(--cherry); stroke-width: 1.2; }
+  .card-bam h3 { color: var(--cherry); }
+
+  /* Play — the hero card */
+  .card-play {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--pale-blue-light), var(--pale-blue) 50%, #C6E1F0 85%, var(--pale-blue-light));
+    border: 1px solid rgba(173, 212, 236, 0.35);
+    padding: 22px 20px;
+    position: relative;
+  }
+  .card-play::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -10px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.45) 0%, transparent 60%);
+    border-radius: 50%;
+    left: auto; bottom: auto; width: 100px;
+  }
+  .card-play .card-icon svg { stroke: var(--cherry); stroke-width: 1.3; }
+  .card-play h3 { color: var(--cherry); font-size: 18px; }
+  .card-play p { color: var(--text-mid); opacity: 0.75; }
+
+  .play-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.5);
+    padding: 4px 12px; border-radius: 16px;
+    font-size: 10px; color: var(--text-mid);
+    margin-top: 8px; border: 1px solid rgba(173,212,236,0.35);
+  }
+  .play-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: #4ADE80;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .mini-tiles {
+    position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+    display: flex; gap: 3px; opacity: 0.2;
+  }
+  .mini-tile {
+    width: 20px; height: 28px;
+    border: 1px solid var(--pale-blue-mid);
+    border-radius: 3px; background: rgba(255,255,255,0.2);
+  }
+
+  .section-label {
+    font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--lavender-text); margin-bottom: 8px; padding-left: 2px;
+  }
+  .tip-card {
+    background: var(--white);
+    border: 1px solid rgba(200,192,216,0.18);
+    border-radius: 16px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: all 0.3s ease;
+    margin-bottom: 16px;
+  }
+  .tip-card:hover { box-shadow: 0 4px 16px rgba(125,102,153,0.06); }
+  .tip-icon-wrap {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--lav-soft);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .tip-icon-wrap svg { width: 20px; height: 20px; stroke: var(--lavender-deep); stroke-width: 1.3; fill: none; }
+  .tip-text h4 {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--text-dark); margin-bottom: 1px;
+  }
+  .tip-text p { font-size: 11px; color: var(--lavender-text); line-height: 1.35; }
+  .tip-arrow svg { width: 13px; height: 13px; stroke: var(--lavender); stroke-width: 1.5; fill: none; }
+
+  .footer-tagline {
+    text-align: center; padding: 4px 0 0;
+    font-family: 'Bodoni Moda', serif;
+    font-size: 12px; font-style: italic;
+    color: var(--lavender-text); letter-spacing: 1px;
+  }
+  .footer-bird {
+    text-align: center; padding: 6px 0 4px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .footer-bird svg { width: 14px; height: 14px; stroke: var(--lavender); stroke-width: 1.1; fill: none; }
+  .fdot { width: 2.5px; height: 2.5px; background: var(--lavender); border-radius: 50%; opacity: 0.4; }
+
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(200,190,215,0.12);
+    padding: 7px 6px 26px;
+    display: flex; justify-content: space-around; align-items: flex-end;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; cursor: pointer; transition: all 0.3s ease;
+    padding: 5px 8px 3px; border-radius: 10px; min-width: 48px;
+  }
+  .nav-item:hover { background: rgba(237,233,244,0.4); }
+  .nav-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+  .nav-icon svg { width: 18px; height: 18px; stroke: var(--lavender-text); stroke-width: 1.3; fill: none; }
+  .nav-label { font-size: 8px; color: var(--lavender-text); font-weight: 500; letter-spacing: 0.6px; }
+
+  .nav-play { margin-top: -18px; }
+  .nav-play-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--cherry), var(--cherry-light));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(224,48,80,0.2);
+    transition: all 0.3s ease; border: 3px solid var(--white);
+  }
+  .nav-play:hover .nav-play-btn { transform: scale(1.06); }
+  .nav-play-btn svg { width: 16px; height: 16px; stroke: white; stroke-width: 2; fill: none; margin-left: 2px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero { animation: fadeUp 0.5s ease-out 0.1s both; }
+  .stats-row { animation: fadeUp 0.4s ease-out 0.2s both; }
+  .feature-card:nth-child(1) { animation: fadeUp 0.4s ease-out 0.25s both; }
+  .feature-card:nth-child(2) { animation: fadeUp 0.4s ease-out 0.3s both; }
+  .feature-card:nth-child(3) { animation: fadeUp 0.4s ease-out 0.35s both; }
+  .feature-card:nth-child(4) { animation: fadeUp 0.4s ease-out 0.4s both; }
+  .feature-card:nth-child(5) { animation: fadeUp 0.4s ease-out 0.45s both; }
+  .tip-card { animation: fadeUp 0.4s ease-out 0.5s both; }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="status-bar"><span>9:41</span><div style="display:flex;gap:4px;align-items:center;font-size:11px;color:var(--text-mid);">●●●○ &nbsp;WiFi &nbsp;🔋</div></div>
+
+  <div class="header">
+    <a class="home-link" href="#" onclick="return false;">
+      <div class="logo-tile">
+        <svg viewBox="0 0 26 34" fill="none">
+          <rect x="1" y="1" width="24" height="32" rx="4.5" stroke="var(--lavender-deep)" stroke-width="1"/>
+          <rect x="5.5" y="6" width="15" height="22" rx="2.5" stroke="var(--cherry)" stroke-width="0.7" opacity="0.65"/>
+          <circle cx="13" cy="17" r="2.2" stroke="var(--cerulean-pastel)" stroke-width="0.8" fill="none"/>
+        </svg>
+      </div>
+    </a>
+    <div class="profile-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--lavender-deep)" stroke-width="1.3" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-tagline">Let's Play</div>
+    <h1 class="hero-title">MAHJI</h1>
+    <!-- Original v3 decorative line shape and colors -->
+    <div class="deco-line-fancy">
+      <svg viewBox="0 0 210 22" fill="none">
+        <!-- Left curves -->
+        <path d="M8 11 C22 11, 28 4, 50 4 C66 4, 70 11, 78 11" stroke="var(--lavender)" stroke-width="0.7" stroke-linecap="round"/>
+        <path d="M8 11 C22 11, 28 18, 50 18 C66 18, 70 11, 78 11" stroke="var(--lavender)" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+        <!-- Left diamond -->
+        <rect x="76" y="7.5" width="5" height="5" rx="0.8" transform="rotate(45 78.5 10)" stroke="var(--lavender-mid)" stroke-width="0.7" fill="none"/>
+        <!-- Center -->
+        <line x1="86" y1="10" x2="114" y2="10" stroke="var(--cherry)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="100" cy="10" r="2" fill="var(--cherry)"/>
+        <!-- Right diamond -->
+        <rect x="119" y="7.5" width="5" height="5" rx="0.8" transform="rotate(45 121.5 10)" stroke="var(--lavender-mid)" stroke-width="0.7" fill="none"/>
+        <!-- Right curves -->
+        <path d="M124 11 C134 11, 138 4, 152 4 C172 4, 180 11, 192 11" stroke="var(--lavender)" stroke-width="0.7" stroke-linecap="round"/>
+        <path d="M124 11 C134 11, 138 18, 152 18 C172 18, 180 11, 192 11" stroke="var(--lavender)" stroke-width="0.5" stroke-linecap="round" opacity="0.5"/>
+        <!-- End dots -->
+        <circle cx="6" cy="11" r="1" fill="var(--lavender)" opacity="0.4"/>
+        <circle cx="194" cy="11" r="1" fill="var(--lavender)" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stats-row">
+      <div class="stat-pill"><div class="stat-num">12</div><div class="stat-label">Games</div></div>
+      <div class="stat-pill"><div class="stat-num">3</div><div class="stat-label">Wins</div></div>
+      <div class="stat-pill"><div class="stat-num">7d</div><div class="stat-label">Streak</div></div>
+    </div>
+
+    <div class="feature-grid">
+      <!-- Learn — Mediterranean blue -->
+      <div class="feature-card card-learn">
+        <div class="card-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg></div>
+        <h3>Learn</h3>
+        <p>Tiles, rules & strategy</p>
+      </div>
+
+      <!-- Practice — terracotta -->
+      <div class="feature-card card-practice">
+        <div class="card-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <h3>Practice</h3>
+        <p>Drills & exercises</p>
+      </div>
+
+      <!-- Play Now — cherry red on pale blue -->
+      <div class="feature-card card-play">
+        <div class="card-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+        <h3>Play Now</h3>
+        <p>Challenge AI or invite friends</p>
+        <div class="play-badge"><span class="play-dot"></span><span>2,341 playing now</span></div>
+        <div class="mini-tiles"><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div></div>
+      </div>
+
+      <!-- Shop — warm gold -->
+      <div class="feature-card card-shop">
+        <div class="card-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+        <h3>Shop</h3>
+        <p>Tiles, sets & accessories</p>
+      </div>
+
+      <!-- Ask Bam Bird — sage green -->
+      <div class="feature-card card-bam">
+        <div class="card-icon">
+          <svg viewBox="0 0 26 26" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 17 Q4 12 8 9 Q10 7.5 13 7.5"/><ellipse cx="15" cy="8.5" rx="3.5" ry="3.2" fill="none"/><circle cx="16.5" cy="7.8" r="0.6" fill="var(--sage-deep)" stroke="none"/><path d="M18.5 8.5 L21.5 7.5 L18.5 9.5"/><path d="M8 14 Q10 11.5 13.5 12.5" opacity="0.5"/><path d="M6 17 L3.5 15.5 M6 17 L3.5 17 M6 17 L4 18.5"/><path d="M10 17 L10 20.5 M10 20.5 L8.5 21.5 M10 20.5 L11.5 21.5"/><path d="M13 17 L13 19.5 M13 19.5 L11.5 20.5 M13 19.5 L14.5 20.5"/>
+          </svg>
+        </div>
+        <h3>Ask Bam Bird</h3>
+        <p>Your AI Mahj mentor</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Today's Tip</div>
+      <div class="tip-card">
+        <div class="tip-icon-wrap">
+          <svg viewBox="0 0 26 26" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17 Q4 12 8 9 Q10 7.5 13 7.5"/><ellipse cx="15" cy="8.5" rx="3.5" ry="3.2" fill="none"/><circle cx="16.5" cy="7.8" r="0.6" fill="var(--lavender-deep)" stroke="none"/><path d="M18.5 8.5 L21.5 7.5 L18.5 9.5"/><path d="M8 14 Q10 11.5 13.5 12.5" opacity="0.5"/><path d="M6 17 L3.5 15.5 M6 17 L3.5 17 M6 17 L4 18.5"/></svg>
+        </div>
+        <div class="tip-text"><h4>Charleston Strategy</h4><p>Pass tiles that don't match your card's top patterns...</p></div>
+        <div class="tip-arrow" style="margin-left:auto;flex-shrink:0;"><svg viewBox="0 0 24 24" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+    <div class="footer-tagline"><em>Master American Mahjong</em></div>
+    <div class="footer-bird"><span class="fdot"></span><svg viewBox="0 0 26 26" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17 Q4 12 8 9 Q10 7.5 13 7.5"/><ellipse cx="15" cy="8.5" rx="3.5" ry="3.2" fill="none"/><circle cx="16.5" cy="7.8" r="0.6" fill="var(--lavender)" stroke="none"/><path d="M18.5 8.5 L21.5 7.5 L18.5 9.5"/><path d="M6 17 L3.5 15.5 M6 17 L3.5 17"/></svg><span class="fdot"></span></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="nav-label">learn</span></div>
+    <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><span class="nav-label">practice</span></div>
+    <div class="nav-item nav-play"><div class="nav-play-btn"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg></div><span class="nav-label" style="color:var(--cherry);font-weight:600;margin-top:4px;">play</span></div>
+    <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><span class="nav-label">shop</span></div>
+    <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 26 26" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17 Q4 12 8 9 Q10 7.5 13 7.5"/><ellipse cx="15" cy="8.5" rx="3.5" ry="3.2" fill="none"/><circle cx="16.5" cy="7.8" r="0.5" fill="var(--lavender-text)" stroke="none"/><path d="M18.5 8.5 L21.5 7.5 L18.5 9.5"/><path d="M6 17 L3.5 15.5 M6 17 L3.5 17"/><path d="M10 17 L10 20 M10 20 L8.5 21 M10 20 L11.5 21"/></svg></div><span class="nav-label">ask bam</span></div>
+  </div>
+</div>
+
+</body>
+</html>
