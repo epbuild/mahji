@@ -22,7 +22,6 @@ function ShopPage({ cart, setCart }) {
         <div style={{ position:"absolute", width:"100%", height:"100%", backfaceVisibility:"hidden" }}><MiniTileBack/></div>
         <div style={{ position:"absolute", width:"100%", height:"100%", backfaceVisibility:"hidden", transform:"rotateY(180deg)" }}>{front}</div>
       </div>
-      <style>{`@keyframes tileFlipLoop{0%{transform:rotateY(0deg)}10%{transform:rotateY(180deg)}50%{transform:rotateY(180deg)}60%{transform:rotateY(360deg)}100%{transform:rotateY(360deg)}}`}</style>
     </div>
   );
   const TilesPreview = () => {
@@ -58,21 +57,21 @@ function ShopPage({ cart, setCart }) {
       return <TinyShell><svg viewBox="0 0 26 36" width="20" height="30">{[0,1,2,3,4].map(i=> <g key={i}><circle cx={4+i*4.5} cy={4} r={1.5} fill={sc[i]+"33"} stroke={sc[i]} strokeWidth=".5"/><circle cx={4+i*4.5} cy={32} r={1.5} fill={sc[i]+"33"} stroke={sc[i]} strokeWidth=".5"/></g>)}{[0,1,2].map(i=> <g key={"s"+i}><circle cx={3} cy={10+i*8} r={1.5} fill={sc[i]+"33"} stroke={sc[i]} strokeWidth=".5"/><circle cx={23} cy={10+i*8} r={1.5} fill={sc[(i+2)%5]+"33"} stroke={sc[(i+2)%5]} strokeWidth=".5"/></g>)}</svg></TinyShell>;
     };
     const TFlower = ({ n }) => { const f=FC[(n-1)%8]; return <TinyShell><svg viewBox="0 0 28 32" width="24" height="28">{Array.from({length:6},(_,i)=>i*60).map(a=> <ellipse key={a} cx="14" cy="10" rx="4" ry="7" fill={f.p} opacity=".7" transform={`rotate(${a} 14 16)`}/>)}<circle cx="14" cy="16" r="4" fill={f.c}/></svg></TinyShell>; };
-    const TJoker = ({ n }) => { const c=STCOL[(n-1)%8]; return <TinyShell><div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"linear-gradient(180deg,#FBF8FE,#F8F4FB)",borderRadius:"inherit"}}><span style={{fontFamily:"'Bodoni Moda',serif",fontSize:5.5,fontWeight:700,fontStyle:"italic",letterSpacing:1.5,color:c.s}}>JOKER</span><svg viewBox="0 0 8 8" width="6" height="6"><polygon points="4,0 5,3 8,3 5.5,5 6.5,8 4,6 1.5,8 2.5,5 0,3 3,3" fill={c.t} opacity=".5"/></svg></div></TinyShell>; };
+    const TJoker = ({ n }) => { const c=STCOL[(n-1)%8]; return <TinyShell><div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"linear-gradient(180deg,#FBF8FE,#F8F4FB)",borderRadius:"inherit"}}><span style={{fontFamily:"'Bodoni Moda',serif",fontSize:5.5,fontWeight:700,fontStyle:"italic",letterSpacing:1.5,color:c.star}}>JOKER</span><svg viewBox="0 0 8 8" width="6" height="6"><polygon points="4,0 5,3 8,3 5.5,5 6.5,8 4,6 1.5,8 2.5,5 0,3 3,3" fill={c.trail} opacity=".5"/></svg></div></TinyShell>; };
     const SL = ({ children }) => (
       <div style={{ marginBottom:4 }}>
-        <div style={{ display:"flex", gap:g }}>{children}</div>
+        <div style={{ display:"flex", gap:g, flexWrap:"wrap" }}>{children}</div>
       </div>
     );
     return (
       <div style={{ padding:"6px 2px" }}>
-        <SL label="Dots">{[1,2,3,4,5,6,7,8,9].map(n=> <TDot key={n} n={n}/>)}</SL>
-        <SL label="Bams">{[1,2,3,4,5,6,7,8,9].map(n=> <TBam key={n} n={n}/>)}</SL>
-        <SL label="Craks">{[1,2,3,4,5,6,7,8,9].map(n=> <TCrak key={n} n={n}/>)}</SL>
-        <SL label="Winds & Dragons">{["N","E","W","S"].map(d=> <TWind key={d} d={d}/>)}<TDrg type="red"/><TDrg type="green"/><TDrg type="white"/></SL>
-        <SL label="Flowers">{[1,2,3,4,5,6,7,8].map(n=> <TFlower key={n} n={n}/>)}</SL>
-        <SL label="Jokers">{[1,2,3,4,5,6,7,8].map(n=> <TJoker key={n} n={n}/>)}</SL>
-        <div style={{ fontSize:8, color:C.light, textAlign:"center", marginTop:4 }}>152 tiles · Designed by Mahji</div>
+        <SL>{[1,2,3,4,5,6,7,8,9].map(n=> <TDot key={n} n={n}/>)}</SL>
+        <SL>{[1,2,3,4,5,6,7,8,9].map(n=> <TBam key={n} n={n}/>)}</SL>
+        <SL>{[1,2,3,4,5,6,7,8,9].map(n=> <TCrak key={n} n={n}/>)}</SL>
+        <SL>{["N","E","W","S"].map(d=> <TWind key={d} d={d}/>)}<TDrg type="red"/><TDrg type="green"/><TDrg type="white"/></SL>
+        <SL>{[1,2,3,4,5,6,7,8].map(n=> <TFlower key={n} n={n}/>)}</SL>
+        <SL>{[1,2,3,4,5,6,7,8].map(n=> <TJoker key={n} n={n}/>)}</SL>
+        <div style={{ fontSize:9, color:C.light, textAlign:"center", marginTop:4 }}>152 tiles · Designed by Mahji</div>
       </div>
     );
   };
@@ -85,18 +84,18 @@ function ShopPage({ cart, setCart }) {
         onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(142,199,226,0.18)";}}
         onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
         <div style={{ minHeight: isSet?"auto":80, background: cat.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {isSet ? <TileSetDetail/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, color:C.cherry, fontWeight:500, opacity:.3 }}>[ preview ]</div>}
+          {isSet ? <TileSetDetail/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, color:C.cherry, fontWeight:500, opacity:.3 }}>[ preview ]</div>}
         </div>
-        <div style={{ padding:"12px 14px", display:"flex", alignItems:"center" }}>
-          <div style={{ flex:1 }}><h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:13, fontWeight:500, color:C.dark }}>{item.name}</h3></div>
-          <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:13, fontWeight:500, color:C.lavDeep, textAlign:"center", flex:1 }}>${item.price}</span>
+        <div style={{ padding:"12px 16px", display:"flex", alignItems:"center" }}>
+          <div style={{ flex:1 }}><h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:500, color:C.dark }}>{item.name}</h3></div>
+          <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:500, color:C.lavDeep, textAlign:"center", flex:1 }}>${item.price}</span>
           <div style={{ flex:1, display:"flex", justifyContent:"flex-end" }}>
             <div onClick={(e) => {e.stopPropagation(); !inCart && addToCart(item.name, item.price);}}
-              style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"5px 14px", borderRadius:20,
+              style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"6px 16px", borderRadius:20,
                 background: inCart ? C.cherry : "transparent", color: inCart ? "#fff" : C.cherry,
                 border: `1.5px solid ${C.cherry}`,
-                fontSize:9, fontWeight:400, letterSpacing:.3, cursor: inCart?"default":"pointer", transition:"all 0.3s", whiteSpace:"nowrap" }}>
-              {inCart ? <><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>Added</> : "Add to Bag"}
+                fontSize:10, fontWeight:400, letterSpacing:.3, cursor: inCart?"default":"pointer", transition:"all 0.3s", whiteSpace:"nowrap" }}>
+              {inCart ? <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>Added</> : "Add to Bag"}
             </div>
           </div>
         </div>
@@ -107,30 +106,30 @@ function ShopPage({ cart, setCart }) {
   if (showCart) {
     const total = cart.reduce((s,c) => s+c.price, 0);
     return (<>
-      <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center", gap:8 }}>
-        <div onClick={() => setShowCart(false)} style={{ fontSize:11, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
+      <div style={{ padding:"8px 22px 0", display:"flex", alignItems:"center", gap:8 }}>
+        <div onClick={() => setShowCart(false)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
       </div>
       <PT>Your Bag</PT>
       <Cnt>
         {cart.length===0 ? <div style={{ textAlign:"center", padding:"40px 20px" }}>
-          <div style={{ fontSize:11, color:C.light, marginBottom:8 }}>Your bag is empty</div>
-          <div onClick={() => setShowCart(false)} style={{ display:"inline-block", fontSize:10, fontWeight:600, color:C.cherry, cursor:"pointer", borderBottom:`1px solid ${C.cherry}`, paddingBottom:1 }}>Continue shopping</div>
+          <div style={{ fontSize:12, color:C.light, marginBottom:8 }}>Your bag is empty</div>
+          <div onClick={() => setShowCart(false)} style={{ display:"inline-block", fontSize:11, fontWeight:600, color:C.cherry, cursor:"pointer", borderBottom:`1px solid ${C.cherry}`, paddingBottom:1 }}>Continue shopping</div>
         </div> : <>
           {cart.map((c,i) => (
             <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 0", borderBottom:`1px solid ${C.lavBorder}` }}>
-              <div style={{ fontSize:12, fontWeight:500, color:C.dark }}>{c.item}</div>
+              <div style={{ fontSize:13, fontWeight:500, color:C.dark }}>{c.item}</div>
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:13, fontWeight:600, color:C.seafoam }}>${c.price}</span>
-                <div onClick={() => removeFromCart(i)} style={{ fontSize:9, color:C.cherry, cursor:"pointer", fontWeight:500 }}>Remove</div>
+                <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:600, color:C.seafoam }}>${c.price}</span>
+                <div onClick={() => removeFromCart(i)} style={{ fontSize:10, color:C.cherry, cursor:"pointer", fontWeight:500 }}>Remove</div>
               </div>
             </div>
           ))}
           <div style={{ display:"flex", justifyContent:"space-between", padding:"14px 0 6px", borderTop:`1.5px solid ${C.dark}`, marginTop:8 }}>
-            <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:600, color:C.dark }}>Total</span>
-            <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:16, fontWeight:700, color:C.seafoam }}>${total}</span>
+            <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, fontWeight:600, color:C.dark }}>Total</span>
+            <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:17, fontWeight:700, color:C.seafoam }}>${total}</span>
           </div>
-          <div style={{ background:C.cherry, color:"#fff", textAlign:"center", padding:"12px 20px", borderRadius:24, fontSize:12, fontWeight:600, letterSpacing:1, cursor:"pointer", marginTop:12 }}>Checkout</div>
+          <div style={{ background:C.cherry, color:"#fff", textAlign:"center", padding:"13px 20px", borderRadius:24, fontSize:13, fontWeight:600, letterSpacing:1, cursor:"pointer", marginTop:12 }}>Checkout</div>
         </>}
       </Cnt>
     </>);
@@ -139,9 +138,9 @@ function ShopPage({ cart, setCart }) {
   if (open) {
     const cat = cats.find(c => c.id === open);
     return (<>
-      <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center", gap:8 }}>
-        <div onClick={() => setOpen(null)} style={{ fontSize:11, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
+      <div style={{ padding:"8px 22px 0", display:"flex", alignItems:"center", gap:8 }}>
+        <div onClick={() => setOpen(null)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
       </div>
       <PT>{cat.title}</PT>
       <Cnt>{cat.items.map(item => <ItemCard key={item.name} item={item} cat={cat}/>)}</Cnt>
@@ -149,7 +148,7 @@ function ShopPage({ cart, setCart }) {
   }
 
   return (<><PT>Shop</PT><Cnt>
-    <p style={{ fontSize:11.5, color:C.mid, marginBottom:14, fontStyle:"italic" }}>Curated essentials for the modern Mahj player.</p>
+    <p style={{ fontSize:12.5, color:C.mid, marginBottom:14, fontStyle:"italic" }}>Curated essentials for the modern Mahj player.</p>
     {cats.map(cat => (
       <div key={cat.id} onClick={() => setOpen(cat.id)} style={{ background:C.white, border:`1px solid ${C.lavBorder}`, borderRadius:16, overflow:"hidden", marginBottom:10, cursor:"pointer", transition:"all 0.35s" }}
         onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(142,199,226,0.18)";}}
@@ -157,13 +156,12 @@ function ShopPage({ cart, setCart }) {
         <div style={{ height:cat.id==="tiles"?"auto":120, minHeight:cat.id==="tiles"?80:120, background:cat.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
           {cat.id==="tiles" ? <TilesPreview/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:18, color:C.cherry, fontWeight:500, opacity:.35 }}>[ preview ]</div>}
         </div>
-        <div style={{ padding:"12px 14px" }}>
-          <h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, fontWeight:500, color:C.dark, marginBottom:2 }}>{cat.title}</h3>
-          <p style={{ fontSize:10, color:C.light, margin:0 }}>{cat.sub}</p></div>
+        <div style={{ padding:"12px 16px" }}>
+          <h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:16, fontWeight:500, color:C.dark, marginBottom:2 }}>{cat.title}</h3>
+          <p style={{ fontSize:11, color:C.light, margin:0 }}>{cat.sub}</p></div>
       </div>
     ))}
   </Cnt></>);
 }
-
 
 export default ShopPage;

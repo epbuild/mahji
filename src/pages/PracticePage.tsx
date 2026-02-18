@@ -8,20 +8,20 @@ const BamOverlay = ({ onClose, context }) => {
   const [input, setInput] = useState("");
   const send = () => { if (!input.trim()) return; setMsgs(p => [...p, { from: "user", text: input }, { from: "bam", text: "Great question! In the live app, I'd give a real answer here." }]); setInput(""); };
   return (
-    <div style={{ position: "absolute", bottom: 94, right: 12, left: 12, background: "rgba(243,251,248,0.95)", borderRadius: 20, boxShadow: "0 12px 40px rgba(50,80,70,0.08)", zIndex: 30, display: "flex", flexDirection: "column", maxHeight: 300, overflow: "hidden", backdropFilter: "blur(14px)" }}>
+    <div className="bam-overlay">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px 8px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}><BirdIcon size={16} color={C.cherry} sw={2.2}/><span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 600, color: C.cherry }}>Bam Bird</span></div>
-        <div onClick={onClose} style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 12, color: "#4A9E88", fontWeight: 600 }}>✕</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}><BirdIcon size={16} color={C.cherry} sw={2.2}/><span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600, color: C.cherry }}>Bam Bird</span></div>
+        <div onClick={onClose} style={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 13, color: "#4A9E88", fontWeight: 600 }}>✕</div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px" }}>
-        {msgs.map((m,i) => <div key={i} style={{ maxWidth: "85%", padding: "9px 12px", marginBottom: 6, fontSize: 11, lineHeight: 1.5, borderRadius: 12,
+        {msgs.map((m,i) => <div key={i} style={{ maxWidth: "85%", padding: "10px 13px", marginBottom: 6, fontSize: 12, lineHeight: 1.5, borderRadius: 12,
           ...(m.from==="bam" ? { background: C.white, border: `0.5px solid rgba(224,48,80,0.2)`, color: C.dark, borderBottomLeftRadius: 3, marginRight: "auto" } : { background: C.white, border: `0.5px solid rgba(109,191,168,0.3)`, color: C.dark, borderBottomRightRadius: 3, marginLeft: "auto" })
         }}>{m.text}</div>)}
       </div>
-      <div style={{ display: "flex", gap: 6, padding: "8px 12px 12px" }}>
-        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask anything..." style={{ flex: 1, padding: "8px 12px", borderRadius: 18, border: `0.5px solid rgba(224,48,80,0.2)`, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", color: C.dark, background: C.white }}/>
-        <button onClick={send} style={{ width: 30, height: 30, borderRadius: "50%", background: C.seafoam, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <div style={{ width: 12, height: 12, stroke: "white", strokeWidth: 2, fill: "none", display: "flex" }}>{I.send}</div></button>
+      <div style={{ display: "flex", gap: 6, padding: "8px 14px 14px" }}>
+        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask anything..." style={{ flex: 1, padding: "9px 14px", borderRadius: 18, border: `0.5px solid rgba(224,48,80,0.2)`, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", color: C.dark, background: C.white }}/>
+        <button onClick={send} style={{ width: 34, height: 34, borderRadius: "50%", background: C.seafoam, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 14, height: 14, stroke: "white", strokeWidth: 2, fill: "none", display: "flex" }}>{I.send}</div></button>
       </div>
     </div>
   );
@@ -42,7 +42,7 @@ function PracticePage({ showChat, setShowChat }) {
   return (<><PT>Practice</PT><Cnt>
     <Tabs items={["Drills","Scenarios","Daily Challenge"]} active={tab} onSelect={setTab}/>
     {tab==="Drills" && drillsData.map(d => <Card key={d.t} title={d.t} desc={d.d} tags={d.lvls.map(l=>({t:lt[l]||"b",l}))}/>)}
-    {tab!=="Drills" && <div style={{ textAlign: "center", padding: 30, color: C.light, fontSize: 11 }}>Coming soon</div>}
+    {tab!=="Drills" && <div style={{ textAlign: "center", padding: 30, color: C.light, fontSize: 12 }}>Coming soon</div>}
     {showChat && <BamOverlay onClose={() => setShowChat(false)} context="Practice"/>}
     {!showChat && <BamFloat onClick={() => setShowChat(true)}/>}
   </Cnt></>);

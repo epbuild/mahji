@@ -13,6 +13,8 @@
     font-family: 'Outfit', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: #F0ECF2;
+    overflow: hidden;
   }
 
   /* Hide scrollbars globally */
@@ -22,6 +24,223 @@
   svg { display: block; }
 }
 
+/* ═══════════════════════════════════════════════
+   RESPONSIVE APP SHELL
+   Mobile-first: fills the screen on phones,
+   centers with max-width on larger screens
+   ═══════════════════════════════════════════════ */
+
+.app-shell {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh; /* dynamic viewport height for mobile browsers */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #F0ECF2;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 480px; /* max phone-like width */
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(180deg,
+    #FFFFFF 0%, #FDFCFE 12%, #FAF8FC 28%,
+    #F7F4FA 45%, #F4F0F7 60%, #F1ECF5 75%,
+    #EEE8F2 90%, #ECE6F0 100%
+  );
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* On desktop/tablet, add subtle shadow to the centered column */
+@media (min-width: 481px) {
+  .app-shell {
+    padding: 0;
+  }
+  .app-container {
+    box-shadow:
+      0 0 60px rgba(50,35,65,0.06),
+      0 0 16px rgba(50,35,65,0.03),
+      -1px 0 0 rgba(200,190,215,0.15),
+      1px 0 0 rgba(200,190,215,0.15);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE TYPOGRAPHY SCALING
+   Base sizes for mobile, scaled up for larger screens
+   ═══════════════════════════════════════════════ */
+
+/* Page titles */
+.page-title {
+  font-family: 'Bodoni Moda', serif;
+  font-weight: 700;
+  color: #E03050;
+  letter-spacing: 4px;
+  text-align: center;
+  font-size: 28px;
+  margin: 0;
+}
+
+/* Home hero title */
+.hero-title {
+  font-family: 'Bodoni Moda', serif;
+  font-weight: 700;
+  color: #E03050;
+  letter-spacing: 8px;
+  line-height: 1;
+  text-align: center;
+  font-size: 48px;
+  margin: 0 0 16px;
+}
+
+/* Section headers */
+.section-header {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #E03050;
+  margin: 20px 0 12px 2px;
+}
+
+/* Body text */
+.body-text {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Card titles */
+.card-title {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Card descriptions */
+.card-desc {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Small labels */
+.label-text {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+@media (min-width: 400px) {
+  .page-title { font-size: 30px; letter-spacing: 5px; }
+  .hero-title { font-size: 52px; }
+  .section-header { font-size: 11.5px; }
+  .body-text { font-size: 13.5px; }
+  .card-title { font-size: 15px; }
+  .card-desc { font-size: 12px; }
+  .label-text { font-size: 9.5px; }
+}
+
+
+/* ═══════════════════════════════════════════════
+   SCROLLABLE CONTENT AREA
+   ═══════════════════════════════════════════════ */
+
+.content-scroll {
+  flex: 1;
+  padding: 0 20px;
+  overflow-y: auto;
+  padding-bottom: 90px; /* room for nav bar */
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 400px) {
+  .content-scroll {
+    padding: 0 24px;
+    padding-bottom: 96px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION BAR
+   ═══════════════════════════════════════════════ */
+
+.nav-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(200,190,215,0.12);
+  padding: 8px 6px calc(env(safe-area-inset-bottom, 8px) + 8px);
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  z-index: 20;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════ */
+
+.app-header {
+  padding: 12px 22px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (min-width: 400px) {
+  .app-header {
+    padding: 14px 26px 6px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   BAM BIRD OVERLAY (contextual chat)
+   ═══════════════════════════════════════════════ */
+
+.bam-overlay {
+  position: absolute;
+  bottom: 94px;
+  right: 14px;
+  left: 14px;
+  background: rgba(243,251,248,0.96);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(50,80,70,0.08), 0 0 0 1px rgba(118,195,170,0.08);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  max-height: 340px;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* ═══════════════════════════════════════════════
+   BAM FLOAT BUTTON
+   ═══════════════════════════════════════════════ */
+
+.bam-float {
+  position: absolute;
+  bottom: 90px;
+  right: 16px;
+  z-index: 15;
+  cursor: pointer;
+  animation: bfloat 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════ */
+
 @layer utilities {
   @keyframes bfloat {
     0%, 100% { transform: translateY(0); }
@@ -29,5 +248,15 @@
   }
   .animate-bfloat {
     animation: bfloat 3s ease-in-out infinite;
+  }
+}
+
+/* Safe area for notched phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .nav-bar {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  }
+  .content-scroll {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
   }
 }
