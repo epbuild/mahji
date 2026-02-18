@@ -1,7 +1,7 @@
 // src/pages/TileGallery.tsx
 import React, { useEffect } from 'react';
-import { MahjiTile, TileBack } from '@/components/tiles';
-import { getTilesBySuit, SUIT_INFO, TileSuit } from '@/data/tileData';
+import { MahjiTile, TileBack } from '../components/tiles';
+import { getTilesBySuit, SUIT_INFO, TileSuit } from '../data/tileData';
 
 const FONT_URL = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap';
 

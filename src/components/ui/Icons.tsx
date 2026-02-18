@@ -1,4 +1,4 @@
-import { C } from '../constants/colors';
+import { C } from '../../constants/colors';
 
 export const BirdIcon = ({ size = 18, color = "currentColor", sw = 2 }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
