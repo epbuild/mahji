@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { C } from '../constants/colors';
 import { BirdIcon, I } from '../components/ui/Icons';
-import { PT, SH, Tag, Card, Cnt, BamFloat } from '../components/Layout';
-import { MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker } from '../components/TileComponents';
+import { PT, SH, Tag, Card, Tabs, Cnt, BamFloat } from '../components/Layout';
+import { MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker, WIND_CFG } from '../components/TileComponents';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -17,12 +17,12 @@ const BamOverlay = ({ onClose, context }) => {
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px" }}>
         {msgs.map((m,i) => <div key={i} style={{ maxWidth: "85%", padding: "9px 12px", marginBottom: 6, fontSize: 11, lineHeight: 1.5, borderRadius: 12,
           ...(m.from==="bam"
-            ? { background: C.white, border: `0.5px solid rgba(224,48,80,0.2)`, color: C.dark, borderBottomLeftRadius: 3, marginRight: "auto" }
-            : { background: C.white, border: `0.5px solid rgba(109,191,168,0.3)`, color: C.dark, borderBottomRightRadius: 3, marginLeft: "auto" })
+            ? { background: C.white, border: "0.5px solid rgba(224,48,80,0.2)", color: C.dark, borderBottomLeftRadius: 3, marginRight: "auto" }
+            : { background: C.white, border: "0.5px solid rgba(109,191,168,0.3)", color: C.dark, borderBottomRightRadius: 3, marginLeft: "auto" })
         }}>{m.text}</div>)}
       </div>
       <div style={{ display: "flex", gap: 6, padding: "8px 12px 12px" }}>
-        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask anything..." style={{ flex: 1, padding: "8px 12px", borderRadius: 18, border: `0.5px solid rgba(224,48,80,0.2)`, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", color: C.dark, background: C.white }}/>
+        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask anything..." style={{ flex: 1, padding: "8px 12px", borderRadius: 18, border: "0.5px solid rgba(224,48,80,0.2)", fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", color: C.dark, background: C.white }}/>
         <button onClick={send} style={{ width: 30, height: 30, borderRadius: "50%", background: C.seafoam, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <div style={{ width: 12, height: 12, stroke: "white", strokeWidth: 2, fill: "none", display: "flex" }}>{I.send}</div></button>
       </div>
@@ -33,6 +33,7 @@ const BamOverlay = ({ onClose, context }) => {
 function MeetTheTiles({ onBack }) {
   const [zoom, setZoom] = useState(null);
   const [dragonNote, setDragonNote] = useState(false);
+
   const Section = ({ title, color, children, note }) => (
     <div style={{ marginBottom: 18 }}>
       <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:13, fontWeight:600, color: color||C.cherry, marginBottom: 4, letterSpacing:1 }}>{title}</div>
@@ -40,14 +41,15 @@ function MeetTheTiles({ onBack }) {
       {note && <div style={{ fontSize:9.5, color:C.light, marginTop:6, lineHeight:1.5, fontStyle:"italic" }}>{note}</div>}
     </div>
   );
+
   const TileRowWrap = ({ children }) => (
     <div style={{ display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>{children}</div>
   );
+
   const Label = ({ children }) => (
     <span style={{ fontSize:9, color:C.mid, fontWeight:500, marginLeft:2, marginRight:6 }}>{children}</span>
   );
 
-  // Zoom overlay
   const ZoomOverlay = () => {
     if (!zoom) return null;
     return (
@@ -83,30 +85,30 @@ function MeetTheTiles({ onBack }) {
 
         <Section title="Dots" color="#4A3660" note="Tiles with circles — each number has a unique dot pattern.">
           <TileRowWrap>
-            {[1,2,3,4,5,6,7,8,9].map(n => <div key={n} onClick={zt(<MiniDot n={n} big/>, `${n} Dot`, `${n} dot${n>1?"s":""} arranged in a pattern. Four copies in the set.`)}><MiniDot n={n}/></div>)}
+            {[1,2,3,4,5,6,7,8,9].map(n => <div key={n} onClick={zt(<MiniDot n={n} big/>, n + " Dot", n + " dot" + (n>1?"s":"") + " arranged in a pattern. Four copies in the set.")}><MiniDot n={n}/></div>)}
           </TileRowWrap>
         </Section>
 
         <Section title="Bams (Bamboo)" color="#2E8B57" note="Tiles with bamboo-shaped sticks. The 1 Bam features a bird — our Bam Bird!">
           <TileRowWrap>
-            {[1,2,3,4,5,6,7,8,9].map(n => <div key={n} onClick={zt(<MiniBam n={n} big/>, n===1?"1 Bam — The Bird":`${n} Bam`, n===1?"The bird tile! Also known as Bam Bird. Four copies in the set.":`${n} bamboo stalk${n>1?"s":""}. Four copies in the set.`)}><MiniBam n={n}/></div>)}
+            {[1,2,3,4,5,6,7,8,9].map(n => <div key={n} onClick={zt(<MiniBam n={n} big/>, n===1?"1 Bam — The Bird":(n + " Bam"), n===1?"The bird tile! Also known as Bam Bird. Four copies in the set.":(n + " bamboo stalk" + (n>1?"s":"") + ". Four copies in the set."))}><MiniBam n={n}/></div>)}
           </TileRowWrap>
         </Section>
 
         <Section title="Craks (Characters)" color="#C2413B" note="Tiles with Chinese characters representing numbers 1–9.">
           <TileRowWrap>
-            {[1,2,3,4,5,6,7,8,9].map(n => <div key={n} onClick={zt(<MiniCrak n={n} big/>, `${n} Crak`, `The Chinese character for ${n}. Four copies in the set.`)}><MiniCrak n={n}/></div>)}
+            {[1,2,3,4,5,6,7,8,9].map(n => <div key={n} onClick={zt(<MiniCrak n={n} big/>, n + " Crak", "The Chinese character for " + n + ". Four copies in the set.")}><MiniCrak n={n}/></div>)}
           </TileRowWrap>
         </Section>
 
-        <div style={{ height:1, background:`linear-gradient(90deg,transparent,${C.lavBorder},transparent)`, margin:"6px 0 14px" }}/>
+        <div style={{ height:1, background:"linear-gradient(90deg,transparent," + C.lavBorder + ",transparent)", margin:"6px 0 14px" }}/>
 
         <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, fontWeight:600, color:C.cherry, marginBottom:2, letterSpacing:.5 }}>Honor Tiles</div>
         <p style={{ fontSize:10.5, color:C.mid, lineHeight:1.5, marginBottom:12 }}>Special tiles that are not numbered.</p>
 
         <Section title="Winds" color="#4A7FA8" note="Four directions. Each appears four times in the set.">
           <TileRowWrap>
-            {["N","E","W","S"].map(d => <div key={d} onClick={zt(<MiniWind d={d} big/>, WIND_CFG[d].l, `The ${WIND_CFG[d].l.toLowerCase()} wind. Four copies in the set.`)}><MiniWind d={d}/></div>)}
+            {["N","E","W","S"].map(d => <div key={d} onClick={zt(<MiniWind d={d} big/>, WIND_CFG[d].l, "The " + WIND_CFG[d].l.toLowerCase() + " wind. Four copies in the set.")}><MiniWind d={d}/></div>)}
           </TileRowWrap>
         </Section>
 
@@ -114,9 +116,9 @@ function MeetTheTiles({ onBack }) {
           <TileRowWrap>
             <div onClick={zt(<MiniDragon type="red" big/>, "Red Dragon", "Goes with Craks. Four copies in the set.")}><MiniDragon type="red"/></div><Label>Red</Label>
             <div onClick={zt(<MiniDragon type="green" big/>, "Green Dragon", "Goes with Bams. Four copies in the set.")}><MiniDragon type="green"/></div><Label>Green</Label>
-            <div onClick={zt(<MiniDragon type="white" big/>, "White Dragon (Soap)", 'Goes with Dots. Has a double life — also used as "0" on the card. Four copies.')}><MiniDragon type="white"/></div><Label>Soap</Label>
+            <div onClick={zt(<MiniDragon type="white" big/>, "White Dragon (Soap)", "Goes with Dots. Has a double life — also used as 0 on the card. Four copies.")}><MiniDragon type="white"/></div><Label>Soap</Label>
           </TileRowWrap>
-          <div onClick={() => setDragonNote(!dragonNote)} style={{ marginTop:8, background:`linear-gradient(135deg,${C.paleBlueLt},${C.paleBlue})`, borderRadius: dragonNote?14:10, padding: dragonNote?"10px 12px":"8px 12px", border:"1px solid rgba(173,212,236,0.3)", cursor:"pointer", transition:"all 0.3s ease" }}>
+          <div onClick={() => setDragonNote(!dragonNote)} style={{ marginTop:8, background:"linear-gradient(135deg," + C.paleBlueLt + "," + C.paleBlue + ")", borderRadius: dragonNote?14:10, padding: dragonNote?"10px 12px":"8px 12px", border:"1px solid rgba(173,212,236,0.3)", cursor:"pointer", transition:"all 0.3s ease" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                 <span style={{ fontSize:11, fontWeight:700, color:"#4A96B8" }}>!</span>
@@ -126,28 +128,28 @@ function MeetTheTiles({ onBack }) {
             </div>
             {dragonNote && <div style={{ fontSize:9.5, color:C.mid, lineHeight:1.5, marginTop:8 }}>
               Red dragons go with Craks. Green dragons go with Bams. White dragons go with Dots.<br/><br/>
-              White dragons are the only dragons with a double life! They can be used for "0"s or for dragons. For example if a line says "2025" — the white dragon is the zero.<br/><br/>
-              White dragons look like a box, so they are often called <strong style={{color:C.dark}}>"Soap."</strong>
+              White dragons are the only dragons with a double life! They can be used for 0s or for dragons. For example if a line says 2025 — the white dragon is the zero.<br/><br/>
+              White dragons look like a box, so they are often called <strong style={{color:C.dark}}>Soap.</strong>
             </div>}
           </div>
         </Section>
 
-        <div style={{ height:1, background:`linear-gradient(90deg,transparent,${C.lavBorder},transparent)`, margin:"6px 0 14px" }}/>
+        <div style={{ height:1, background:"linear-gradient(90deg,transparent," + C.lavBorder + ",transparent)", margin:"6px 0 14px" }}/>
 
         <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, fontWeight:600, color:C.cherry, marginBottom:2, letterSpacing:.5 }}>Special Tiles</div>
         <p style={{ fontSize:10.5, color:C.mid, lineHeight:1.5, marginBottom:12 }}>Unique tiles with special roles.</p>
 
         <Section title="Flowers" color="#8B7355" note="8 unique decorative tiles that appear in specific hands. One copy each.">
-          <div style={{ display:"flex", gap:5, marginBottom:5 }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniFlower n={n} big/>, `Flower ${n}`, "A unique flower tile. One copy in the set.")}><MiniFlower n={n}/></div>)}</div>
-          <div style={{ display:"flex", gap:5 }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniFlower n={n} big/>, `Flower ${n}`, "A unique flower tile. One copy in the set.")}><MiniFlower n={n}/></div>)}</div>
+          <div style={{ display:"flex", gap:5, marginBottom:5 }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniFlower n={n} big/>, "Flower " + n, "A unique flower tile. One copy in the set.")}><MiniFlower n={n}/></div>)}</div>
+          <div style={{ display:"flex", gap:5 }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniFlower n={n} big/>, "Flower " + n, "A unique flower tile. One copy in the set.")}><MiniFlower n={n}/></div>)}</div>
         </Section>
 
         <Section title="Jokers" color="#B8A9C9" note="8 wild tiles that can substitute for other tiles, with restrictions. One copy each.">
-          <div style={{ display:"flex", gap:5, marginBottom:5 }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, `Joker ${n}`, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div>
-          <div style={{ display:"flex", gap:5 }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, `Joker ${n}`, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div>
+          <div style={{ display:"flex", gap:5, marginBottom:5 }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, "Joker " + n, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div>
+          <div style={{ display:"flex", gap:5 }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, "Joker " + n, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div>
         </Section>
 
-        <div style={{ height:1, background:`linear-gradient(90deg,transparent,${C.lavBorder},transparent)`, margin:"6px 0 14px" }}/>
+        <div style={{ height:1, background:"linear-gradient(90deg,transparent," + C.lavBorder + ",transparent)", margin:"6px 0 14px" }}/>
 
       </Cnt>
     </>
