@@ -43,10 +43,10 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
     <>
       <div className="desktop-header">
         {/* Left: tile icon + MAHJI text on inner pages */}
-        <div onClick={onHome} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
-          <TileIcon size={14} />
+        <div onClick={onHome} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+          <TileIcon size={18} />
           {!isHome && (
-            <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, fontWeight: 500, color: C.cherry, letterSpacing: 2, opacity: 0.8 }}>MAHJI</span>
+            <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 12, fontWeight: 500, color: C.cherry, letterSpacing: 2, opacity: 0.8 }}>MAHJI</span>
           )}
         </div>
 
@@ -74,12 +74,12 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
         {/* Right: bag + profile */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div onClick={onCart} style={{ cursor: "pointer", position: "relative" }}>
-            <BagIcon color={C.lavDeep} size={15} />
+            <BagIcon color={C.lavDeep} size={17} />
             {cartCount > 0 && (
               <div style={{ position: "absolute", top: -4, right: -6, width: 14, height: 14, borderRadius: "50%", background: C.cherry, color: "#fff", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</div>
             )}
           </div>
-          <ProfileCircle size={26} onClick={onProfile} />
+          <ProfileCircle size={30} onClick={onProfile} />
         </div>
       </div>
       <div className="desktop-header-divider" />

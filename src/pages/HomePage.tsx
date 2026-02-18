@@ -14,11 +14,11 @@ function HomePage({ onNav, signedIn = true }) {
     <>
       {/* Hero */}
       <div className="hero-section">
-        <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 11, fontWeight: 400, letterSpacing: 5, color: C.cherry, textTransform: "uppercase", marginBottom: 5 }}>Let's Play</div>
+        <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 400, letterSpacing: 5, color: C.cherry, textTransform: "uppercase", marginBottom: 5 }}>Let's Play</div>
         <h1 className="hero-title">MAHJI</h1>
         <DecoLine />
         {signedIn && (
-          <p style={{ fontSize: 11, color: C.lavText, fontStyle: "italic", marginTop: 2 }}>Your tiles are calling</p>
+          <p style={{ fontSize: 12, color: C.lavText, fontStyle: "italic", marginTop: 2 }}>Your tiles are calling</p>
         )}
       </div>
 
@@ -28,8 +28,8 @@ function HomePage({ onNav, signedIn = true }) {
           <div className="stats-row">
             {[["12", "Games"], ["3", "Wins"], ["7d", "Streak"]].map(([n, l]) => (
               <div key={l} style={{ flex: 1, background: C.lavCard, border: `1px solid ${C.lavBorder}`, borderRadius: 14, padding: "14px 10px", textAlign: "center" }}>
-                <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 22, fontWeight: 600, color: C.lavDeep, lineHeight: 1 }}>{n}</div>
-                <div style={{ fontSize: 9, color: C.lavText, textTransform: "uppercase", letterSpacing: 1.5, marginTop: 4, fontWeight: 500 }}>{l}</div>
+                <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 24, fontWeight: 600, color: C.lavDeep, lineHeight: 1 }}>{n}</div>
+                <div style={{ fontSize: 10, color: C.lavText, textTransform: "uppercase", letterSpacing: 1.5, marginTop: 4, fontWeight: 500 }}>{l}</div>
               </div>
             ))}
           </div>
@@ -37,14 +37,14 @@ function HomePage({ onNav, signedIn = true }) {
           /* New visitor: sign in / create account */
           <div style={{ textAlign: "center", marginBottom: 14 }}>
             <div style={{ display: "inline-flex", gap: 8 }}>
-              <button style={{ padding: "9px 26px", borderRadius: 12, border: "none", fontFamily: "'Bodoni Moda',serif", fontSize: 12, fontWeight: 600, letterSpacing: 1.5, color: C.white, background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, cursor: "pointer", boxShadow: "0 3px 10px rgba(224,48,80,0.18)" }}>
+              <button style={{ padding: "10px 28px", borderRadius: 12, border: "none", fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 600, letterSpacing: 1.5, color: C.white, background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, cursor: "pointer", boxShadow: "0 3px 10px rgba(224,48,80,0.18)" }}>
                 Sign In
               </button>
-              <button style={{ padding: "9px 26px", borderRadius: 12, border: `1.5px solid ${C.lavender}`, fontFamily: "'Bodoni Moda',serif", fontSize: 12, fontWeight: 600, letterSpacing: 1, color: C.lavDeep, background: C.white, cursor: "pointer", boxShadow: "0 2px 8px rgba(126,100,164,0.08)" }}>
+              <button style={{ padding: "10px 28px", borderRadius: 12, border: `1.5px solid ${C.lavender}`, fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 600, letterSpacing: 1, color: C.lavDeep, background: C.white, cursor: "pointer", boxShadow: "0 2px 8px rgba(126,100,164,0.08)" }}>
                 Create Account
               </button>
             </div>
-            <p style={{ fontSize: 10, color: C.lavText, marginTop: 8, fontStyle: "italic" }}>Your tiles are calling</p>
+            <p style={{ fontSize: 11, color: C.lavText, marginTop: 8, fontStyle: "italic" }}>Your tiles are calling</p>
           </div>
         )}
 
@@ -61,11 +61,11 @@ function HomePage({ onNav, signedIn = true }) {
               <div style={{ width: 12, height: 12, stroke: "white", strokeWidth: 2, fill: "none", marginLeft: 1, display: "flex" }}>{I.play}</div>
             </div>
             <div>
-              <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 700, color: C.cherry, marginBottom: 0 }}>Play Now</h3>
-              <p style={{ fontSize: 10, color: C.mid, opacity: 0.6, margin: 0 }}>Challenge AI or invite friends</p>
+              <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 16, fontWeight: 700, color: C.cherry, marginBottom: 0 }}>Play Now</h3>
+              <p style={{ fontSize: 11, color: C.mid, opacity: 0.6, margin: 0 }}>Challenge AI or invite friends</p>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.5)", padding: "3px 10px", borderRadius: 12, fontSize: 9, color: C.mid, border: "1px solid rgba(173,212,236,0.25)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.5)", padding: "3px 10px", borderRadius: 12, fontSize: 10, color: C.mid, border: "1px solid rgba(173,212,236,0.25)" }}>
             <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#4ADE80", display: "inline-block" }} />
             <span>2,341 online</span>
           </div>
@@ -95,8 +95,8 @@ function HomePage({ onNav, signedIn = true }) {
                     : <div style={{ width: 16, height: 16, stroke: accent, strokeWidth: 1.3, fill: "none", display: "flex" }}>{c.icon}</div>
                   }
                 </div>
-                <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600, color: C.dark, marginBottom: 2 }}>{c.title}</h3>
-                <p style={{ fontSize: 10, color: C.light, margin: 0, lineHeight: 1.4 }}>{c.desc}</p>
+                <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600, color: C.dark, marginBottom: 2 }}>{c.title}</h3>
+                <p style={{ fontSize: 11, color: C.light, margin: 0, lineHeight: 1.4 }}>{c.desc}</p>
               </div>
             );
           })}
