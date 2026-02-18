@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { C } from "./constants/colors";
-import { NavBar, Header } from "./components/Layout";
+import { DesktopHeader, MobileHeader, MobileNav, Footer } from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import LearnPage from "./pages/LearnPage";
 import PracticePage from "./pages/PracticePage";
@@ -15,11 +14,13 @@ export default function App() {
   const [showChat, setShowChat] = useState(false);
   const [signedIn, setSignedIn] = useState(true);
   const [cart, setCart] = useState([]);
+
   const onNav = (p) => { setPage(p); setShowChat(false); };
   const onHome = () => { setPage("home"); setShowChat(false); };
   const onProfile = () => { setPrevPage(page); setPage("profile"); };
   const onSignOut = () => { setSignedIn(false); setPage("home"); };
   const onSignIn = () => { setSignedIn(true); };
+  const onCart = () => { /* future cart drawer */ };
 
   return (
     <div className="app-shell">
@@ -30,15 +31,41 @@ export default function App() {
         @keyframes tileFlipLoop{0%{transform:rotateY(0deg)}10%{transform:rotateY(180deg)}50%{transform:rotateY(180deg)}60%{transform:rotateY(360deg)}100%{transform:rotateY(360deg)}}
       `}</style>
       <div className="app-container">
-        {page!=="profile" && <Header onHome={onHome} onProfile={onProfile} isHome={page==="home"} cartCount={cart.length} onCart={() => {}} page={page}/>}
-        {page==="home" && <HomePage onNav={onNav}/>}
-        {page==="learn" && <LearnPage showChat={showChat} setShowChat={setShowChat}/>}
-        {page==="practice" && <PracticePage showChat={showChat} setShowChat={setShowChat}/>}
-        {page==="play" && <PlayPage/>}
-        {page==="shop" && <ShopPage cart={cart} setCart={setCart}/>}
-        {page==="bam" && <BamPage/>}
-        {page==="profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn}/>}
-        <NavBar active={page==="home"||page==="profile"?null:page} onNav={onNav}/>
+        {/* DESKTOP: Top nav — CSS hides this below 768px */}
+        {page !== "profile" && (
+          <DesktopHeader
+            page={page}
+            onNav={onNav}
+            onHome={onHome}
+            onProfile={onProfile}
+            cartCount={cart.length}
+            onCart={onCart}
+          />
+        )}
+
+        {/* MOBILE: Header at top — CSS hides this at 768px+ */}
+        {page !== "profile" && (
+          <MobileHeader
+            onHome={onHome}
+            onProfile={onProfile}
+            isHome={page === "home"}
+            cartCount={cart.length}
+            onCart={onCart}
+            page={page}
+          />
+        )}
+
+        {/* Page content */}
+        {page === "home" && <HomePage onNav={onNav} signedIn={signedIn} />}
+        {page === "learn" && <LearnPage showChat={showChat} setShowChat={setShowChat} />}
+        {page === "practice" && <PracticePage showChat={showChat} setShowChat={setShowChat} />}
+        {page === "play" && <PlayPage />}
+        {page === "shop" && <ShopPage cart={cart} setCart={setCart} />}
+        {page === "bam" && <BamPage />}
+        {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
+
+        {/* MOBILE: Bottom nav — CSS hides this at 768px+ */}
+        <MobileNav active={page === "home" || page === "profile" ? null : page} onNav={onNav} />
       </div>
     </div>
   );

@@ -2,9 +2,11 @@ export const C = {
   bg: "#FDFCFE", lavHint: "#F5F2F9", lavSoft: "#ECE7F3",
   lavCard: "rgba(243,239,250,0.5)", lavBorder: "rgba(196,184,218,0.22)",
   lavender: "#C0B2D4", lavMid: "#A898BE", lavDeep: "#7E64A4", lavText: "#9688AA",
-  cherry: "#E03050", cherryLt: "#E8566D",
+  cherry: "#E03050", cherryLt: "#E8566D", cherryDk: "#C42844",
   paleBlue: "#D9ECF5", paleBlueLt: "#EDF5FA", paleBlueMid: "#ADD4EC",
   cerulean: "#8EC7E2", seafoam: "#6DBFA8", seafoamLt: "rgba(118,195,170,0.3)",
+  positano: "#E08850", purple: "#9B72CF", skyBlue: "#7EB8D8",
+  violet: "#5B3E8A", navPurple: "#9A82B8",
   dark: "#302040", mid: "#5E4D6D", light: "#9A8DAA", white: "#FFFFFF",
   gold: "#B08D3A", clinton: "#65554a",
 };
