@@ -110,28 +110,30 @@ function LearnPage({ showChat, setShowChat }) {
   const filtered = level === "All" ? learnData : learnData.map(sec => ({ ...sec, items: sec.items.filter(it => it.lvl === level) })).filter(sec => sec.items.length > 0);
   let num = 0;
   return (<>
-    <div style={{ position:"relative" }}>
-      <PT>Learn</PT>
-      {/* Fun starburst button — top right */}
-      <div onClick={() => setLesson("History")} style={{ position:"absolute", top:4, right:16, cursor:"pointer", transition:"transform 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1) rotate(5deg)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";}}>
-        <svg width="62" height="62" viewBox="0 0 100 100" style={{ filter:"drop-shadow(0 2px 8px rgba(224,48,80,0.15))" }}>
-          <path d="M50 4 L58 22 L72 8 L66 28 L88 22 L74 38 L96 42 L76 50 L96 58 L74 62 L88 78 L66 72 L72 92 L58 78 L50 96 L42 78 L28 92 L34 72 L12 78 L26 62 L4 58 L24 50 L4 42 L26 38 L12 22 L34 28 L28 8 L42 22 Z" fill="#FFF0F3" stroke={C.cherry} strokeWidth="1" opacity="0.9"/>
-          <circle cx="50" cy="50" r="24" fill="none" stroke={C.lavender} strokeWidth="0.5" opacity="0.5"/>
-        </svg>
-        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", textAlign:"center" }}>
-          <span style={{ fontSize:8, fontWeight:700, color:C.cherry, lineHeight:1.15, letterSpacing:0.2 }}>Mahjong<br/>History!</span>
-        </div>
-      </div>
-    </div>
+    <PT>Learn</PT>
     <Cnt>
-    <div style={{ display:"flex", gap:5, marginBottom:8, flexWrap:"nowrap", overflowX:"auto" }}>
+    <div style={{ display:"flex", gap:5, marginBottom:12, flexWrap:"nowrap", overflowX:"auto" }}>
       {levels.map(lv => (<div key={lv} onClick={() => setLevel(lv)} style={{ padding:"6px 12px", borderRadius:20, fontSize:11, fontWeight: level===lv ? 600 : 400, cursor:"pointer", background: level===lv ? C.seafoam : "transparent", color: level===lv ? C.white : C.mid, border: level===lv ? "none" : `1px solid ${C.lavBorder}`, transition:"all 0.3s", whiteSpace:"nowrap", flexShrink:0 }}>{lv === "All" ? "See All" : lv}</div>))}
     </div>
-    <div style={{ display:"flex", gap:4, marginBottom:14, justifyContent:"flex-end" }}>
-      {["Video","Text"].map(f => (<div key={f} onClick={() => setFormat(f)} style={{ padding:"5px 12px", borderRadius:14, fontSize:10, fontWeight: format===f?600:400, cursor:"pointer", background: format===f ? C.lavDeep : "transparent", color: format===f ? C.white : C.lavText, border: format===f ? "none" : `1px solid ${C.lavBorder}`, transition:"all 0.25s" }}>
-        {f === "Video" ? "📹" : "📖"} {f}</div>))}
+    {filtered.map((sec, si) => <div key={sec.s}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <SH>{sec.s}</SH>
+        {si === 0 && <div style={{ display:"flex", gap:4 }}>
+          {["Video","Text"].map(f => (<div key={f} onClick={() => setFormat(f)} style={{ padding:"4px 10px", borderRadius:12, fontSize:10, fontWeight: format===f?600:400, cursor:"pointer", background: format===f ? C.lavDeep : "transparent", color: format===f ? C.white : C.lavText, border: format===f ? "none" : `1px solid ${C.lavBorder}`, transition:"all 0.25s" }}>
+            {f === "Video" ? "📹" : "📖"} {f}</div>))}
+        </div>}
+      </div>
+      {sec.items.map((it) => { num++; return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={it.t === "Meet the Tiles" ? () => setLesson("Meet the Tiles") : undefined}/>; })}
+    </div>)}
+    {/* History bonus button */}
+    <div onClick={() => setLesson("History")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: C.paleBlue || "#D9ECF5", border:`1px solid rgba(142,199,226,0.3)`, borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
+      <div style={{ width:32, height:32, borderRadius:"50%", background:C.cerulean, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:14 }}>📜</div>
+      <div>
+        <div style={{ fontSize:12, fontWeight:600, color:C.cerulean, letterSpacing:0.5 }}>Bonus!</div>
+        <div style={{ fontSize:12, color:C.mid, marginTop:1 }}>Learn the History of American Mahjong</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.cerulean} strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft:"auto", flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    {filtered.map(sec => <div key={sec.s}><SH>{sec.s}</SH>{sec.items.map((it) => { num++; return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={it.t === "Meet the Tiles" ? () => setLesson("Meet the Tiles") : undefined}/>; })}</div>)}
     {showChat && <BamOverlay onClose={() => setShowChat(false)} context="Learn"/>}
     {!showChat && <BamFloat onClick={() => setShowChat(true)}/>}
   </Cnt></>);
