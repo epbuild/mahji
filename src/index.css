@@ -82,7 +82,13 @@
 .bam-float { position:fixed; bottom:90px; right:16px; z-index:35; cursor:pointer; animation:bfloat 3s ease-in-out infinite; }
 @media (min-width:768px) { .bam-float { bottom:30px; right:30px; } }
 
-/* FOOTER */
+/* HOME CARDS — red accent on all sizes */
+.home-card { background:#FFFFFF; border:1px solid rgba(196,184,218,0.22); border-radius:16px; padding:18px 14px; cursor:pointer; overflow:hidden; transition:all 0.35s; border-top:2.5px solid #E03050; }
+.home-card-icon { width:28px; height:28px; border-radius:8px; background:rgba(224,48,80,0.04); display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:#E03050; }
+
+/* PLAY NOW BANNER */
+.play-now-banner { padding:16px 18px; }
+@media (min-width:768px) { .play-now-banner { padding:12px 18px; } }
 .app-footer { text-align:center; margin-top:36px; padding-bottom:8px; }
 .app-footer-tagline { font-size:clamp(9px, 1.1vw, 11px); color:#9688AA; letter-spacing:1.5px; text-transform:uppercase; font-weight:500; margin-bottom:6px; }
 .app-footer-copyright { font-size:clamp(8px, 0.9vw, 10px); color:#9688AA; opacity:0.5; margin:0; }

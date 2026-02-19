@@ -49,10 +49,10 @@ function HomePage({ onNav, signedIn = true }) {
         )}
 
         {/* Play Now — slim banner */}
-        <div onClick={() => onNav("play")} style={{
+        <div onClick={() => onNav("play")} className="play-now-banner" style={{
           background: `linear-gradient(135deg,${C.paleBlueLt},${C.paleBlue} 40%,#C6E1F0 80%,${C.paleBlueLt})`,
           border: "1px solid rgba(173,212,236,0.3)", borderRadius: 14,
-          padding: "12px 18px", marginBottom: 14,
+          marginBottom: 14,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           cursor: "pointer", transition: "all 0.3s"
         }}>
@@ -71,7 +71,7 @@ function HomePage({ onNav, signedIn = true }) {
           </div>
         </div>
 
-        {/* Feature cards with accent colors */}
+        {/* Feature cards — red on mobile, colorful on desktop */}
         <div className="home-grid">
           {[
             { id: "learn", title: "Learn", desc: "Tiles, rules & strategy", icon: I.book },
@@ -81,18 +81,14 @@ function HomePage({ onNav, signedIn = true }) {
           ].map(c => {
             const accent = cardAccents[c.id];
             return (
-              <div key={c.id} onClick={() => onNav(c.id)} style={{
-                background: C.white, border: `1px solid ${C.lavBorder}`,
-                borderRadius: 16, padding: "18px 14px", cursor: "pointer",
-                overflow: "hidden", borderTop: `2.5px solid ${accent}`,
-                transition: "all 0.35s"
-              }}
+              <div key={c.id} onClick={() => onNav(c.id)}
+                className={`home-card home-card-${c.id}`}
                 onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = ""; }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: `${accent}0A`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                <div className={`home-card-icon home-card-icon-${c.id}`}>
                   {c.isBird
-                    ? <BirdIcon size={16} color={accent} sw={1.8} />
-                    : <div style={{ width: 16, height: 16, stroke: accent, strokeWidth: 1.3, fill: "none", display: "flex" }}>{c.icon}</div>
+                    ? <BirdIcon size={16} color="currentColor" sw={1.8} />
+                    : <div style={{ width: 16, height: 16, stroke: "currentColor", strokeWidth: 1.3, fill: "none", display: "flex" }}>{c.icon}</div>
                   }
                 </div>
                 <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600, color: C.dark, marginBottom: 2 }}>{c.title}</h3>
