@@ -129,7 +129,6 @@ function LearnPage({ showChat, setShowChat }) {
     <div style={{ display:"flex", gap:4, marginBottom:14 }}>
       {["Video","Text"].map(f => (<div key={f} onClick={() => setFormat(f)} style={{ padding:"5px 12px", borderRadius:14, fontSize:10, fontWeight: format===f?600:400, cursor:"pointer", background: format===f ? C.lavDeep : "transparent", color: format===f ? C.white : C.lavText, border: format===f ? "none" : `1px solid ${C.lavBorder}`, transition:"all 0.25s" }}>
         {f === "Video" ? "📹" : "📖"} {f}</div>))}
-      </div>
     </div>
     {filtered.map(sec => <div key={sec.s}><SH>{sec.s}</SH>{sec.items.map((it) => { num++; return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={it.t === "Meet the Tiles" ? () => setLesson("Meet the Tiles") : undefined}/>; })}</div>)}
     {showChat && <BamOverlay onClose={() => setShowChat(false)} context="Learn"/>}
