@@ -37,7 +37,7 @@ function MeetTheTiles({ onBack, format }) {
   const Label = ({ children }) => (<span style={{ fontSize:10, color:C.mid, fontWeight:500, marginLeft:2, marginRight:6 }}>{children}</span>);
   const ZoomOverlay = () => { if (!zoom) return null; return (<div onClick={() => setZoom(null)} style={{ position:"fixed", inset:0, background:"rgba(48,32,64,0.6)", backdropFilter:"blur(4px)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", animation:"fadeIn 0.2s ease" }}><div style={{ animation:"zoomIn 0.25s ease", display:"flex", flexDirection:"column", alignItems:"center", gap:10 }} onClick={e => e.stopPropagation()}><div style={{ transform:"scale(1.6)" }}>{zoom.tile}</div><div style={{ marginTop:16, textAlign:"center" }}><div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:18, fontWeight:600, color:"#fff" }}>{zoom.name}</div>{zoom.desc && <div style={{ fontSize:12, color:"rgba(255,255,255,0.7)", marginTop:4, maxWidth:240, lineHeight:1.4 }}>{zoom.desc}</div>}</div><div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginTop:8 }}>Tap anywhere to close</div></div></div>); };
   const zt = (tile, name, desc) => () => setZoom({tile, name, desc});
-  return (<><ZoomOverlay/><div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center", justifyContent:"space-between" }}><div onClick={onBack} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Learn</div><div style={{ display:"flex", gap:4 }}>{["Video","Text"].map(f => (<div key={f} onClick={() => setLocalFormat(f)} style={{ padding:"4px 10px", borderRadius:12, fontSize:10, fontWeight: localFormat===f?600:400, cursor:"pointer", background: localFormat===f?C.seafoam:"transparent", color: localFormat===f?C.white:C.mid, border: localFormat===f?"none":`1px solid ${C.lavBorder}`, transition:"all 0.25s" }}>{f}</div>))}</div></div><PT>Meet the Tiles</PT><Cnt>
+  return (<><ZoomOverlay/><div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}><div onClick={onBack} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Learn</div></div><div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12, padding:"8px 20px 10px" }}><h1 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:28, fontWeight:700, color:C.cherry, letterSpacing:4, margin:0 }}>Meet the Tiles</h1><div style={{ display:"flex", gap:4 }}>{["Video","Text"].map(f => (<div key={f} onClick={() => setLocalFormat(f)} style={{ padding:"4px 10px", borderRadius:12, fontSize:10, fontWeight: localFormat===f?600:400, cursor:"pointer", background: localFormat===f?C.lavDeep:"transparent", color: localFormat===f?C.white:C.mid, border: localFormat===f?"none":`1px solid ${C.lavBorder}`, transition:"all 0.25s" }}>{f}</div>))}</div></div><Cnt>
     {localFormat === "Video" ? (<div style={{ background:C.lavCard, border:`1px solid ${C.lavBorder}`, borderRadius:14, padding:"28px 20px", textAlign:"center", marginBottom:16 }}><div style={{ fontSize:28, marginBottom:8 }}>▶️</div><div style={{ fontSize:13, color:C.mid, fontWeight:500 }}>Video lesson coming soon</div><div style={{ fontSize:11, color:C.light, marginTop:4 }}>Switch to Text to read this lesson now</div></div>) : (<>
     <p className="body-text" style={{ color:C.mid, marginBottom:16 }}>American Mahjong uses <strong style={{color:C.dark}}>152 tiles</strong>, divided into several groups. Tap any tile to zoom in.</p>
     <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:16, fontWeight:600, color:C.cherry, marginBottom:2, letterSpacing:.5 }}>Suits</div>
@@ -93,9 +93,36 @@ function LearnPage({ showChat, setShowChat }) {
   const [level, setLevel] = useState("All");
   const [format, setFormat] = useState("Text");
   if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} format={format}/>;
+  if (lesson === "History") return (<>
+    <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}>
+      <div onClick={() => setLesson(null)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Learn</div>
+    </div>
+    <PT>The History of Mahjong</PT>
+    <Cnt>
+      <p className="body-text" style={{ color:C.mid, marginBottom:14 }}>Mahjong originated in China during the mid-to-late <strong style={{color:C.dark}}>Qing dynasty</strong>, likely in the 1800s. While its exact origins are debated, it evolved from earlier Chinese card and tile games.</p>
+      <p className="body-text" style={{ color:C.mid, marginBottom:14 }}>The game arrived in the United States in the <strong style={{color:C.dark}}>1920s</strong>, brought by travelers and immigrants. It quickly became a sensation — especially among Jewish-American women, who embraced it as a social pastime.</p>
+      <p className="body-text" style={{ color:C.mid, marginBottom:14 }}>In <strong style={{color:C.dark}}>1937</strong>, the National Mah Jongg League (NMJL) was founded to standardize rules for American play. Each year they release a new card with official hands — the card you'll use when you play in Mahji.</p>
+      <p className="body-text" style={{ color:C.mid, marginBottom:14 }}>Today, American Mahjong is experiencing a massive <strong style={{color:C.dark}}>renaissance</strong>. A new generation of players is discovering the game through social media, modern tile sets, and apps like Mahji. What was once your grandmother's game is now everyone's game.</p>
+      <p className="body-text" style={{ color:C.mid, marginBottom:14, fontStyle:"italic" }}>Welcome to the table.</p>
+    </Cnt>
+  </>);
   const filtered = level === "All" ? learnData : learnData.map(sec => ({ ...sec, items: sec.items.filter(it => it.lvl === level) })).filter(sec => sec.items.length > 0);
   let num = 0;
-  return (<><PT>Learn</PT><Cnt>
+  return (<>
+    <div style={{ position:"relative" }}>
+      <PT>Learn</PT>
+      {/* Fun starburst button — top right */}
+      <div onClick={() => setLesson("History")} style={{ position:"absolute", top:8, right:20, cursor:"pointer", transition:"transform 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.08) rotate(3deg)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";}}>
+        <svg width="72" height="72" viewBox="0 0 100 100" style={{ filter:"drop-shadow(0 2px 6px rgba(180,200,80,0.3))" }}>
+          <polygon points="50,2 61,28 90,15 72,38 98,50 72,62 90,85 61,72 50,98 39,72 10,85 28,62 2,50 28,38 10,15 39,28" fill="#C8D96A" stroke="#B8C85A" strokeWidth="1"/>
+        </svg>
+        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", textAlign:"center" }}>
+          <span style={{ fontSize:9, fontWeight:700, color:"#4A5520", lineHeight:1.2, letterSpacing:0.3 }}>Learn the<br/>History!</span>
+        </div>
+      </div>
+    </div>
+    <Cnt>
     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
       <div style={{ display:"flex", gap:5, flexWrap:"wrap", flex:1 }}>
         {levels.map(lv => (<div key={lv} onClick={() => setLevel(lv)} style={{ padding:"6px 14px", borderRadius:20, fontSize:11, fontWeight: level===lv ? 600 : 400, cursor:"pointer", background: level===lv ? C.seafoam : "transparent", color: level===lv ? C.white : C.mid, border: level===lv ? "none" : `1px solid ${C.lavBorder}`, transition:"all 0.3s" }}>{lv === "All" ? "See All" : lv}</div>))}

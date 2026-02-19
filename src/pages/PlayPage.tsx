@@ -41,13 +41,16 @@ function PlayPage() {
     <SH style={{ marginTop: 4 }}>Select Card</SH>
     <CardSel items={[{id:"2025",name:"NMJL 2025",sub:"Current year"},{id:"2024",name:"NMJL 2024",sub:"Last year"},{id:"big",name:"Big Card",sub:"Mahjong Line"}]} active={card} onSelect={setCard}/>
     <SH>Select Your Game Mat</SH>
-    <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-      {matsList.map(m => <div key={m.id} style={{ textAlign: "center" }}>
-        <div onClick={() => setMat(m.id)} style={{ width: 52, height: 52, borderRadius: 12, background: m.g, cursor: "pointer", border: mat===m.id?`2px solid ${C.cherry}`:"2px solid transparent", boxShadow: mat===m.id?"0 2px 10px rgba(224,48,80,0.15)":"none" }}/>
-        <div style={{ fontSize: 8, color: C.light, marginTop: 4, letterSpacing: .5 }}>{m.name}</div></div>)}
-    </div>
-    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-      <button style={{ padding: "12px 28px", border: "none", borderRadius: 14, fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600, letterSpacing: 2, color: C.white, cursor: "pointer", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, boxShadow: "0 4px 14px rgba(224,48,80,0.18)" }}>Start Game</button>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: 12, flex: 1 }}>
+        {matsList.map(m => <div key={m.id} style={{ textAlign: "center" }}>
+          <div onClick={() => setMat(m.id)} style={{ width: 52, height: 52, borderRadius: 12, background: m.g, cursor: "pointer", border: mat===m.id?`2px solid ${C.cherry}`:"2px solid transparent", boxShadow: mat===m.id?"0 2px 10px rgba(224,48,80,0.15)":"none" }}/>
+          <div style={{ fontSize: 8, color: C.light, marginTop: 4, letterSpacing: .5 }}>{m.name}</div></div>)}
+      </div>
+      <button style={{ padding: "12px 22px", border: "none", borderRadius: 14, fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600, letterSpacing: 1.5, color: C.white, cursor: "pointer", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, boxShadow: "0 4px 14px rgba(224,48,80,0.18)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        Start Game
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.cerulean} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+      </button>
     </div>
     <div style={{ background: mb.bg, borderRadius: 16, padding: 18, marginBottom: 10, position: "relative", minHeight: 300, border: "1px solid rgba(60,48,35,0.15)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.1)", transition: "all 0.5s ease" }}>
       <Rack dir="top" label="North"/>

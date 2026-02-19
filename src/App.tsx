@@ -11,7 +11,8 @@ import { C } from "./constants/colors";
 
 function SplashScreen({ onDone }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 1500);
+    // Animation is 1.6s. Start fading in content at 1.3s so they overlap.
+    const t = setTimeout(onDone, 1300);
     return () => clearTimeout(t);
   }, [onDone]);
 
@@ -45,7 +46,7 @@ export default function App() {
   const onSignIn = () => { setSignedIn(true); };
   const onCart = () => { /* future cart drawer */ };
 
-  const handleSplashDone = () => { setSplashDone(true); setTimeout(() => setShowSplash(false), 400); };
+  const handleSplashDone = () => { setSplashDone(true); setTimeout(() => setShowSplash(false), 800); };
 
   return (
     <div className="app-shell">
