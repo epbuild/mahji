@@ -51,7 +51,7 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
       <p style={{ fontSize: 13, color: C.mid, textAlign: "center", lineHeight: 1.6, marginBottom: 24 }}>Sign in to track your stats, save your streak, and pick up right where you left off.</p>
       <button onClick={onSignIn} style={{ width: "100%", padding: 14, border: "none", borderRadius: 14, fontFamily: "'Bodoni Moda',serif", fontSize: 16, fontWeight: 600, letterSpacing: 2, color: C.white, cursor: "pointer", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, boxShadow: "0 4px 14px rgba(224,48,80,0.18)", marginBottom: 12 }}>Sign In</button>
       <button style={{ width: "100%", padding: 14, border: `1px solid ${C.lavBorder}`, borderRadius: 14, fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 500, letterSpacing: 1.5, color: C.lavDeep, cursor: "pointer", background: C.white }}>Create Account</button>
-      <p style={{ fontSize: 11, color: C.lavText, textAlign: "center", marginTop: 16, fontStyle: "italic" }}>Free to play — always.</p>
+      <p style={{ fontSize: 11, color: C.lavText, textAlign: "center", marginTop: 16, fontStyle: "italic" }}>Your tiles are calling</p>
     </div>
   </>);
 
@@ -146,6 +146,20 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
       <Row icon={I.edit} label="Edit Profile" sub="Name, username, avatar, goals" onClick={() => setSub("edit")}/>
       <Row icon={I.settings} label="Preferences" sub="Notifications, sounds, defaults" onClick={() => setSub("prefs")}/>
       <Row icon={I.creditCard} label="Billing" sub="Free plan — no charges"/>
+      <SH>Invite Friends</SH>
+      <div style={{ background: C.white, border: `1px solid ${C.lavBorder}`, borderRadius: 14, padding: "16px 16px", marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: C.dark, marginBottom: 6 }}>Share Mahji with friends</div>
+        <p style={{ fontSize: 12, color: C.light, lineHeight: 1.5, marginBottom: 12 }}>Give friends 4 weeks free when they sign up with your code. You'll get 2 bonus weeks too!</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <div style={{ flex: 1, padding: "10px 14px", background: C.lavHint, border: `1px solid ${C.lavBorder}`, borderRadius: 10, fontFamily: "'Bodoni Moda',serif", fontSize: 16, fontWeight: 600, color: C.lavDeep, letterSpacing: 2, textAlign: "center" }}>MAHJI-ERIKA</div>
+          <div style={{ padding: "10px 16px", background: C.seafoam, color: C.white, borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Copy</div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button style={{ flex: 1, padding: "10px", border: `1px solid ${C.lavBorder}`, borderRadius: 10, fontSize: 12, fontWeight: 500, color: C.mid, background: C.white, cursor: "pointer" }}>Text a Friend</button>
+          <button style={{ flex: 1, padding: "10px", border: `1px solid ${C.lavBorder}`, borderRadius: 10, fontSize: 12, fontWeight: 500, color: C.mid, background: C.white, cursor: "pointer" }}>Share Link</button>
+        </div>
+      </div>
+
       <SH>Danger Zone</SH>
       <Row icon={I.trash} label="Delete All Data" sub="Wipe stats, progress, and preferences" danger/>
       <Row icon={I.logOut} label="Sign Out" danger onClick={onSignOut}/>

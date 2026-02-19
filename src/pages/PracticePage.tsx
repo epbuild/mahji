@@ -37,11 +37,31 @@ const drillsData = [
 
 const lt = { "First Timer": "b", Novice: "n", Beginner: "b", Intermediate: "i", Advanced: "a" };
 
+const levels = ["All", "Beginner", "Intermediate", "Advanced"];
+
 function PracticePage({ showChat, setShowChat }) {
   const [tab, setTab] = useState("Drills");
+  const [level, setLevel] = useState("All");
+  const filtered = level === "All" ? drillsData : drillsData.filter(d => d.lvls.includes(level));
   return (<><PT>Practice</PT><Cnt>
     <Tabs items={["Drills","Scenarios","Daily Challenge"]} active={tab} onSelect={setTab}/>
-    {tab==="Drills" && drillsData.map(d => <Card key={d.t} title={d.t} desc={d.d} tags={d.lvls.map(l=>({t:lt[l]||"b",l}))}/>)}
+    {tab==="Drills" && <>
+      <div style={{ display:"flex", gap:5, marginBottom:14, flexWrap:"wrap" }}>
+        {levels.map(lv => (
+          <div key={lv} onClick={() => setLevel(lv)} style={{
+            padding:"6px 14px", borderRadius:20, fontSize:11,
+            fontWeight: level===lv ? 600 : 400, cursor:"pointer",
+            background: level===lv ? C.seafoam : "transparent",
+            color: level===lv ? C.white : C.mid,
+            border: level===lv ? "none" : `1px solid ${C.lavBorder}`,
+            transition:"all 0.3s"
+          }}>{lv === "All" ? "See All" : lv}</div>
+        ))}
+      </div>
+      <SH>Drills</SH>
+      {filtered.map(d => <Card key={d.t} title={d.t} desc={d.d} tags={d.lvls.map(l=>({t:lt[l]||"b",l}))}/>)}
+      {filtered.length === 0 && <div style={{ textAlign: "center", padding: 30, color: C.light, fontSize: 12 }}>No drills at this level yet</div>}
+    </>}
     {tab!=="Drills" && <div style={{ textAlign: "center", padding: 30, color: C.light, fontSize: 12 }}>Coming soon</div>}
     {showChat && <BamOverlay onClose={() => setShowChat(false)} context="Practice"/>}
     {!showChat && <BamFloat onClick={() => setShowChat(true)}/>}

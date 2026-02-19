@@ -26,7 +26,18 @@ function PlayPage() {
     );
   };
   return (<><PT>Play</PT><Cnt>
-    <Tabs items={["Novice","Intermediate","Advanced"]} active={diff} onSelect={setDiff}/>
+    <div style={{ display:"flex", gap:5, marginBottom:14, flexWrap:"wrap" }}>
+      {["Novice","Intermediate","Advanced"].map(d => (
+        <div key={d} onClick={() => setDiff(d)} style={{
+          padding:"6px 14px", borderRadius:20, fontSize:11,
+          fontWeight: diff===d ? 600 : 400, cursor:"pointer",
+          background: diff===d ? C.seafoam : "transparent",
+          color: diff===d ? C.white : C.mid,
+          border: diff===d ? "none" : `1px solid ${C.lavBorder}`,
+          transition:"all 0.3s"
+        }}>{d}</div>
+      ))}
+    </div>
     <SH style={{ marginTop: 4 }}>Select Card</SH>
     <CardSel items={[{id:"2025",name:"NMJL 2025",sub:"Current year"},{id:"2024",name:"NMJL 2024",sub:"Last year"},{id:"big",name:"Big Card",sub:"Mahjong Line"}]} active={card} onSelect={setCard}/>
     <SH>Select Your Game Mat</SH>
@@ -34,6 +45,9 @@ function PlayPage() {
       {matsList.map(m => <div key={m.id} style={{ textAlign: "center" }}>
         <div onClick={() => setMat(m.id)} style={{ width: 52, height: 52, borderRadius: 12, background: m.g, cursor: "pointer", border: mat===m.id?`2px solid ${C.cherry}`:"2px solid transparent", boxShadow: mat===m.id?"0 2px 10px rgba(224,48,80,0.15)":"none" }}/>
         <div style={{ fontSize: 8, color: C.light, marginTop: 4, letterSpacing: .5 }}>{m.name}</div></div>)}
+    </div>
+    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+      <button style={{ padding: "12px 28px", border: "none", borderRadius: 14, fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600, letterSpacing: 2, color: C.white, cursor: "pointer", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, boxShadow: "0 4px 14px rgba(224,48,80,0.18)" }}>Start Game</button>
     </div>
     <div style={{ background: mb.bg, borderRadius: 16, padding: 18, marginBottom: 10, position: "relative", minHeight: 300, border: "1px solid rgba(60,48,35,0.15)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.1)", transition: "all 0.5s ease" }}>
       <Rack dir="top" label="North"/>
@@ -45,9 +59,6 @@ function PlayPage() {
     </div>
     <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
       {["Sort by Rank","Sort by Suit"].map(t => <div key={t} style={{ fontSize: 9.5, color: C.mid, padding: "5px 10px", background: C.white, borderRadius: 8, border: `1px solid ${C.lavBorder}`, cursor: "pointer" }}>{t}</div>)}
-    </div>
-    <div style={{ marginTop: 14 }}>
-      <button style={{ display: "block", width: "100%", padding: 14, border: "none", borderRadius: 14, fontFamily: "'Bodoni Moda',serif", fontSize: 16, fontWeight: 600, letterSpacing: 2, color: C.white, cursor: "pointer", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, boxShadow: "0 4px 14px rgba(224,48,80,0.18)" }}>Start Game</button>
     </div>
   </Cnt></>);
 }

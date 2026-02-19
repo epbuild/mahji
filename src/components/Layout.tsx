@@ -186,8 +186,8 @@ export const CardSel = ({ items, active, onSelect }) => (
 
 export const BamFloat = ({ onClick }) => (
   <div className="bam-float" onClick={onClick}>
-    <div style={{ width: 42, height: 42, borderRadius: "50%", background: `linear-gradient(135deg,${C.paleBlue},${C.paleBlueMid})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px rgba(142,199,226,0.25)", border: "2px solid rgba(255,255,255,0.7)" }}>
-      <BirdIcon size={20} color={C.cerulean} sw={2} />
+    <div style={{ width: 42, height: 42, borderRadius: "50%", background: C.seafoam, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(109,191,168,0.25)", border: "2.5px solid rgba(255,255,255,0.7)" }}>
+      <BirdIcon size={20} color={C.white} sw={1.8} />
     </div>
   </div>
 );

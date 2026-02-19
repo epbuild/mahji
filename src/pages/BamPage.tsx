@@ -14,7 +14,7 @@ function BamPage() {
   return (<><PT>Ask Bam Bird</PT>
     <div style={{ flex: 1, padding: "0 20px", display: "flex", flexDirection: "column", paddingBottom: 90 }}>
       <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ width: 34, height: 34, borderRadius: "50%", background: C.lavSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}><BirdIcon size={20} color={C.cherry} sw={1.8}/></div>
-        <p style={{ fontSize: 12, color: C.mid, fontStyle: "italic", margin: 0 }}>Your AI Mahj mentor. Ask anything.</p></div>
+        <p style={{ fontSize: 12, color: C.mid, fontStyle: "italic", margin: 0 }}>Your AI Mahj mentor. Ask away!</p></div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {msgs.map((m,i) => <div key={i} style={{ maxWidth: "80%", padding: "12px 14px", marginBottom: 8, fontSize: 13, lineHeight: 1.5, borderRadius: 14, ...(m.from==="bam"?{background:C.white,border:`1px solid ${C.lavBorder}`,color:C.dark,borderBottomLeftRadius:4,marginRight:"auto"}:{background:C.cherry,color:C.white,borderBottomRightRadius:4,marginLeft:"auto"}) }}>
           {m.from==="bam" && <strong style={{ fontSize: 11, color: C.lavDeep, display: "block", marginBottom: 2 }}>Bam Bird</strong>}{m.text}</div>)}

@@ -23,17 +23,33 @@ function HomePage({ onNav, signedIn = true }) {
       </div>
 
       <Cnt>
-        {/* Signed in: stats */}
-        {signedIn ? (
-          <div className="stats-row">
-            {[["12", "Games"], ["3", "Wins"], ["7d", "Streak"]].map(([n, l]) => (
-              <div key={l} style={{ flex: 1, background: C.lavCard, border: `1px solid ${C.lavBorder}`, borderRadius: 14, padding: "14px 10px", textAlign: "center" }}>
-                <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 24, fontWeight: 600, color: C.lavDeep, lineHeight: 1 }}>{n}</div>
-                <div style={{ fontSize: 10, color: C.lavText, textTransform: "uppercase", letterSpacing: 1.5, marginTop: 4, fontWeight: 500 }}>{l}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
+        {/* Signed in: smart stats */}
+        {signedIn ? (() => {
+          const games = 0; // Change to test: 0 = new user, 12 = active user
+          const wins = 0;
+          const streak = 0;
+          const isNew = games === 0;
+          const encouraging = isNew ? [
+            { n: "🀄", l: "Ready", sub: "Your first game awaits" },
+            { n: "📚", l: "Learn", sub: "Start with the basics" },
+            { n: "🔥", l: "Streak", sub: "Play daily to build one" },
+          ] : [
+            { n: String(games), l: "Games" },
+            { n: String(wins) || "—", l: "Wins" },
+            { n: streak ? streak + "d" : "—", l: "Streak" },
+          ];
+          return (
+            <div className="stats-row">
+              {encouraging.map(s => (
+                <div key={s.l} style={{ flex: 1, background: C.lavCard, border: `1px solid ${C.lavBorder}`, borderRadius: 14, padding: "14px 10px", textAlign: "center" }}>
+                  <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: isNew ? 18 : 24, fontWeight: 600, color: C.lavDeep, lineHeight: 1 }}>{s.n}</div>
+                  <div style={{ fontSize: 10, color: C.lavText, textTransform: "uppercase", letterSpacing: 1.5, marginTop: 4, fontWeight: 500 }}>{s.l}</div>
+                  {s.sub && <div style={{ fontSize: 8, color: C.light, marginTop: 2, fontStyle: "italic" }}>{s.sub}</div>}
+                </div>
+              ))}
+            </div>
+          );
+        })() : (
           /* New visitor: sign in / create account */
           <div style={{ textAlign: "center", marginBottom: 14 }}>
             <div style={{ display: "inline-flex", gap: 8 }}>

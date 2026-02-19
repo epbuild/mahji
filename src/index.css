@@ -89,6 +89,39 @@
 /* PLAY NOW BANNER */
 .play-now-banner { padding:16px 18px; }
 @media (min-width:768px) { .play-now-banner { padding:12px 18px; } }
+/* SPLASH SCREEN */
+.splash-overlay { position:fixed; inset:0; z-index:1000; pointer-events:none; }
+.splash-bg {
+  position:absolute; inset:0;
+  background:linear-gradient(160deg, #F3F0F7 0%, #EDEAF2 35%, #E8E3EF 65%, #E3DDEB 100%);
+  animation: splashBgFade 1.5s ease forwards;
+}
+.splash-tile {
+  position:absolute; top:50%; left:50%; z-index:1001;
+  animation: splashTile 1.5s cubic-bezier(0.4, 0, 0.15, 1) forwards;
+  will-change: transform, top, left;
+}
+@keyframes splashTile {
+  0%   { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotateY(0deg); }
+  35%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotateY(660deg); }
+  100% { top:12px; left:20px; transform:translate(0,0) scale(1) rotateY(900deg); }
+}
+@media (min-width:768px) {
+  .splash-tile {
+    animation: splashTileDesktop 1.5s cubic-bezier(0.4, 0, 0.15, 1) forwards;
+  }
+  @keyframes splashTileDesktop {
+    0%   { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotateY(0deg); }
+    35%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotateY(660deg); }
+    100% { top:10px; left:28px; transform:translate(0,0) scale(1) rotateY(900deg); }
+  }
+}
+@keyframes splashBgFade {
+  0%   { opacity:1; }
+  40%  { opacity:1; }
+  100% { opacity:0; }
+}
+
 .app-footer { text-align:center; margin-top:36px; padding-bottom:8px; }
 .app-footer-tagline { font-size:clamp(9px, 1.1vw, 11px); color:#9688AA; letter-spacing:1.5px; text-transform:uppercase; font-weight:500; margin-bottom:6px; }
 .app-footer-copyright { font-size:clamp(8px, 0.9vw, 10px); color:#9688AA; opacity:0.5; margin:0; }
@@ -99,7 +132,7 @@
 
 /* ANIMATIONS */
 @layer utilities {
-  @keyframes bfloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes bfloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
   .animate-bfloat { animation:bfloat 3s ease-in-out infinite; }
 }
 @supports (padding-bottom:env(safe-area-inset-bottom)) { .mobile-nav { padding-bottom:calc(env(safe-area-inset-bottom) + 8px); } }
