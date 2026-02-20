@@ -19,8 +19,8 @@
 .app-shell {
   width: 100%; height: 100vh; height: 100dvh;
   display: flex; flex-direction: column;
-  background: linear-gradient(180deg,#FFFFFF 0%,#FDFCFE 12%,#FAF8FC 28%,#F7F4FA 45%,#F4F0F7 60%,#F1ECF5 75%,#EEE8F2 90%,#ECE6F0 100%);
   overflow: hidden;
+  transition: background 0.4s ease;
 }
 .app-container { width:100%; height:100%; display:flex; flex-direction:column; position:relative; overflow:hidden; }
 
@@ -41,7 +41,7 @@
 @media (min-width:768px) { .mobile-header { display:none; } }
 
 /* MOBILE BOTTOM NAV — hidden on desktop */
-.mobile-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(255,255,255,0.96); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-top:1px solid rgba(200,190,215,0.12); padding:8px 6px calc(env(safe-area-inset-bottom,8px) + 8px); display:flex; justify-content:space-around; align-items:flex-end; z-index:50; }
+.mobile-nav { position:fixed; bottom:0; left:0; right:0; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); padding:8px 6px calc(env(safe-area-inset-bottom,8px) + 8px); display:flex; justify-content:space-around; align-items:flex-end; z-index:50; }
 @media (min-width:768px) { .mobile-nav { display:none; } }
 .mobile-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:5px 8px 3px; border-radius:10px; min-width:48px; transition:all 0.25s; }
 .mobile-nav-label { font-size:clamp(9px, 2.5vw, 11px); font-weight:500; letter-spacing:0.6px; }
@@ -82,9 +82,9 @@
 .bam-float { position:fixed; bottom:90px; right:16px; z-index:35; cursor:pointer; animation:bfloat 3s ease-in-out infinite; }
 @media (min-width:768px) { .bam-float { bottom:30px; right:30px; } }
 
-/* HOME CARDS — red accent on all sizes */
-.home-card { background:#FFFFFF; border:1px solid rgba(196,184,218,0.22); border-radius:16px; padding:18px 14px; cursor:pointer; overflow:hidden; transition:all 0.35s; border-top:2.5px solid #E03050; }
-.home-card-icon { width:28px; height:28px; border-radius:8px; background:rgba(224,48,80,0.04); display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:#E03050; }
+/* HOME CARDS — styles now controlled by FeatureCard component */
+.home-card { cursor:pointer; overflow:hidden; transition:all 0.35s; }
+.home-card-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
 
 /* PLAY NOW BANNER */
 .play-now-banner { padding:16px 18px; }

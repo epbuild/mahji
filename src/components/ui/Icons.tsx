@@ -30,19 +30,60 @@ export const I = {
   edit: <svg viewBox="0 0 24 24" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
 };
 
-export const DecoLine = () => (
-  <svg width="210" height="22" viewBox="0 0 210 22" fill="none" style={{ display: "block", margin: "0 auto 20px" }}>
-    <path d="M8 11 C22 11, 28 4, 48 4 C62 4, 66 11, 73 11" stroke={C.lavender} strokeWidth="0.7" strokeLinecap="round"/>
-    <path d="M8 11 C22 11, 28 18, 48 18 C62 18, 66 11, 73 11" stroke={C.lavender} strokeWidth="0.5" strokeLinecap="round" opacity="0.5"/>
-    <rect x="76" y="7.5" width="5" height="5" rx="0.8" transform="rotate(45 78.5 10)" stroke={C.lavMid} strokeWidth="0.7" fill="none"/>
-    <line x1="86" y1="10" x2="114" y2="10" stroke={C.cherry} strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="100" cy="10" r="2" fill={C.cherry}/>
-    <rect x="119" y="7.5" width="5" height="5" rx="0.8" transform="rotate(45 121.5 10)" stroke={C.lavMid} strokeWidth="0.7" fill="none"/>
-    <path d="M127 11 C134 11, 138 4, 152 4 C172 4, 180 11, 192 11" stroke={C.lavender} strokeWidth="0.7" strokeLinecap="round"/>
-    <path d="M127 11 C134 11, 138 18, 152 18 C172 18, 180 11, 192 11" stroke={C.lavender} strokeWidth="0.5" strokeLinecap="round" opacity="0.5"/>
-    <circle cx="6" cy="11" r="1" fill={C.lavender} opacity="0.4"/><circle cx="194" cy="11" r="1" fill={C.lavender} opacity="0.4"/>
-  </svg>
-);
+export const DecoLine = ({ t = null }) => {
+  // t = theme colors object. If null, use legacy C (light mode)
+  const swirl1 = t ? t.decoSwirl1 : C.lavender;
+  const swirl2 = t ? t.decoSwirl2 : C.lavender;
+  const diamond = t ? t.decoDiamond : C.lavMid;
+  const swirl3 = t ? t.decoSwirl3 : "";
+  const cherryC = C.cherry;
+  const isDark = t && t.decoSwirl3;
+  const sO = isDark ? 0.45 : 0.55;
+  const s2O = isDark ? 0.27 : 0.3;
+  const dO = isDark ? 0.5 : 0.55;
+  const cO = isDark ? 0.7 : 0.8;
+
+  return (
+    <svg width="210" height="26" viewBox="0 0 210 26" fill="none" style={{ display: "block", margin: "0 auto 8px" }}>
+      <path d="M8 13 C22 13, 28 6, 48 6 C62 6, 66 13, 73 13" stroke={swirl1} strokeWidth="0.8" strokeLinecap="round" opacity={sO}/>
+      <path d="M8 13 C22 13, 28 20, 48 20 C62 20, 66 13, 73 13" stroke={swirl2} strokeWidth="0.5" strokeLinecap="round" opacity={s2O}/>
+      {swirl3 && <path d="M18 13 C30 13, 36 9, 50 9 C60 9, 66 13, 73 13" stroke={swirl3} strokeWidth="0.4" strokeLinecap="round" opacity="0.25"/>}
+      <rect x="76" y="9.5" width="5" height="5" rx="0.8" transform="rotate(45 78.5 12)" stroke={diamond} strokeWidth="0.7" fill="none" opacity={dO}/>
+      <line x1="86" y1="12" x2="114" y2="12" stroke={cherryC} strokeWidth="1.5" strokeLinecap="round" opacity={cO}/>
+      <circle cx="100" cy="12" r="2" fill={cherryC} opacity={cO}/>
+      <rect x="119" y="9.5" width="5" height="5" rx="0.8" transform="rotate(45 121.5 12)" stroke={diamond} strokeWidth="0.7" fill="none" opacity={dO}/>
+      <path d="M127 13 C134 13, 138 6, 152 6 C172 6, 180 13, 192 13" stroke={swirl1} strokeWidth="0.8" strokeLinecap="round" opacity={sO}/>
+      <path d="M127 13 C134 13, 138 20, 152 20 C172 20, 180 13, 192 13" stroke={swirl2} strokeWidth="0.5" strokeLinecap="round" opacity={s2O}/>
+      {swirl3 && <path d="M127 13 C140 13, 144 9, 158 9 C168 9, 178 13, 190 13" stroke={swirl3} strokeWidth="0.4" strokeLinecap="round" opacity="0.25"/>}
+      <circle cx="6" cy="13" r="1.2" fill={swirl2} opacity={sO * 0.5}/>
+      <circle cx="194" cy="13" r="1.2" fill={swirl2} opacity={sO * 0.5}/>
+    </svg>
+  );
+};
+
+export const TileIconBold = ({ t = null }) => {
+  const s1 = t ? t.tileStroke1 : C.lavDeep;
+  const s2 = t ? t.tileStroke2 : C.cherry;
+  const s3 = t ? t.tileStroke3 : C.cerulean;
+  return (
+    <svg width="24" height="32" viewBox="0 0 26 34" fill="none">
+      <rect x="1" y="1" width="24" height="32" rx="4.5" stroke={s1} strokeWidth="1.6"/>
+      <rect x="5.5" y="6" width="15" height="22" rx="2.5" stroke={s2} strokeWidth="1.1" opacity="0.65"/>
+      <circle cx="13" cy="17" r="2.4" stroke={s3} strokeWidth="1.1" fill="none" opacity="0.7"/>
+    </svg>
+  );
+};
+
+export const FooterDeco = ({ t = null }) => {
+  const color = C.cherry;
+  const op = t ? t.footerDecoOp : 0.4;
+  return (
+    <svg width="40" height="6" viewBox="0 0 40 6" fill="none" style={{ display: "block", margin: "0 auto 8px" }}>
+      <line x1="2" y1="3" x2="38" y2="3" stroke={color} strokeWidth="1" strokeLinecap="round" opacity={op}/>
+      <circle cx="20" cy="3" r="1.5" fill={color} opacity={op}/>
+    </svg>
+  );
+};
 
 export const Logo = ({ onClick, showText = true }) => (
   <a onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none", cursor: "pointer" }}>

@@ -1,15 +1,31 @@
 import { useState } from 'react';
-import { C } from '../constants/colors';
-import { BirdIcon, I, Logo } from './ui/Icons';
+import { C, getThemeColors } from '../constants/colors';
+import { useTheme } from '../constants/ThemeContext';
+import { BirdIcon, I, Logo, TileIconBold, FooterDeco } from './ui/Icons';
 
-/* ═══ TILE ICON (for desktop header) ═══ */
-const TileIcon = ({ size = 14 }) => (
-  <svg width={size} height={size * 1.33} viewBox="0 0 26 34" fill="none">
-    <rect x="1" y="1" width="24" height="32" rx="4.5" stroke={C.lavDeep} strokeWidth="1.3" />
-    <rect x="5.5" y="6" width="15" height="22" rx="2.5" stroke={C.cherry} strokeWidth="1" opacity="0.6" />
-    <circle cx="13" cy="17" r="2.2" stroke={C.cerulean} strokeWidth="1" fill="none" />
-  </svg>
-);
+/* ═══ MODE TOGGLE ═══ */
+export const ModeToggle = () => {
+  const { isDark, toggle } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div onClick={toggle} style={{
+      width: 44, height: 22, borderRadius: 11, cursor: "pointer",
+      background: t.modeToggleBg, border: `1px solid ${t.modeToggleBorder}`,
+      position: "relative", transition: "all 0.3s", display: "flex", alignItems: "center", padding: "0 3px",
+    }}>
+      <div style={{
+        width: 16, height: 16, borderRadius: "50%",
+        transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+        transform: isDark ? "translateX(22px)" : "translateX(0px)",
+        background: t.modeToggleDot,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: t.modeToggleShadow,
+      }}>
+        <span style={{ fontSize: 8, lineHeight: 1 }}>{isDark ? "🌙" : "☀️"}</span>
+      </div>
+    </div>
+  );
+};
 
 /* ═══ SHOPPING BAG ICON ═══ */
 const BagIcon = ({ color = C.lavDeep, size = 15 }) => (
@@ -21,11 +37,15 @@ const BagIcon = ({ color = C.lavDeep, size = 15 }) => (
 );
 
 /* ═══ PROFILE AVATAR ═══ */
-const ProfileCircle = ({ size = 28, onClick }) => (
-  <div onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", background: C.lavHint, border: `1.5px solid ${C.lavender}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-    <div style={{ width: size * 0.4, height: size * 0.4, stroke: C.lavDeep, strokeWidth: 1.3, fill: "none", display: "flex" }}>{I.user}</div>
-  </div>
-);
+const ProfileCircle = ({ size = 28, onClick }) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", background: t.profileBg, border: `1.5px solid ${t.profileBorder}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+      <div style={{ width: size * 0.4, height: size * 0.4, stroke: t.lavDeep, strokeWidth: 1.3, fill: "none", display: "flex" }}>{I.user}</div>
+    </div>
+  );
+};
 
 /* ═══ DESKTOP TOP NAV (768px+) ═══ */
 export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, onCart }) => {
@@ -44,7 +64,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
       <div className="desktop-header">
         {/* Left: tile icon + MAHJI text on inner pages */}
         <div onClick={onHome} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-          <TileIcon size={18} />
+          <TileIconBold />
           {!isHome && (
             <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 12, fontWeight: 500, color: C.cherry, letterSpacing: 2, opacity: 0.8 }}>MAHJI</span>
           )}
@@ -71,8 +91,9 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
           })}
         </div>
 
-        {/* Right: bag + profile */}
+        {/* Right: toggle + bag + profile */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <ModeToggle />
           <div onClick={onCart} style={{ cursor: "pointer", position: "relative" }}>
             <BagIcon color={C.lavDeep} size={17} />
             {cartCount > 0 && (
@@ -92,6 +113,7 @@ export const MobileHeader = ({ onHome, onProfile, isHome, cartCount = 0, onCart,
   <div className="mobile-header">
     <Logo onClick={onHome} showText={!isHome} />
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <ModeToggle />
       {page === "shop" && (
         <div onClick={onCart} style={{ position: "relative", cursor: "pointer" }}>
           <div style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -105,33 +127,55 @@ export const MobileHeader = ({ onHome, onProfile, isHome, cartCount = 0, onCart,
   </div>
 );
 
+/* ═══ NAV ITEM WITH HOVER ═══ */
+const NavItemAnimated = ({ id, icon, label, isBird, active, onNav }) => {
+  const [h, setH] = useState(false);
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  const isActive = active === id;
+  const color = h ? t.navHoverColor : isActive ? t.lavDeep : t.navDimColor;
+
+  return (
+    <div className="mobile-nav-item" onClick={() => onNav(id)}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+        transform: h ? "translateY(-3px) scale(1.08)" : "translateY(0) scale(1)",
+      }}>
+      <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.25s" }}>
+        {isBird ? <BirdIcon size={22} color={color} sw={isActive ? 2.2 : 1.8} /> :
+          <div style={{ width: 20, height: 20, stroke: color, strokeWidth: isActive ? 1.6 : 1.3, fill: "none", display: "flex", transition: "all 0.25s" }}>{icon}</div>}
+      </div>
+      <span className="mobile-nav-label" style={{ color, fontWeight: isActive || h ? 600 : 500, transition: "all 0.25s" }}>{label}</span>
+    </div>
+  );
+};
+
 /* ═══ MOBILE BOTTOM NAV (under 768px) ═══ */
-export const MobileNav = ({ active, onNav }) => (
-  <div className="mobile-nav">
-    {[
-      { id: "learn", icon: I.book, label: "learn" },
-      { id: "practice", icon: I.clock, label: "practice" },
-      { id: "play", label: "play", isPlay: true },
-      { id: "shop", icon: I.bag, label: "shop" },
-      { id: "bam", label: "ask bam", isBird: true },
-    ].map(it => it.isPlay ? (
-      <div key="play" className="mobile-play-wrap" onClick={() => onNav("play")}>
-        <div style={{ width: 46, height: 46, borderRadius: "50%", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(224,48,80,0.2)", border: `3px solid ${C.white}` }}>
-          <div style={{ width: 16, height: 16, stroke: "white", strokeWidth: 2, fill: "none", marginLeft: 2, display: "flex" }}>{I.play}</div>
+export const MobileNav = ({ active, onNav }) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div className="mobile-nav" style={{ background: t.navBg, borderTop: `1px solid ${t.navBorder}` }}>
+      {[
+        { id: "learn", icon: I.book, label: "learn" },
+        { id: "practice", icon: I.clock, label: "practice" },
+        { id: "play", label: "play", isPlay: true },
+        { id: "shop", icon: I.bag, label: "shop" },
+        { id: "bam", label: "ask bam", isBird: true },
+      ].map(it => it.isPlay ? (
+        <div key="play" className="mobile-play-wrap" onClick={() => onNav("play")}>
+          <div style={{ width: 46, height: 46, borderRadius: "50%", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(224,48,80,0.2)", border: `3px solid ${t.navPlayBorder}` }}>
+            <div style={{ width: 16, height: 16, stroke: "white", strokeWidth: 2, fill: "none", marginLeft: 2, display: "flex" }}>{I.play}</div>
+          </div>
+          <span className="mobile-nav-label" style={{ color: C.cherry, fontWeight: 600, marginTop: 4 }}>play</span>
         </div>
-        <span className="mobile-nav-label" style={{ color: C.cherry, fontWeight: 600, marginTop: 4 }}>play</span>
-      </div>
-    ) : (
-      <div key={it.id} className="mobile-nav-item" onClick={() => onNav(it.id)}>
-        <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {it.isBird ? <BirdIcon size={22} color={active === it.id ? C.lavDeep : C.lavText} sw={active === it.id ? 2.2 : 1.8} /> :
-            <div style={{ width: 20, height: 20, stroke: active === it.id ? C.lavDeep : C.lavText, strokeWidth: active === it.id ? 1.6 : 1.3, fill: "none", display: "flex" }}>{it.icon}</div>}
-        </div>
-        <span className="mobile-nav-label" style={{ color: active === it.id ? C.lavDeep : C.lavText, fontWeight: active === it.id ? 600 : 500 }}>{it.label}</span>
-      </div>
-    ))}
-  </div>
-);
+      ) : (
+        <NavItemAnimated key={it.id} {...it} active={active} onNav={onNav} />
+      ))}
+    </div>
+  );
+};
 
 /* ═══ SHARED COMPONENTS ═══ */
 
@@ -194,7 +238,7 @@ export const BamFloat = ({ onClick }) => (
 
 export const Footer = () => (
   <div className="app-footer">
-    <p className="app-footer-tagline">Master American Mahjong</p>
+    <FooterDeco />
     <p className="app-footer-copyright">© Mahji LLC</p>
   </div>
 );
