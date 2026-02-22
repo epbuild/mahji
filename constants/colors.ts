@@ -46,6 +46,15 @@ const light = {
   profileBg: "#F5F2F9",
   profileBorder: "#C0B2D4",
   hoverShadow: "0 6px 18px rgba(126,100,164,0.1)",
+  btnBg: "#FFFFFF",
+  btnBorder: "rgba(196,184,218,0.22)",
+  cardSheen: "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 50%)",
+  cardInnerBorder: "rgba(196,184,218,0.12)",
+  lacquerReflection: "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 50%)",
+  mobileNavBg: "rgba(255,255,255,0.96)",
+  mobileNavColor: "rgba(124,96,162,0.5)",
+  mobileNavActiveColor: "#7C60A2",
+  mobileNavHoverBg: "rgba(126,100,164,0.06)",
   decoSwirl1: "#C0B2D4",
   decoSwirl2: "#C0B2D4",
   decoDiamond: "#A898BE",
@@ -99,6 +108,15 @@ const dark: typeof light = {
   profileBg: "rgba(155,136,187,0.08)",
   profileBorder: "rgba(192,178,212,0.15)",
   hoverShadow: "0 6px 18px rgba(142,199,226,0.08)",
+  btnBg: "rgba(255,255,255,0.055)",
+  btnBorder: "rgba(192,178,212,0.14)",
+  cardSheen: "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%)",
+  cardInnerBorder: "rgba(192,178,212,0.08)",
+  lacquerReflection: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 50%)",
+  mobileNavBg: "rgba(22,16,42,0.96)",
+  mobileNavColor: "rgba(168,216,238,0.4)",
+  mobileNavActiveColor: "#A8D8EE",
+  mobileNavHoverBg: "rgba(168,216,238,0.06)",
   decoSwirl1: "#85D4BC",
   decoSwirl2: "#D4C8E8",
   decoDiamond: "#A8D8EE",
@@ -110,6 +128,10 @@ const dark: typeof light = {
 };
 
 export const getThemeColors = (isDark: boolean) => isDark ? dark : light;
+
+// Font constants
+export const FONT_SERIF = "'Bodoni Moda', serif";
+export const FONT_SANS = "'Outfit', sans-serif";
 
 // C is still exported for backward compat — defaults to light
 export const C = light;
