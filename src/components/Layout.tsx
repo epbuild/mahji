@@ -171,13 +171,13 @@ export const Card = ({ title, desc, tags = [], num, onClick }) => {
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
   return (
-    <div onClick={onClick} style={{ background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 16, padding: "16px 18px 16px 20px", marginBottom: 10, cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden", transition: "all 0.35s", boxShadow: t.cardInnerBorder }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 20px rgba(142,199,226,0.18)`; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = t.cardInnerBorder; }}>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: t.cardSheen, pointerEvents: "none", borderRadius: 16 }} />
+    <div onClick={onClick} style={{ background: t.btnBg, border: `0.5px solid ${t.btnBorder}`, borderRadius: 16, padding: "16px 18px 16px 20px", marginBottom: 10, cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden", transition: "all 0.35s", boxShadow: t.cardShadow || t.cardInnerBorder, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = isDark ? "0 6px 20px rgba(142,199,226,0.1), inset 0 0.5px 0 rgba(255,255,255,0.04)" : "0 6px 24px rgba(126,100,164,0.08), inset 0 1px 0 rgba(255,255,255,0.8)"; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = t.cardShadow || t.cardInnerBorder; }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: t.cardGloss || t.cardSheen, pointerEvents: "none", borderRadius: 16 }} />
       <div style={{ position: "absolute", left: 0, top: 12, bottom: 12, width: 1, background: C.cherry, borderRadius: "0 1px 1px 0" }} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        {num != null && <div style={{ width: 24, height: 24, borderRadius: "50%", background: C.cherry, color: C.white, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{num}</div>}
+        {num != null && <div style={{ width: 24, height: 24, borderRadius: "50%", background: C.cherry, color: C.white, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(224,48,80,0.2), inset 0 1px 0 rgba(255,255,255,0.15)" }}>{num}</div>}
         <div style={{ flex: 1 }}>
           <div className="card-title" style={{ color: t.textMain }}>{title}</div>
           {desc && <div className="card-desc" style={{ color: t.textDim, marginTop: 3 }}>{desc}</div>}
@@ -206,8 +206,8 @@ export const CardSel = ({ items, active, onSelect }) => {
   const t = getThemeColors(isDark);
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-      {items.map(it => <div key={it.id} onClick={() => onSelect(it.id)} style={{ flex: 1, textAlign: "center", padding: "12px 6px", background: t.btnBg, border: `${active === it.id ? "1.5px" : "1px"} solid ${active === it.id ? t.seafoam : t.btnBorder}`, borderRadius: 14, cursor: "pointer", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: t.cardSheen, pointerEvents: "none" }} />
+      {items.map(it => <div key={it.id} onClick={() => onSelect(it.id)} style={{ flex: 1, textAlign: "center", padding: "12px 6px", background: t.btnBg, border: `${active === it.id ? "1.5px" : "0.5px"} solid ${active === it.id ? t.seafoam : t.btnBorder}`, borderRadius: 14, cursor: "pointer", position: "relative", overflow: "hidden", boxShadow: t.cardShadow || "none", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: t.cardGloss || t.cardSheen, pointerEvents: "none" }} />
         <h4 style={{ fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 500, color: active === it.id ? (isDark ? "#85D4BC" : "#4A9E88") : t.textMain, marginBottom: 1, position: "relative" }}>{it.name}</h4>
         <p style={{ fontFamily: FONT_SANS, fontSize: 9, color: t.textDim, margin: 0, position: "relative" }}>{it.sub}</p>
       </div>)}

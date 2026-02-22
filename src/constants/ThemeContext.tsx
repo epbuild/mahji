@@ -19,7 +19,7 @@ export const useTheme = () => useContext(ThemeContext);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
-      return (localStorage.getItem('mahji-theme') as Theme) || 'dark';
+      return (localStorage.getItem('mahji-theme-v2') as Theme) || 'dark';
     } catch {
       return 'dark';
     }
@@ -30,7 +30,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggle = () => {
     setTheme(prev => {
       const next = prev === 'light' ? 'dark' : 'light';
-      try { localStorage.setItem('mahji-theme', next); } catch {}
+      try { localStorage.setItem('mahji-theme-v2', next); } catch {}
       return next;
     });
   };
