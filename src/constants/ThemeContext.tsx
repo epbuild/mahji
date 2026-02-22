@@ -9,8 +9,8 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'light',
-  isDark: false,
+  theme: 'dark',
+  isDark: true,
   toggle: () => {},
 });
 
@@ -19,9 +19,9 @@ export const useTheme = () => useContext(ThemeContext);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
-      return (localStorage.getItem('mahji-theme') as Theme) || 'light';
+      return (localStorage.getItem('mahji-theme') as Theme) || 'dark';
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
 

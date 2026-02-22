@@ -83,20 +83,20 @@ function ShopPage({ cart, setCart }) {
     const inCart = cart.some(c => c.item === item.name);
     const isSet = item.name.includes("Mahji Set");
     return (
-      <div style={{ background: C.white, border: `1px solid ${C.lavBorder}`, borderRadius: 16, overflow: "hidden", marginBottom: 10, transition: "all 0.35s" }}
-        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(142,199,226,0.18)";}}
+      <div style={{ background: isDark ? t.btnBg : C.white, border: `1px solid ${isDark ? t.btnBorder : C.lavBorder}`, borderRadius: 16, overflow: "hidden", marginBottom: 10, transition: "all 0.35s" }}
+        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=isDark ? cat.darkGlow : "0 6px 20px rgba(142,199,226,0.18)";}}
         onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
         <div style={{ minHeight: isSet?"auto":80, background: cat.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {isSet ? <TileSetDetail/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, color:C.cherry, fontWeight:500, opacity:.3 }}>[ preview ]</div>}
+          {isSet ? <TileSetDetail/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, color:isDark?"rgba(255,255,255,0.1)":C.cherry, fontWeight:500, opacity:isDark?1:.3 }}>[ preview ]</div>}
         </div>
         <div style={{ padding:"12px 16px", display:"flex", alignItems:"center" }}>
-          <div style={{ flex:1 }}><h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:500, color:C.dark }}>{item.name}</h3></div>
-          <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:500, color:C.lavDeep, textAlign:"center", flex:1 }}>${item.price}</span>
+          <div style={{ flex:1 }}><h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:500, color:t.textMain }}>{item.name}</h3></div>
+          <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:500, color:isDark ? "#A8D8EE" : C.lavDeep, textAlign:"center", flex:1 }}>${item.price}</span>
           <div style={{ flex:1, display:"flex", justifyContent:"flex-end" }}>
             <div onClick={(e) => {e.stopPropagation(); !inCart && addToCart(item.name, item.price);}}
               style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"6px 16px", borderRadius:20,
-                background: inCart ? C.cherry : "transparent", color: inCart ? "#fff" : C.cherry,
-                border: `1.5px solid ${C.cherry}`,
+                background: inCart ? C.cherry : "transparent", color: inCart ? "#fff" : isDark ? "#A8D8EE" : C.cherry,
+                border: `1.5px solid ${inCart ? C.cherry : isDark ? "rgba(168,216,238,0.3)" : C.cherry}`,
                 fontSize:10, fontWeight:400, letterSpacing:.3, cursor: inCart?"default":"pointer", transition:"all 0.3s", whiteSpace:"nowrap" }}>
               {inCart ? <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>Added</> : "Add to Bag"}
             </div>
@@ -110,26 +110,26 @@ function ShopPage({ cart, setCart }) {
     const total = cart.reduce((s,c) => s+c.price, 0);
     return (<>
       <div style={{ padding:"8px 22px 0", display:"flex", alignItems:"center", gap:8 }}>
-        <div onClick={() => setShowCart(false)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
+        <div onClick={() => setShowCart(false)} style={{ fontSize:12, color:isDark ? "#A8D8EE" : C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#A8D8EE" : C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
       </div>
       <PT>Your Bag</PT>
       <Cnt>
         {cart.length===0 ? <div style={{ textAlign:"center", padding:"40px 20px" }}>
-          <div style={{ fontSize:12, color:C.light, marginBottom:8 }}>Your bag is empty</div>
+          <div style={{ fontSize:12, color:t.textDim, marginBottom:8 }}>Your bag is empty</div>
           <div onClick={() => setShowCart(false)} style={{ display:"inline-block", fontSize:11, fontWeight:600, color:C.cherry, cursor:"pointer", borderBottom:`1px solid ${C.cherry}`, paddingBottom:1 }}>Continue shopping</div>
         </div> : <>
           {cart.map((c,i) => (
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 0", borderBottom:`1px solid ${C.lavBorder}` }}>
-              <div style={{ fontSize:13, fontWeight:500, color:C.dark }}>{c.item}</div>
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 0", borderBottom:`1px solid ${isDark ? t.btnBorder : C.lavBorder}` }}>
+              <div style={{ fontSize:13, fontWeight:500, color:t.textMain }}>{c.item}</div>
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                 <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:14, fontWeight:600, color:C.seafoam }}>${c.price}</span>
                 <div onClick={() => removeFromCart(i)} style={{ fontSize:10, color:C.cherry, cursor:"pointer", fontWeight:500 }}>Remove</div>
               </div>
             </div>
           ))}
-          <div style={{ display:"flex", justifyContent:"space-between", padding:"14px 0 6px", borderTop:`1.5px solid ${C.dark}`, marginTop:8 }}>
-            <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, fontWeight:600, color:C.dark }}>Total</span>
+          <div style={{ display:"flex", justifyContent:"space-between", padding:"14px 0 6px", borderTop:`1.5px solid ${isDark ? t.btnBorder : C.dark}`, marginTop:8 }}>
+            <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:15, fontWeight:600, color:t.textMain }}>Total</span>
             <span style={{ fontFamily:"'Bodoni Moda',serif", fontSize:17, fontWeight:700, color:C.seafoam }}>${total}</span>
           </div>
           <div style={{ background:C.cherry, color:"#fff", textAlign:"center", padding:"13px 20px", borderRadius:24, fontSize:13, fontWeight:600, letterSpacing:1, cursor:"pointer", marginTop:12 }}>Checkout</div>
@@ -142,8 +142,8 @@ function ShopPage({ cart, setCart }) {
     const cat = cats.find(c => c.id === open);
     return (<>
       <div style={{ padding:"8px 22px 0", display:"flex", alignItems:"center", gap:8 }}>
-        <div onClick={() => setOpen(null)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
+        <div onClick={() => setOpen(null)} style={{ fontSize:12, color:isDark ? "#A8D8EE" : C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#A8D8EE" : C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>Shop</div>
       </div>
       <PT>{cat.title}</PT>
       <Cnt>{cat.items.map(item => <ItemCard key={item.name} item={item} cat={cat}/>)}</Cnt>
