@@ -89,38 +89,64 @@
 /* PLAY NOW BANNER */
 .play-now-banner { padding:16px 18px; }
 @media (min-width:768px) { .play-now-banner { padding:12px 18px; } }
-/* SPLASH SCREEN */
-.splash-overlay { position:fixed; inset:0; z-index:1000; pointer-events:none; }
+/* SPLASH / INTRO SCREEN */
+.splash-overlay { position:fixed; inset:0; z-index:1000; pointer-events:auto; }
 .splash-bg {
   position:absolute; inset:0;
-  background:linear-gradient(160deg, #F3F0F7 0%, #EDEAF2 35%, #E8E3EF 65%, #E3DDEB 100%);
-  animation: splashBgFade 1.6s ease forwards;
+  background:linear-gradient(160deg, #1E1432 0%, #1A1028 50%, #16102A 100%);
+  animation: splashBgFade 3.4s ease forwards;
+}
+.splash-skip {
+  position:absolute; top:16px; right:20px; z-index:1003;
+  background:none; border:none; color:rgba(255,255,255,0.3);
+  font-family:'Outfit',sans-serif; font-size:11px; letter-spacing:2px;
+  cursor:pointer; text-transform:uppercase;
+}
+.splash-text {
+  position:absolute; top:50%; left:50%; z-index:1001;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  animation: splashTextAnim 3.4s cubic-bezier(0.4,0,0.2,1) forwards;
 }
 .splash-tile {
-  position:absolute; top:50%; left:50%; z-index:1001;
-  animation: splashTile 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  position:absolute; top:50%; left:50%; z-index:1002;
+  animation: splashTileAnim 3.4s cubic-bezier(0.4,0,0.2,1) forwards;
   will-change: transform, top, left, opacity;
 }
-@keyframes splashTile {
-  0%   { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotateY(0deg); opacity:1; }
-  33%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotateY(660deg); opacity:1; }
-  85%  { top:12px; left:20px; transform:translate(0,0) scale(1.05) rotateY(880deg); opacity:1; }
-  100% { top:12px; left:20px; transform:translate(0,0) scale(1) rotateY(900deg); opacity:0; }
+
+/* Text: elegant fade+rise in, hold, then spin + shrink + fade */
+@keyframes splashTextAnim {
+  0%   { opacity:0; transform:translate(-50%,-50%) translateY(20px) scale(1) rotate(0deg); }
+  10%  { opacity:1; transform:translate(-50%,-50%) translateY(0px) scale(1) rotate(0deg); }
+  35%  { opacity:1; transform:translate(-50%,-50%) translateY(0px) scale(1) rotate(0deg); }
+  55%  { opacity:0; transform:translate(-50%,-50%) translateY(0px) scale(0.2) rotate(-360deg); }
+  100% { opacity:0; transform:translate(-50%,-50%) translateY(0px) scale(0) rotate(-360deg); }
 }
+
+/* Tile: appears from text spin, continues spin to corner */
+@keyframes splashTileAnim {
+  0%   { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotate(-360deg); opacity:0; }
+  48%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotate(-360deg); opacity:0; }
+  52%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotate(-360deg); opacity:1; }
+  66%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(3.5) rotate(-720deg); opacity:1; }
+  90%  { top:12px; left:20px; transform:translate(0,0) scale(1.05) rotate(-1060deg); opacity:1; }
+  100% { top:12px; left:20px; transform:translate(0,0) scale(1) rotate(-1080deg); opacity:0; }
+}
+
 @media (min-width:768px) {
-  .splash-tile {
-    animation: splashTileDesktop 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-  @keyframes splashTileDesktop {
-    0%   { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotateY(0deg); opacity:1; }
-    33%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotateY(660deg); opacity:1; }
-    85%  { top:10px; left:28px; transform:translate(0,0) scale(1.05) rotateY(880deg); opacity:1; }
-    100% { top:10px; left:28px; transform:translate(0,0) scale(1) rotateY(900deg); opacity:0; }
+  @keyframes splashTileAnim {
+    0%   { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotate(-360deg); opacity:0; }
+    48%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotate(-360deg); opacity:0; }
+    52%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotate(-360deg); opacity:1; }
+    66%  { top:50%; left:50%; transform:translate(-50%,-50%) scale(4.5) rotate(-720deg); opacity:1; }
+    90%  { top:10px; left:28px; transform:translate(0,0) scale(1.05) rotate(-1060deg); opacity:1; }
+    100% { top:10px; left:28px; transform:translate(0,0) scale(1) rotate(-1080deg); opacity:0; }
   }
 }
+
 @keyframes splashBgFade {
   0%   { opacity:1; }
-  35%  { opacity:1; }
+  75%  { opacity:1; }
   100% { opacity:0; }
 }
 

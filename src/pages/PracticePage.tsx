@@ -28,16 +28,16 @@ const BamOverlay = ({ onClose, context }) => {
 };
 
 const drillsData = [
-  { t: "Learn the Hands", d: "Match tiles to NMJL card patterns", lvls: ["Beginner"] },
-  { t: "How to Deal", d: "Roll dice, break the wall, deal correctly", lvls: ["Beginner"] },
-  { t: "Practicing the Charleston", d: "Master R-O-L-★-L-O-R and blind passes", lvls: ["Beginner","Intermediate","Advanced"] },
+  { t: "Learn the Hands", d: "Match tiles to NMJL card patterns", lvls: ["Novice"] },
+  { t: "How to Deal", d: "Roll dice, break the wall, deal correctly", lvls: ["Novice"] },
+  { t: "Practicing the Charleston", d: "Master R-O-L-★-L-O-R and blind passes", lvls: ["Novice","Intermediate","Advanced"] },
   { t: "Reading Exposures", d: "Narrow down opponent hands from melds", lvls: ["Intermediate","Advanced"] },
   { t: "Playing Defense", d: "Choose the safest discard, stop feeding", lvls: ["Advanced"] },
 ];
 
 const lt = { "First Timer": "b", Novice: "n", Beginner: "b", Intermediate: "i", Advanced: "a" };
 
-const levels = ["All", "Beginner", "Intermediate", "Advanced"];
+const levels = ["All", "Novice", "Intermediate", "Advanced"];
 
 function PracticePage({ showChat, setShowChat }) {
   const [level, setLevel] = useState("All");

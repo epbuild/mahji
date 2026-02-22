@@ -12,16 +12,21 @@ import { ThemeProvider, useTheme } from "./constants/ThemeContext";
 
 function SplashScreen({ onDone }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 1300);
+    const t = setTimeout(onDone, 3400);
     return () => clearTimeout(t);
   }, [onDone]);
 
   return (
     <div className="splash-overlay">
       <div className="splash-bg" />
+      <button className="splash-skip" onClick={onDone}>Skip</button>
+      <div className="splash-text">
+        <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:13, fontWeight:400, letterSpacing:6, color:"#A8D8EE", textTransform:"uppercase", marginBottom:10, opacity:0.55 }}>Let's Play</div>
+        <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:52, fontWeight:700, color:"#FFFFFF", letterSpacing:10 }}>MAHJI</div>
+      </div>
       <div className="splash-tile">
         <svg width="20" height="27" viewBox="0 0 26 34" fill="none">
-          <rect x="1" y="1" width="24" height="32" rx="4.5" stroke={C.lavDeep} strokeWidth="1.3"/>
+          <rect x="1" y="1" width="24" height="32" rx="4.5" stroke="rgba(212,200,232,0.6)" strokeWidth="1.3"/>
           <rect x="5.5" y="6" width="15" height="22" rx="2.5" stroke={C.cherry} strokeWidth="1" opacity="0.6"/>
           <circle cx="13" cy="17" r="2.2" stroke={C.cerulean} strokeWidth="1" fill="none"/>
         </svg>

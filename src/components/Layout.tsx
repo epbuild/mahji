@@ -3,18 +3,23 @@ import { C, getThemeColors, FONT_SERIF, FONT_SANS } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { BirdIcon, I, Logo, TileIconBold, FooterDeco, SunIcon, MoonIcon } from './ui/Icons';
 
-/* ═══ SUN/MOON THEME TOGGLE (A2) ═══ */
+/* ═══ SUN/MOON THEME TOGGLE ═══ */
 export const ModeToggle = () => {
   const { isDark, toggle } = useTheme();
   return (
-    <div onClick={toggle} role="button" tabIndex={0}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onKeyDown={e => e.key === 'Enter' && toggle()}
-      style={{ width: 32, height: 32, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", background: "transparent" }}>
-      <div className="theme-toggle-icon" style={{ transform: isDark ? "rotate(20deg)" : "rotate(0deg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {isDark ? <MoonIcon size={17} color="#D4C8E8" /> : <SunIcon size={17} color="#B08D3A" />}
-      </div>
-    </div>
+    <button onClick={toggle} aria-label="Toggle theme" style={{
+      background: isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)",
+      border: `1px solid ${isDark ? "rgba(168,216,238,0.12)" : "rgba(126,100,164,0.1)"}`,
+      borderRadius: 20, cursor: "pointer", padding: "4px 6px",
+      display: "flex", alignItems: "center", gap: 4, height: 28, transition: "all 0.35s",
+    }}>
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%",
+        background: !isDark ? "rgba(126,100,164,0.12)" : "transparent",
+        color: !isDark ? "#7E64A4" : "rgba(255,255,255,0.25)", transition: "all 0.35s" }}><SunIcon size={13} color="currentColor" /></span>
+      <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%",
+        background: isDark ? "rgba(168,216,238,0.15)" : "transparent",
+        color: isDark ? "#A8D8EE" : "rgba(126,100,164,0.3)", transition: "all 0.35s" }}><MoonIcon size={13} color="currentColor" /></span>
+    </button>
   );
 };
 

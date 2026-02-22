@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { C } from '../constants/colors';
+import { C, getThemeColors } from '../constants/colors';
+import { useTheme } from '../constants/ThemeContext';
 import { PT, Cnt } from '../components/Layout';
 import { MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker, MiniTileBack, DOT_COLORS, DOT_LAYOUTS, BAM_COLS, BAM_DARK, CHINESE_N, WIND_CFG, SOAP_COLORS, F_COLS as FC, STAR_COLS as STCOL } from '../components/TileComponents';
 
 function ShopPage({ cart, setCart }) {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   const [open, setOpen] = useState(null);
   const [showCart, setShowCart] = useState(false);
   const addToCart = (item, price) => { setCart(prev => [...prev, { item, price }]); };
   const removeFromCart = (idx) => { setCart(prev => prev.filter((_,i) => i !== idx)); };
 
   const cats = [
-    { id: "cards", title: "Game Cards", sub: "Official NMJL playing cards", bg: "linear-gradient(135deg,#FDF8F4,#F8F0E8)", items: [{name:"NMJL Card",price:15}] },
-    { id: "tiles", title: "Tiles", sub: "The Mahji Set", bg: "linear-gradient(135deg,#F3EFF8,#ECE7F3)", items: [{name:"The Mahji Set",price:200}] },
-    { id: "table", title: "Table Accessories", sub: "Mats, racks, shufflers & more", bg: "linear-gradient(135deg,#F0F8F5,#E0F0EB)", items: [{name:"Mats",price:45},{name:"Racks",price:35},{name:"Shufflers",price:60},{name:"Card Holders",price:25},{name:"Tile Bags",price:30},{name:"Totes",price:55}] },
-    { id: "salon", title: "The Salon", sub: "Lifestyle treats for the modern mahj enthusiast", bg: "linear-gradient(135deg,#FAF4F5,#F5ECED)", items: [{name:"Linen Napkins",price:40},{name:"Pillows",price:85},{name:"Frosted Cups",price:28},{name:"Needlepoint Pillows",price:120},{name:"Trucker Hats",price:35},{name:"Silk Scarf",price:65},{name:"Silk Pajamas",price:150},{name:"Cashmere Eye Mask",price:75},{name:"Stationery",price:30}] },
+    { id: "cards", title: "Game Cards", sub: "Official NMJL playing cards", bg: isDark ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg,#FDF8F4,#F8F0E8)", darkGlow: "0 8px 28px rgba(253,248,244,0.06), 0 0 0 1px rgba(248,240,232,0.08)", items: [{name:"NMJL Card",price:15}] },
+    { id: "tiles", title: "Tiles", sub: "The Mahji Set", bg: isDark ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg,#F3EFF8,#ECE7F3)", darkGlow: "0 8px 28px rgba(192,178,212,0.06), 0 0 0 1px rgba(192,178,212,0.08)", items: [{name:"The Mahji Set",price:200}] },
+    { id: "table", title: "Table Accessories", sub: "Mats, racks, shufflers & more", bg: isDark ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg,#F0F8F5,#E0F0EB)", darkGlow: "0 8px 28px rgba(109,191,168,0.06), 0 0 0 1px rgba(109,191,168,0.08)", items: [{name:"Mats",price:45},{name:"Racks",price:35},{name:"Shufflers",price:60},{name:"Card Holders",price:25},{name:"Tile Bags",price:30},{name:"Totes",price:55}] },
+    { id: "salon", title: "The Salon", sub: "Lifestyle treats for the modern mahj enthusiast", bg: isDark ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg,#FAF4F5,#F5ECED)", darkGlow: "0 8px 28px rgba(224,48,80,0.05), 0 0 0 1px rgba(224,48,80,0.06)", items: [{name:"Linen Napkins",price:40},{name:"Pillows",price:85},{name:"Frosted Cups",price:28},{name:"Needlepoint Pillows",price:120},{name:"Trucker Hats",price:35},{name:"Silk Scarf",price:65},{name:"Silk Pajamas",price:150},{name:"Cashmere Eye Mask",price:75},{name:"Stationery",price:30}] },
   ];
 
   const FlipTile = ({ front, delay, cycle }) => (
@@ -148,17 +151,17 @@ function ShopPage({ cart, setCart }) {
   }
 
   return (<><PT>Shop</PT><Cnt>
-    <p style={{ fontSize:12.5, color:C.mid, marginBottom:14, fontStyle:"italic" }}>Curated essentials for the modern Mahj player.</p>
+    <p style={{ fontSize:12.5, color:t.textMid, marginBottom:14, fontStyle:"italic", background: `linear-gradient(90deg, #C0B2D4, ${C.cerulean}, #6DBFA8, ${C.cherry}, #C0B2D4)`, backgroundSize:"200% 100%", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", animation:"shimmer 3s ease-in-out infinite" }}>Curated essentials for the modern Mahj player.</p>
     {cats.map(cat => (
-      <div key={cat.id} onClick={() => setOpen(cat.id)} style={{ background:C.white, border:`1px solid ${C.lavBorder}`, borderRadius:16, overflow:"hidden", marginBottom:10, cursor:"pointer", transition:"all 0.35s" }}
-        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(142,199,226,0.18)";}}
+      <div key={cat.id} onClick={() => setOpen(cat.id)} style={{ background: isDark ? t.btnBg : C.white, border:`1px solid ${isDark ? t.btnBorder : C.lavBorder}`, borderRadius:16, overflow:"hidden", marginBottom:10, cursor:"pointer", transition:"all 0.35s" }}
+        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=isDark ? cat.darkGlow : "0 6px 20px rgba(142,199,226,0.18)";}}
         onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
         <div style={{ height:cat.id==="tiles"?"auto":120, minHeight:cat.id==="tiles"?80:120, background:cat.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          {cat.id==="tiles" ? <TilesPreview/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:18, color:C.cherry, fontWeight:500, opacity:.35 }}>[ preview ]</div>}
+          {cat.id==="tiles" ? <TilesPreview/> : <div style={{ fontFamily:"'Bodoni Moda',serif", fontSize:18, color:isDark?"rgba(255,255,255,0.1)":C.cherry, fontWeight:500, opacity:isDark?1:.35 }}>[ preview ]</div>}
         </div>
         <div style={{ padding:"12px 16px" }}>
-          <h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:16, fontWeight:500, color:C.dark, marginBottom:2 }}>{cat.title}</h3>
-          <p style={{ fontSize:11, color:C.light, margin:0 }}>{cat.sub}</p></div>
+          <h3 style={{ fontFamily:"'Bodoni Moda',serif", fontSize:16, fontWeight:500, color:t.textMain, marginBottom:2 }}>{cat.title}</h3>
+          <p style={{ fontSize:11, color:t.textDim, margin:0 }}>{cat.sub}</p></div>
       </div>
     ))}
   </Cnt></>);
