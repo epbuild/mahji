@@ -91,3 +91,19 @@ export const Logo = ({ onClick, showText = true }) => (
     {showText && <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 12, fontWeight: 400, color: C.cherry, letterSpacing: 2.5 }}>MAHJI</span>}
   </a>
 );
+
+export const SunIcon = ({ size = 13, color = "currentColor" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round">
+    <circle cx="12" cy="12" r="4.5" />
+    {[0,45,90,135,180,225,270,315].map(a => {
+      const r = a * Math.PI / 180;
+      return <line key={a} x1={12 + 7.5 * Math.cos(r)} y1={12 + 7.5 * Math.sin(r)} x2={12 + 9.5 * Math.cos(r)} y2={12 + 9.5 * Math.sin(r)} />;
+    })}
+  </svg>
+);
+
+export const MoonIcon = ({ size = 13, color = "currentColor" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
