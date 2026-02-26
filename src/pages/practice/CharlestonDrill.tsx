@@ -6,7 +6,7 @@
 // shuffleDeck(), and MahjiTile. Zero duplicate tile art.
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MahjiTile } from "../../components/tiles/MahjiTile";
 import { GameTile, getFullDeck, shuffleDeck } from "../../data/tileData";
 import { C, getThemeColors } from "../../constants/colors";
@@ -192,6 +192,33 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [receivedTileIds, setReceivedTileIds] = useState<Set<string>>(new Set());
   const [touchedTileIds, setTouchedTileIds] = useState<Set<string>>(new Set());
   const [levelLocked, setLevelLocked] = useState(false);
+
+  // ── Responsive tile scaling ──────────────────────────────────
+  // Measures the hand container and computes a CSS scale so all
+  // tiles always fit in a single row, shrinking as the window narrows.
+  const handRef = useRef<HTMLDivElement>(null);
+  const [tileScale, setTileScale] = useState(1);
+
+  // We track hand count separately so recalcScale can run on layout
+  const visibleHandCount = (players?.[0]?.hand || []).filter(t => !selectedIds.has(t.instanceId)).length;
+
+  const recalcScale = useCallback(() => {
+    if (!handRef.current) return;
+    const containerW = handRef.current.offsetWidth - 12; // minus padding
+    const tileCount = Math.max(visibleHandCount, 1);
+    const GAP = 3;
+    const BASE_TILE_W = 48; // MahjiTile "md" width approx
+    const totalNeeded = tileCount * BASE_TILE_W + (tileCount - 1) * GAP;
+    const scale = Math.min(1, containerW / totalNeeded);
+    setTileScale(Math.max(0.45, scale)); // never shrink below 45%
+  }, [visibleHandCount]);
+
+  useEffect(() => {
+    recalcScale();
+    const ro = new ResizeObserver(() => recalcScale());
+    if (handRef.current) ro.observe(handRef.current);
+    return () => ro.disconnect();
+  }, [recalcScale]);
 
   const dealGame = useCallback(() => {
     const deck = shuffleDeck(getFullDeck());
@@ -405,12 +432,14 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       )}
 
       {/* Hand */}
-      <div style={{ display: "flex", gap: 3, padding: "5px 6px 16px", flexWrap: "wrap", justifyContent: "center" }}>
+      <div ref={handRef} style={{ display: "flex", gap: 3 * tileScale, padding: "5px 6px 16px", flexWrap: "nowrap", justifyContent: "center", alignItems: "flex-end" }}>
         {visibleHand.map((tile, idx) => (
-          <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)}
-            disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
-            cherry={U.cherry} hasHalo={tileHasHalo(tile)} isDragOver={dragOverIdx === idx && dragIdx !== idx}
-            onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
+          <div key={tile.instanceId} style={{ transform: `scale(${tileScale})`, transformOrigin: "bottom center", transition: "transform 0.15s ease" }}>
+            <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)}
+              disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
+              cherry={U.cherry} hasHalo={tileHasHalo(tile)} isDragOver={dragOverIdx === idx && dragIdx !== idx}
+              onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
+          </div>
         ))}
         <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={e => handleDrop(e, visibleHand.length)} style={{ width: 8, flexShrink: 0 }} />
       </div>
