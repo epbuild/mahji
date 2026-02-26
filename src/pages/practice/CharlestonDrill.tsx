@@ -204,13 +204,14 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
   const recalcScale = useCallback(() => {
     if (!handRef.current) return;
-    const containerW = handRef.current.offsetWidth - 12; // minus padding
+    const containerW = handRef.current.offsetWidth - 16; // minus padding
     const tileCount = Math.max(visibleHandCount, 1);
     const GAP = 3;
-    const BASE_TILE_W = 48; // MahjiTile "md" width approx
-    const totalNeeded = tileCount * BASE_TILE_W + (tileCount - 1) * GAP;
-    const scale = Math.min(1, containerW / totalNeeded);
-    setTileScale(Math.max(0.45, scale)); // never shrink below 45%
+    const BASE_TILE_W = 52; // MahjiTile "md" width including outline
+    const totalNeeded = tileCount * BASE_TILE_W + (tileCount - 1) * GAP + 8; // +8 for drop zone
+    if (totalNeeded <= containerW) { setTileScale(1); return; }
+    const scale = containerW / totalNeeded;
+    setTileScale(Math.max(0.35, scale)); // never shrink below 35%
   }, [visibleHandCount]);
 
   useEffect(() => {
@@ -432,16 +433,21 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       )}
 
       {/* Hand */}
-      <div ref={handRef} style={{ display: "flex", gap: 3 * tileScale, padding: "5px 6px 16px", flexWrap: "nowrap", justifyContent: "center", alignItems: "flex-end" }}>
-        {visibleHand.map((tile, idx) => (
-          <div key={tile.instanceId} style={{ transform: `scale(${tileScale})`, transformOrigin: "bottom center", transition: "transform 0.15s ease" }}>
-            <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)}
+      <div ref={handRef} style={{ width: "100%", overflow: "hidden", padding: "0 6px 16px" }}>
+        <div style={{
+          display: "flex", gap: 3, flexWrap: "nowrap", justifyContent: "center", alignItems: "flex-end",
+          transform: `scale(${tileScale})`, transformOrigin: "bottom center",
+          height: `${68 * tileScale}px`, marginTop: `${68 * (1 - tileScale) * -0.5}px`,
+          padding: "5px 0",
+        }}>
+          {visibleHand.map((tile, idx) => (
+            <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)}
               disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
               cherry={U.cherry} hasHalo={tileHasHalo(tile)} isDragOver={dragOverIdx === idx && dragIdx !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
-          </div>
-        ))}
-        <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={e => handleDrop(e, visibleHand.length)} style={{ width: 8, flexShrink: 0 }} />
+          ))}
+          <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={e => handleDrop(e, visibleHand.length)} style={{ width: 8, flexShrink: 0 }} />
+        </div>
       </div>
     </div>
   );
