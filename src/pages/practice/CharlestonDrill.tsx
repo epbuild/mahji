@@ -120,10 +120,10 @@ function TileCard({ tile, selected, onTap, disabled, cherry, size = "md" as "sm"
         position: "relative", cursor: disabled ? "default" : "grab", transition: "all 0.15s ease",
         transform: selected ? "translateY(-6px) scale(1.05)" : isDragOver ? "scale(1.06)" : "scale(1)",
         boxShadow: hasHalo ? "0 0 12px rgba(180,154,216,0.5), 0 0 4px rgba(180,154,216,0.3)" : selected ? `0 0 14px ${cherry}33` : isDragOver ? "0 0 10px rgba(109,191,168,0.3)" : "none",
-        opacity: disabled ? 0.5 : 1, flexShrink: 0, userSelect: "none", marginLeft: isDragOver ? 6 : 0, borderRadius: 10,
+        opacity: disabled ? 0.5 : 1, userSelect: "none", marginLeft: isDragOver ? 6 : 0, borderRadius: 10,
         outline: hasHalo ? "2px solid rgba(180,154,216,0.6)" : selected ? `2px solid ${cherry}` : isDragOver ? "2px solid #6DBFA8" : "2px solid transparent",
       }}>
-      <MahjiTile tileId={tile.id} size={size} onClick={disabled ? undefined : onTap} />
+      <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size={size} /></div>
       {hasHalo && <div style={{ position: "absolute", top: -3, right: -3, width: 10, height: 10, borderRadius: "50%", background: "#B49AD8", border: "2px solid #fff", zIndex: 2 }} />}
     </div>
   );
@@ -197,7 +197,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const deck = shuffleDeck(getFullDeck());
     let idx = 0;
     const hands = [0,1,2,3].map(s => { const count = s === dealerSeat ? 14 : 13; const h = deck.slice(idx, idx + count); idx += count; return h; });
-    setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You","East","North","West"][s], hand: hands[s], selectedForPass: [], isHuman: s === 0 })));
+    setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (Dealer)","South","West","North"][s], hand: hands[s], selectedForPass: [], isHuman: s === 0 })));
     setPhase("charleston"); setStepIdx(0); setSelectedIds(new Set()); setBotsReady(false); setCourtesyCount(null);
     setAnimating(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
@@ -297,7 +297,6 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Back</button>
-          <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 700, color: U.cherry, letterSpacing: 3 }}>MAHJI</span>
         </div>
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           {(["novice","intermediate","advanced"] as const).map(l => (
@@ -320,16 +319,16 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
       {/* Board */}
       <div style={{ flex: 1, margin: "4px 8px", background: mat.bg, borderRadius: 16, position: "relative", minHeight: 280, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* North */}
+        {/* West (across from you) */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 0 0" }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>North</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>West</span>
           {botsReady && phase === "charleston" && !showStopPrompt && <ReadyBadge mat={mat} />}
         </div>
 
         {/* Middle */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "0 10px" }}>
           <div style={{ textAlign: "center", minWidth: 40 }}>
-            <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>West</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>North</span>
             {botsReady && phase === "charleston" && !showStopPrompt && <div style={{ marginTop: 2 }}><ReadyBadge mat={mat} /></div>}
           </div>
 
@@ -380,14 +379,14 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
           </div>
 
           <div style={{ textAlign: "center", minWidth: 40 }}>
-            <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>East</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>South</span>
             {botsReady && phase === "charleston" && !showStopPrompt && <div style={{ marginTop: 2 }}><ReadyBadge mat={mat} /></div>}
           </div>
         </div>
 
         {/* Bottom */}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 14px 8px", position: "relative" }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>👤 You {dealerSeat === 0 ? "(Dealer)" : ""}</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>👤 You (East · Dealer)</span>
           {showROL && <div style={{ position: "absolute", right: 14, bottom: 8 }}><ROLIndicator stepIdx={stepIdx} phase={phase} showStopPrompt={showStopPrompt} stoppedEarly={stoppedEarly} cherry={U.cherry} textFaded={mat.text} /></div>}
         </div>
       </div>
@@ -406,7 +405,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       )}
 
       {/* Hand */}
-      <div style={{ display: "flex", gap: 3, padding: "5px 6px 16px", overflowX: "auto", flexWrap: "nowrap", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" as any }}>
+      <div style={{ display: "flex", gap: 3, padding: "5px 6px 16px", flexWrap: "wrap", justifyContent: "center" }}>
         {visibleHand.map((tile, idx) => (
           <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)}
             disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
