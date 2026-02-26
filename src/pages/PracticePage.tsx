@@ -3,7 +3,7 @@ import { C } from '../constants/colors';
 import { BirdIcon, I } from '../components/ui/Icons';
 import { PF, SH, Tag, Card, Tabs, Cnt, BamFloat } from '../components/Layout';
 import { useTheme } from '../constants/ThemeContext';
-// ─── NEW: Import the Charleston drill ───
+// ─── NEW: Charleston drill import ───
 import CharlestonDrill from './practice/CharlestonDrill';
 
 const BamOverlay = ({ onClose, context }) => {
@@ -43,14 +43,13 @@ const levels = ["All", "Novice", "Intermediate", "Advanced"];
 
 function PracticePage({ showChat, setShowChat }) {
   const [level, setLevel] = useState("All");
-  // ─── NEW: Track which drill is active ───
+  // ─── NEW: Track active drill ───
   const [activeDrill, setActiveDrill] = useState(null);
-  const { isDark } = useTheme();
 
   const filtered = level === "All" ? drillsData : drillsData.filter(d => d.lvls.includes(level));
   let num = 0;
 
-  // ─── NEW: When Charleston drill is active, show it instead of the list ───
+  // ─── NEW: Show Charleston drill when active ───
   if (activeDrill === "charleston") {
     return <CharlestonDrill onBack={() => setActiveDrill(null)} />;
   }
@@ -70,7 +69,7 @@ function PracticePage({ showChat, setShowChat }) {
     </div>
 
     <SH>Drills</SH>
-    {filtered.map((d,i) => { num++; return <Card key={i} title={d.t} desc={d.d} num={num} tags={d.lvls.map(lv=>(lt[lv]||"b",1))}
+    {filtered.map((d,i) => { num++; return <Card key={i} title={d.t} desc={d.d} num={num} tags={d.lvls.map(lv=>(lt[lv]||"b"))}
       onClick={d.t === "Practicing the Charleston" ? () => setActiveDrill("charleston") : undefined}
     />; })}
     {filtered.length === 0 && <div style={{ textAlign: "center", padding: 30, color: C.light, fontSize: 12 }}>No drills at this level yet</div>}
