@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { C } from '../constants/colors';
 import { BirdIcon, I } from '../components/ui/Icons';
-import { PF, SH, Tag, Card, Tabs, Cnt, BamFloat } from '../components/Layout';
+import { PT, SH, Tag, Card, Tabs, Cnt, BamFloat } from '../components/Layout';
 import { useTheme } from '../constants/ThemeContext';
 // ─── NEW: Charleston drill import ───
 import CharlestonDrill from './practice/CharlestonDrill';
@@ -37,7 +37,7 @@ const drillsData = [
   { t: "Playing Defense", d: "Choose the safest discard, stop feeding", lvls: ["Advanced"] },
 ];
 
-const lt = { "First Timer": "b", Novice: "b", Beginner: "b", Intermediate: "i", Advanced: "a" };
+const lt = { "First Timer": "b", Novice: "n", Beginner: "b", Intermediate: "i", Advanced: "a" };
 
 const levels = ["All", "Novice", "Intermediate", "Advanced"];
 
@@ -54,7 +54,7 @@ function PracticePage({ showChat, setShowChat }) {
     return <CharlestonDrill onBack={() => setActiveDrill(null)} />;
   }
 
-  return (<><PF>Practice</PF><Cnt>
+  return (<><PT>Practice</PT><Cnt>
     <div style={{ display: "flex", gap:5, marginBottom:14, flexWrap:"wrap" }}>
       {levels.map(lv => (
         <div key={lv} onClick={() => setLevel(lv)} style={{
