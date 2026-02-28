@@ -194,38 +194,43 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [levelLocked, setLevelLocked] = useState(false);
 
   // ── Responsive tile scaling ──────────────────────────────────
-  // Measures the hand container and computes a CSS scale so all
-  // tiles always fit in a single row, shrinking as the window narrows.
-  const handRef = useRef<HTMLDivElement>(null);
+  // Strategy: render tiles at full size inside an inner row, measure
+  // the row's natural scrollWidth vs the viewport width, then apply
+  // transform:scale() to the row. The OUTER wrapper clips its height
+  // to the scaled height so no blank space remains.
+  const outerRef = useRef<HTMLDivElement>(null);   // the fixed-width viewport
+  const innerRef = useRef<HTMLDivElement>(null);    // the flex row of tiles (may be wider)
   const [tileScale, setTileScale] = useState(1);
-
-  // We track hand count separately so recalcScale can run on layout
-  const visibleHandCount = (players?.[0]?.hand || []).filter(t => !selectedIds.has(t.instanceId)).length;
+  const [rowNaturalH, setRowNaturalH] = useState(80); // measured natural height of tile row
+  const [rowMarginLeft, setRowMarginLeft] = useState(0); // offset to center scaled row
 
   const recalcScale = useCallback(() => {
-    if (!handRef.current) return;
-    // Get the actual available width of the hand container
-    const containerW = handRef.current.parentElement?.offsetWidth ?? handRef.current.offsetWidth;
-    const availW = containerW - 12; // minus horizontal padding
-    const tileCount = Math.max(visibleHandCount, 1);
-    const GAP = 3;
-    const BASE_TILE_W = 52; // MahjiTile "md" approx rendered width
-    const totalNeeded = tileCount * BASE_TILE_W + (tileCount - 1) * GAP + 8;
-    if (totalNeeded <= availW) { setTileScale(1); return; }
-    const scale = availW / totalNeeded;
-    setTileScale(Math.max(0.35, scale));
-  }, [visibleHandCount]);
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    const availW = outer.offsetWidth;
+    const naturalW = inner.scrollWidth;
+    const naturalH = inner.scrollHeight;
+    if (naturalH > 0) setRowNaturalH(naturalH);
+    if (naturalW <= availW) { setTileScale(1); setRowMarginLeft(0); return; }
+    const s = Math.max(0.3, availW / naturalW);
+    setTileScale(s);
+    // The scaled visual width = naturalW * s. Center it in availW.
+    setRowMarginLeft(Math.max(0, (availW - naturalW * s) / 2));
+  }, []);
 
   useEffect(() => {
+    // Run on every render (hand changes, selection changes, etc.)
     recalcScale();
-    // Watch the overall page container for resize, not the flex row itself
-    const target = handRef.current?.parentElement ?? handRef.current;
-    if (!target) return;
-    const ro = new ResizeObserver(() => recalcScale());
-    ro.observe(target);
-    // Also listen to window resize as a fallback
-    window.addEventListener("resize", recalcScale);
-    return () => { ro.disconnect(); window.removeEventListener("resize", recalcScale); };
+  });
+
+  useEffect(() => {
+    // Also run on window resize
+    const onResize = () => recalcScale();
+    window.addEventListener("resize", onResize);
+    const ro = new ResizeObserver(onResize);
+    if (outerRef.current) ro.observe(outerRef.current);
+    return () => { window.removeEventListener("resize", onResize); ro.disconnect(); };
   }, [recalcScale]);
 
   const dealGame = useCallback(() => {
@@ -439,17 +444,33 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         </div>
       )}
 
-      {/* Hand */}
-      <div ref={handRef} style={{ display: "flex", gap: `${3 * tileScale}px`, padding: "5px 6px 16px", flexWrap: "nowrap", justifyContent: "center", alignItems: "flex-end" }}>
-        {visibleHand.map((tile, idx) => (
-          <div key={tile.instanceId} style={{ zoom: tileScale, flexShrink: 0 }}>
-            <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)}
+      {/* Hand — two-div structure: outer clips to scaled height, inner holds tiles at natural size */}
+      <div ref={outerRef} style={{
+        width: "100%",
+        overflow: "hidden",
+        height: Math.ceil(rowNaturalH * tileScale) + 22,
+        padding: "5px 0 16px",
+      }}>
+        <div ref={innerRef} style={{
+          display: "flex",
+          gap: 3,
+          flexWrap: "nowrap",
+          alignItems: "flex-end",
+          whiteSpace: "nowrap",
+          transformOrigin: "top left",
+          transform: `scale(${tileScale})`,
+          width: "max-content",
+          marginLeft: rowMarginLeft,
+          padding: "0 6px",
+        }}>
+          {visibleHand.map((tile, idx) => (
+            <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)}
               disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
               cherry={U.cherry} hasHalo={tileHasHalo(tile)} isDragOver={dragOverIdx === idx && dragIdx !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
-          </div>
-        ))}
-        <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={e => handleDrop(e, visibleHand.length)} style={{ width: 8, flexShrink: 0 }} />
+          ))}
+          <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={e => handleDrop(e, visibleHand.length)} style={{ width: 8, flexShrink: 0 }} />
+        </div>
       </div>
     </div>
   );
