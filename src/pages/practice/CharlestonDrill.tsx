@@ -507,7 +507,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             <SeatLabel name="South" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
             {showStopPrompt ? (
               <div style={{ background: "#FFFFFF", borderRadius: 14, padding: "18px 22px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "center", minWidth: 200 }}>
                 <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 14, color: "#E03050", margin: "0 0 4px", letterSpacing: 1 }}>First Charleston Complete</h3>
@@ -550,11 +550,11 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               const selectedTiles = humanHand.filter(t => selectedIds.has(t.instanceId));
               return (
               <>
-                <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: Math.round(14 * bScale), padding: `${Math.round(3 * bScale)}px ${Math.round(12 * bScale)}px`, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", textAlign: "center", maxWidth: Math.round(220 * bScale) }}>
-                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(11 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 1 }}>{step?.label} {step && dirArrow[step.dir]}</span>
-                  {isBlind && <span style={{ fontSize: Math.round(7 * bScale), color: "#6DBFA8", fontWeight: 600, marginLeft: 6 }}>BLIND OK</span>}
+                <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: Math.round(8 * bScale), padding: `${Math.round(2 * bScale)}px ${Math.round(8 * bScale)}px`, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center", maxWidth: Math.round(200 * bScale) }}>
+                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(10 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 0.5 }}>{step?.label} {step && dirArrow[step.dir]}</span>
+                  {isBlind && <span style={{ fontSize: Math.round(6 * bScale), color: "#6DBFA8", fontWeight: 600, marginLeft: 4 }}>BLIND OK</span>}
                   {level === "novice" && step && (
-                    <div style={{ fontSize: Math.round(7 * bScale), color: "#6B5A82", marginTop: 2, lineHeight: 1.3 }}>
+                    <div style={{ fontSize: Math.round(6 * bScale), color: "#6B5A82", marginTop: 1, lineHeight: 1.2 }}>
                       {step.dir === "right" ? "Pass tiles to South (your right)" : step.dir === "across" ? "Pass tiles to West (across)" : "Pass tiles to North (your left)"}
                       {isBlind ? " · You won't see what comes back!" : ""}
                     </div>
@@ -580,7 +580,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   )}
                 </div>
                 {(phase === "charleston" || phase === "courtesy") && (
-                  <button onClick={executePass} disabled={!canPass()} style={{ background: canPass() ? "#E03050" : "rgba(255,255,255,0.2)", color: canPass() ? "#FFFFFF" : mat.text, border: "none", borderRadius: Math.round(18 * bScale), padding: `${Math.round(5 * bScale)}px ${Math.round(20 * bScale)}px`, cursor: canPass() ? "pointer" : "not-allowed", fontSize: Math.round(10 * bScale), fontWeight: 700, fontFamily: "'Bodoni Moda',serif", letterSpacing: 2, transition: "all 0.2s ease", opacity: canPass() ? 1 : 0.4, boxShadow: canPass() ? "0 0 14px rgba(224,48,80,0.25)" : "none" }}>{animating ? "..." : "PASS"}</button>
+                  <button onClick={executePass} disabled={!canPass()} style={{ background: canPass() ? "#E03050" : "rgba(255,255,255,0.2)", color: canPass() ? "#FFFFFF" : mat.text, border: "none", borderRadius: Math.round(14 * bScale), padding: `${Math.round(4 * bScale)}px ${Math.round(16 * bScale)}px`, cursor: canPass() ? "pointer" : "not-allowed", fontSize: Math.round(9 * bScale), fontWeight: 700, fontFamily: "'Bodoni Moda',serif", letterSpacing: 1.5, transition: "all 0.2s ease", opacity: canPass() ? 1 : 0.4, boxShadow: canPass() ? "0 0 10px rgba(224,48,80,0.2)" : "none" }}>{animating ? "..." : "PASS"}</button>
                 )}
               </>
               );

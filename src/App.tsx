@@ -47,7 +47,13 @@ function AppInner() {
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
 
-  const onNav = (p) => { setPage(p); setShowChat(false); };
+  // navKey forces remount of section pages (resets sub-views to homepage)
+  const [navKey, setNavKey] = useState(0);
+  const onNav = (p) => {
+    // If already on this page (and it's not play), reset the page to its homepage
+    if (p === page && p !== "play") setNavKey(k => k + 1);
+    setPage(p); setShowChat(false);
+  };
   const onHome = () => { setPage("home"); setShowChat(false); };
   const onProfile = () => { setPrevPage(page); setPage("profile"); };
   const onSignOut = () => { setSignedIn(false); setPage("home"); };
@@ -91,10 +97,10 @@ function AppInner() {
         )}
 
         {page === "home" && <HomePage onNav={onNav} signedIn={signedIn} />}
-        {page === "learn" && <LearnPage showChat={showChat} setShowChat={setShowChat} />}
-        {page === "practice" && <PracticePage showChat={showChat} setShowChat={setShowChat} />}
+        {page === "learn" && <LearnPage key={navKey} showChat={showChat} setShowChat={setShowChat} />}
+        {page === "practice" && <PracticePage key={navKey} showChat={showChat} setShowChat={setShowChat} />}
         {page === "play" && <PlayPage />}
-        {page === "shop" && <ShopPage cart={cart} setCart={setCart} />}
+        {page === "shop" && <ShopPage key={navKey} cart={cart} setCart={setCart} />}
         {page === "bam" && <BamPage />}
         {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
 
