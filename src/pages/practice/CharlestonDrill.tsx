@@ -74,15 +74,18 @@ function resolvePass(players: PlayerData[], step: { dir: "right" | "across" | "l
 }
 
 // ─── SORTING ──────────────────────────────────────────────────
+// Flowers always far LEFT, Jokers always far RIGHT in both sort modes.
 
 function sortBySuit(hand: GameTile[]): GameTile[] {
   return [...hand].sort((a, b) => {
     const gk = (t: GameTile) => {
-      if (isJoker(t)) return 0; if (t.suit === "characters") return 1;
+      if (t.suit === "flowers") return -1; // far left
+      if (isJoker(t)) return 99;           // far right
+      if (t.suit === "characters") return 1;
       if (t.suit === "dragons" && t.type === "red") return 1.9; if (t.suit === "bamboo") return 2;
       if (t.suit === "dragons" && t.type === "green") return 2.9; if (t.suit === "dots") return 3;
       if (t.suit === "dragons" && t.type === "white") return 3.9; if (t.suit === "winds") return 4;
-      if (t.suit === "flowers") return 5; return 9;
+      return 9;
     };
     const ga = gk(a), gb = gk(b); if (ga !== gb) return ga - gb;
     if (a.suit === "winds" && b.suit === "winds") return (WIND_ORDER[a.type || ""] ?? 9) - (WIND_ORDER[b.type || ""] ?? 9);
@@ -93,14 +96,17 @@ function sortBySuit(hand: GameTile[]): GameTile[] {
 
 function sortByRank(hand: GameTile[]): GameTile[] {
   return [...hand].sort((a, b) => {
-    if (isJoker(a) && !isJoker(b)) return -1; if (!isJoker(a) && isJoker(b)) return 1;
+    if (a.suit === "flowers" && b.suit !== "flowers") return -1;
+    if (a.suit !== "flowers" && b.suit === "flowers") return 1;
+    if (a.suit === "flowers" && b.suit === "flowers") return (a.number ?? 0) - (b.number ?? 0);
+    if (isJoker(a) && !isJoker(b)) return 1; // far right
+    if (!isJoker(a) && isJoker(b)) return -1;
     if (isJoker(a) && isJoker(b)) return 0;
-    const mg = (t: GameTile) => { if (t.suit === "dots" || t.suit === "bamboo" || t.suit === "characters") return 0; if (t.suit === "winds") return 1; if (t.suit === "dragons") return 2; if (t.suit === "flowers") return 3; return 4; };
+    const mg = (t: GameTile) => { if (t.suit === "dots" || t.suit === "bamboo" || t.suit === "characters") return 0; if (t.suit === "winds") return 1; if (t.suit === "dragons") return 2; return 4; };
     const ma = mg(a), mb = mg(b); if (ma !== mb) return ma - mb;
     if (ma === 0) { if ((a.number ?? 0) !== (b.number ?? 0)) return (a.number ?? 0) - (b.number ?? 0); const so: Record<string, number> = { characters: 0, bamboo: 1, dots: 2 }; return (so[a.suit] ?? 9) - (so[b.suit] ?? 9); }
     if (a.suit === "winds" && b.suit === "winds") return (WIND_ORDER[a.type || ""] ?? 9) - (WIND_ORDER[b.type || ""] ?? 9);
     if (a.suit === "dragons" && b.suit === "dragons") return (DRAGON_ORDER[a.type || ""] ?? 9) - (DRAGON_ORDER[b.type || ""] ?? 9);
-    if (a.suit === "flowers" && b.suit === "flowers") return (a.number ?? 0) - (b.number ?? 0);
     return 0;
   });
 }
@@ -109,23 +115,34 @@ function sortByRank(hand: GameTile[]): GameTile[] {
 // TILE CARD — wraps MahjiTile with selection/halo/drag UI
 // ═══════════════════════════════════════════════════════════════
 
-function TileCard({ tile, selected, onTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, isDragOver = false, hasHalo = false }: {
-  tile: GameTile; selected: boolean; onTap: () => void; disabled: boolean; cherry: string; size?: "sm"|"md";
-  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; isDragOver?: boolean; hasHalo?: boolean;
+function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, showInsertLeft = false, isNew = false }: {
+  tile: GameTile; selected: boolean; onTap: () => void; onDoubleTap?: () => void; disabled: boolean; cherry: string; size?: "sm"|"md";
+  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean;
 }) {
   return (
-    <div draggable={!disabled && size !== "sm"} onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop}
-      onClick={disabled ? undefined : onTap}
-      style={{
-        position: "relative", cursor: disabled ? "default" : "grab", transition: "all 0.15s ease",
-        transform: selected ? "translateY(-6px) scale(1.05)" : isDragOver ? "scale(1.06)" : "scale(1)",
-        boxShadow: hasHalo ? "0 0 12px rgba(180,154,216,0.5), 0 0 4px rgba(180,154,216,0.3)" : selected ? `0 0 14px ${cherry}33` : isDragOver ? "0 0 10px rgba(109,191,168,0.3)" : "none",
-        opacity: disabled ? 0.5 : 1, userSelect: "none", marginLeft: isDragOver ? 6 : 0, borderRadius: 10,
-        outline: hasHalo ? "2px solid rgba(180,154,216,0.6)" : selected ? `2px solid ${cherry}` : isDragOver ? "2px solid #6DBFA8" : "2px solid transparent",
-      }}>
-      <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size={size} /></div>
-      {hasHalo && <div style={{ position: "absolute", top: -3, right: -3, width: 10, height: 10, borderRadius: "50%", background: "#B49AD8", border: "2px solid #fff", zIndex: 2 }} />}
+    <div style={{ position: "relative", display: "flex", alignItems: "stretch" }}>
+      {showInsertLeft && <div style={{ position: "absolute", left: -2, top: 2, bottom: 2, width: 3, background: "#6DBFA8", borderRadius: 2, zIndex: 3 }} />}
+      <div draggable={!disabled && size !== "sm"} onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop}
+        onClick={disabled ? undefined : onTap}
+        onDoubleClick={disabled || !onDoubleTap ? undefined : onDoubleTap}
+        style={{
+          position: "relative", cursor: disabled ? "default" : "grab", transition: "all 0.15s ease",
+          transform: selected ? "translateY(-6px) scale(1.05)" : "scale(1)",
+          boxShadow: isNew ? "0 0 10px rgba(109,191,168,0.4), 0 0 4px rgba(109,191,168,0.2)" : selected ? `0 0 14px ${cherry}33` : "none",
+          opacity: disabled ? 0.5 : 1, userSelect: "none", borderRadius: 10,
+          outline: isNew ? "2px solid rgba(109,191,168,0.6)" : selected ? `2px solid ${cherry}` : "2px solid transparent",
+        }}>
+        <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size={size} /></div>
+        {isNew && <div style={{ position: "absolute", top: -4, right: -4, fontSize: 7, fontWeight: 700, color: "#fff", background: "#6DBFA8", borderRadius: 6, padding: "1px 4px", zIndex: 2 }}>NEW</div>}
+      </div>
     </div>
+  );
+}
+
+// Empty placeholder for missing tiles (shows 14 slots always)
+function EmptySlot() {
+  return (
+    <div style={{ width: 52, height: 72, borderRadius: 10, border: "2px dashed rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.03)", flexShrink: 0 }} />
   );
 }
 
@@ -156,8 +173,17 @@ function ROLIndicator({ stepIdx, phase, showStopPrompt, stoppedEarly, cherry, te
   );
 }
 
-function ReadyBadge({ mat }: { mat: typeof MATS[number] }) {
-  return <span style={{ fontSize: 7, background: mat.readyBg, color: mat.readyText, padding: "1px 6px", borderRadius: 8, fontWeight: 600 }}>Ready</span>;
+function ReadyBadge() {
+  return <span style={{ fontSize: 7, color: "rgba(109,191,168,0.5)", fontWeight: 600 }}>Ready</span>;
+}
+
+function SeatLabel({ name, isReady, showReady }: { name: string; isReady: boolean; showReady: boolean }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
+      {isReady && showReady && <div style={{ marginTop: 2 }}><ReadyBadge /></div>}
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -237,7 +263,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const deck = shuffleDeck(getFullDeck());
     let idx = 0;
     const hands = [0,1,2,3].map(s => { const count = s === dealerSeat ? 14 : 13; const h = deck.slice(idx, idx + count); idx += count; return h; });
-    setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (Dealer)","South","West","North"][s], hand: hands[s], selectedForPass: [], isHuman: s === 0 })));
+    setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (East)","South","West","North"][s], hand: hands[s], selectedForPass: [], isHuman: s === 0 })));
     setPhase("charleston"); setStepIdx(0); setSelectedIds(new Set()); setBotsReady(false); setCourtesyCount(null);
     setAnimating(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
@@ -308,20 +334,48 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
   useEffect(() => { if (phase === "charleston" && !showStopPrompt) setMessage(getMsg()); }, [stepIdx, phase, showStopPrompt]);
 
-  // Drag
+  // Drag — insertion line appears BETWEEN tiles
   const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); };
-  const handleDragOver = (e: React.DragEvent, idx: number) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverIdx(idx); };
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault(); e.dataTransfer.dropEffect = "move";
+    // Determine which side of the tile we're closer to (left or right)
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    const insertAt = e.clientX < midX ? idx : idx + 1;
+    setDragOverIdx(insertAt);
+  };
   const handleDrop = (e: React.DragEvent, targetIdx: number) => {
-    e.preventDefault(); if (dragIdx === null || dragIdx === targetIdx) { setDragIdx(null); setDragOverIdx(null); return; }
+    e.preventDefault();
+    // Recalculate insertion from mouse position
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    const insertAt = e.clientX < midX ? targetIdx : targetIdx + 1;
+    if (dragIdx === null || dragIdx === insertAt || dragIdx + 1 === insertAt) { setDragIdx(null); setDragOverIdx(null); return; }
     setPlayers(prev => prev!.map((p, i) => {
       if (i !== 0) return p; const visible = p.hand.filter(t => !selectedIds.has(t.instanceId)); const dragTile = visible[dragIdx!]; if (!dragTile) return p;
-      const without = visible.filter((_, idx) => idx !== dragIdx); const insertAt = dragIdx! < targetIdx ? targetIdx - 1 : targetIdx; without.splice(Math.max(0, insertAt), 0, dragTile);
+      const without = visible.filter((_, idx) => idx !== dragIdx);
+      const adj = dragIdx! < insertAt ? insertAt - 1 : insertAt;
+      without.splice(Math.max(0, adj), 0, dragTile);
+      return { ...p, hand: [...without, ...p.hand.filter(t => selectedIds.has(t.instanceId))] };
+    })); setDragIdx(null); setDragOverIdx(null);
+  };
+  const handleDropEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIdx === null) { setDragOverIdx(null); return; }
+    const insertAt = visibleHand.length;
+    if (dragIdx === insertAt || dragIdx + 1 === insertAt) { setDragIdx(null); setDragOverIdx(null); return; }
+    setPlayers(prev => prev!.map((p, i) => {
+      if (i !== 0) return p; const visible = p.hand.filter(t => !selectedIds.has(t.instanceId)); const dragTile = visible[dragIdx!]; if (!dragTile) return p;
+      const without = visible.filter((_, idx) => idx !== dragIdx);
+      without.push(dragTile);
       return { ...p, hand: [...without, ...p.hand.filter(t => selectedIds.has(t.instanceId))] };
     })); setDragIdx(null); setDragOverIdx(null);
   };
 
   const visibleHand = humanHand.filter(t => !selectedIds.has(t.instanceId));
-  const tileHasHalo = (tile: GameTile) => receivedTileIds.has(tile.instanceId) && !touchedTileIds.has(tile.instanceId);
+  const tileIsNew = (tile: GameTile) => receivedTileIds.has(tile.instanceId) && !touchedTileIds.has(tile.instanceId);
+  const totalSlots = dealerSeat === 0 ? 14 : 13;
+  const emptySlots = Math.max(0, totalSlots - visibleHand.length);
   const dirArrow: Record<string, string> = { right: "→", across: "↑", left: "←" };
 
   if (!players) return null;
@@ -331,7 +385,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   // ═══════════════════════════════════════════════════════════
 
   return (
-    <div style={{ minHeight: "100vh", background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: 1, background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80 }}>
 
       {/* Header with Back button */}
       <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
@@ -358,18 +412,16 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       </div>
 
       {/* Board */}
-      <div style={{ flex: 1, margin: "4px 8px", background: mat.bg, borderRadius: 16, position: "relative", minHeight: 280, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* West (across from you) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 0 0" }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>West</span>
-          {botsReady && phase === "charleston" && !showStopPrompt && <ReadyBadge mat={mat} />}
+      <div style={{ flex: 1, margin: "4px 8px", background: mat.bg, borderRadius: 16, position: "relative", minHeight: 0, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden" }}>
+        {/* West (across from East/you) */}
+        <div style={{ padding: "10px 0 0" }}>
+          <SeatLabel name="West" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} />
         </div>
 
         {/* Middle */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "0 10px" }}>
-          <div style={{ textAlign: "center", minWidth: 40 }}>
-            <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>North</span>
-            {botsReady && phase === "charleston" && !showStopPrompt && <div style={{ marginTop: 2 }}><ReadyBadge mat={mat} /></div>}
+          <div style={{ minWidth: 40 }}>
+            <SeatLabel name="South" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
@@ -402,13 +454,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 11, fontWeight: 700, color: "#E03050", letterSpacing: 1 }}>{step?.label} {step && dirArrow[step.dir]}</span>
                   {isBlind && <span style={{ fontSize: 7, color: "#6DBFA8", fontWeight: 600, marginLeft: 6 }}>BLIND OK</span>}
                 </div>
-                <div style={{ width: 200, minHeight: 80, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: 6, transition: "all 0.2s ease" }}>
+                <div
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+                  onDrop={e => { e.preventDefault(); /* drop from hand handled by toggleTile via double-click */ }}
+                  style={{ minWidth: Math.max(80, Math.ceil((72 * 3 + 12) * tileScale) + 16), minHeight: Math.max(36, Math.ceil(98 * tileScale) + 12), background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: 5, transition: "all 0.2s ease", overflow: "hidden" }}>
                   {selectedIds.size === 0 ? (
-                    <span style={{ fontSize: 8, color: mat.text, fontStyle: "italic" }}>{isBlind ? "Tap tiles (0–3)" : "Tap 3 tiles below"}</span>
+                    <span style={{ fontSize: 8, color: mat.text, fontStyle: "italic" }}>{isBlind ? "Tap or double-click tiles (0–3)" : "Double-click or tap 3 tiles"}</span>
                   ) : (
-                    humanHand.filter(t => selectedIds.has(t.instanceId)).map(t => (
-                      <TileCard key={t.instanceId} tile={t} selected={false} onTap={() => toggleTile(t)} cherry={U.cherry} size="sm" disabled={false} />
-                    ))
+                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "center center" }}>
+                      {humanHand.filter(t => selectedIds.has(t.instanceId)).map(t => (
+                        <TileCard key={t.instanceId} tile={t} selected={false} onTap={() => toggleTile(t)} cherry={U.cherry} size="md" disabled={false} />
+                      ))}
+                    </div>
                   )}
                 </div>
                 {(phase === "charleston" || phase === "courtesy") && (
@@ -418,27 +475,26 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             )}
           </div>
 
-          <div style={{ textAlign: "center", minWidth: 40 }}>
-            <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>South</span>
-            {botsReady && phase === "charleston" && !showStopPrompt && <div style={{ marginTop: 2 }}><ReadyBadge mat={mat} /></div>}
+          <div style={{ minWidth: 40 }}>
+            <SeatLabel name="North" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} />
           </div>
         </div>
 
-        {/* Bottom */}
+        {/* Bottom — You (East · Dealer) */}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 14px 8px", position: "relative" }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: mat.text }}>👤 You (East · Dealer)</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
           {showROL && <div style={{ position: "absolute", right: 14, bottom: 8 }}><ROLIndicator stepIdx={stepIdx} phase={phase} showStopPrompt={showStopPrompt} stoppedEarly={stoppedEarly} cherry={U.cherry} textFaded={mat.text} /></div>}
         </div>
       </div>
 
       {/* Message */}
-      <div style={{ textAlign: "center", padding: "3px 10px", minHeight: 16 }}>
+      <div style={{ textAlign: "center", padding: "3px 10px", minHeight: 16, flexShrink: 0 }}>
         {message && <span style={{ fontSize: 10, fontWeight: 500, color: message.startsWith("⚠") ? U.cherry : U.textMid }}>{message}</span>}
       </div>
 
       {/* Sort */}
       {phase !== "complete" && phase !== "courtesy_prompt" && !showStopPrompt && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "1px 10px" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "1px 10px", flexShrink: 0 }}>
           <button onClick={() => doSort(sortByRank)} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 9, color: U.btnText, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Sort by Rank</button>
           <button onClick={() => doSort(sortBySuit)} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 9, color: U.btnText, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Sort by Suit</button>
         </div>
@@ -449,6 +505,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         width: "100%",
         overflow: "hidden",
         height: Math.ceil(rowNaturalH * tileScale) + 22,
+        minHeight: 60,
+        flexShrink: 0,
         padding: "5px 0 16px",
       }}>
         <div ref={innerRef} style={{
@@ -464,12 +522,15 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
           padding: "0 6px",
         }}>
           {visibleHand.map((tile, idx) => (
-            <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)}
+            <TileCard key={tile.instanceId} tile={tile} selected={false}
+              onTap={() => { if (receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); toggleTile(tile); }}
+              onDoubleTap={() => toggleTile(tile)}
               disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
-              cherry={U.cherry} hasHalo={tileHasHalo(tile)} isDragOver={dragOverIdx === idx && dragIdx !== idx}
+              cherry={U.cherry} isNew={tileIsNew(tile)} showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
           ))}
-          <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={e => handleDrop(e, visibleHand.length)} style={{ width: 8, flexShrink: 0 }} />
+          {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
+          <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={handleDropEnd} style={{ width: 8, flexShrink: 0 }} />
         </div>
       </div>
     </div>
