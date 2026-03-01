@@ -39,10 +39,10 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
     copies: 4,
   })),
   // Winds (4 copies each)
-  { id: 'wind-E', suit: 'winds', type: 'E', displayName: 'East', copies: 4 },
-  { id: 'wind-S', suit: 'winds', type: 'S', displayName: 'South', copies: 4 },
-  { id: 'wind-W', suit: 'winds', type: 'W', displayName: 'West', copies: 4 },
   { id: 'wind-N', suit: 'winds', type: 'N', displayName: 'North', copies: 4 },
+  { id: 'wind-E', suit: 'winds', type: 'E', displayName: 'East', copies: 4 },
+  { id: 'wind-W', suit: 'winds', type: 'W', displayName: 'West', copies: 4 },
+  { id: 'wind-S', suit: 'winds', type: 'S', displayName: 'South', copies: 4 },
   // Dragons (4 copies each)
   { id: 'dragon-red', suit: 'dragons', type: 'red', displayName: 'Red Dragon', copies: 4 },
   { id: 'dragon-green', suit: 'dragons', type: 'green', displayName: 'Green Dragon', copies: 4 },
