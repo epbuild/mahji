@@ -165,14 +165,14 @@ function sortByRank(hand: GameTile[]): GameTile[] {
 // TILE CARD — wraps MahjiTile with selection/halo/drag UI
 // ═══════════════════════════════════════════════════════════════
 
-function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, showInsertLeft = false, isNew = false, isHint = false, isDragging = false }: {
+function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, onDragEnd, showInsertLeft = false, isNew = false, isHint = false, isDragging = false }: {
   tile: GameTile; selected: boolean; onTap: () => void; onDoubleTap?: () => void; disabled: boolean; cherry: string; size?: "sm"|"md";
-  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean; isHint?: boolean; isDragging?: boolean;
+  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; onDragEnd?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean; isHint?: boolean; isDragging?: boolean;
 }) {
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "stretch", marginLeft: showInsertLeft ? 6 : 0, transition: "margin 0.1s ease" }}>
       {showInsertLeft && <div style={{ position: "absolute", left: -5, top: 0, bottom: 0, width: 4, background: "#6DBFA8", borderRadius: 2, zIndex: 3, boxShadow: "0 0 8px rgba(109,191,168,0.6), 0 0 3px rgba(109,191,168,0.4)" }} />}
-      <div draggable={!disabled && size !== "sm"} onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop}
+      <div draggable={!disabled && size !== "sm"} onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd}
         onClick={disabled ? undefined : onTap}
         onDoubleClick={disabled || !onDoubleTap ? undefined : onDoubleTap}
         style={{
@@ -417,7 +417,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   }, [stepIdx, phase, showStopPrompt, animating, level]);
 
   // Drag — insertion line appears BETWEEN tiles
-  const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); };
+  const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(idx)); const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); };
+  // Always clear drag state when drag ends (regardless of whether drop succeeded)
+  const handleDragEnd = () => { setDragIdx(null); setDragOverIdx(null); };
   const handleDragOver = (e: React.DragEvent, idx: number) => {
     e.preventDefault(); e.dataTransfer.dropEffect = "move";
     // Determine which side of the tile we're closer to (left or right)
@@ -562,7 +564,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 </div>
                 <div
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
-                  onDrop={e => { e.preventDefault(); }}
+                  onDrop={e => { e.preventDefault(); const idxStr = e.dataTransfer.getData("text/plain"); const idx = parseInt(idxStr, 10); if (!isNaN(idx) && visibleHand[idx]) { const tile = visibleHand[idx]; if (!selectedIds.has(tile.instanceId) && !isJoker(tile)) { const max = reqCount !== null ? reqCount : 3; if (selectedIds.size < max) toggleTile(tile); } } setDragIdx(null); setDragOverIdx(null); }}
                   style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
                   <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
                     <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
@@ -646,7 +648,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
               cherry={U.cherry} isNew={tileIsNew(tile)} isHint={passHints.has(tile.instanceId)} isDragging={dragIdx === idx}
               showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
-              onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
+              onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} onDragEnd={handleDragEnd} />
           ))}
           {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
           <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={handleDropEnd} style={{ width: 8, flexShrink: 0 }} />
