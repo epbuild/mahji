@@ -165,21 +165,21 @@ function sortByRank(hand: GameTile[]): GameTile[] {
 // TILE CARD — wraps MahjiTile with selection/halo/drag UI
 // ═══════════════════════════════════════════════════════════════
 
-function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, showInsertLeft = false, isNew = false, isHint = false }: {
+function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, showInsertLeft = false, isNew = false, isHint = false, isDragging = false }: {
   tile: GameTile; selected: boolean; onTap: () => void; onDoubleTap?: () => void; disabled: boolean; cherry: string; size?: "sm"|"md";
-  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean; isHint?: boolean;
+  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean; isHint?: boolean; isDragging?: boolean;
 }) {
   return (
-    <div style={{ position: "relative", display: "flex", alignItems: "stretch" }}>
-      {showInsertLeft && <div style={{ position: "absolute", left: -2, top: 2, bottom: 2, width: 3, background: "#6DBFA8", borderRadius: 2, zIndex: 3 }} />}
+    <div style={{ position: "relative", display: "flex", alignItems: "stretch", marginLeft: showInsertLeft ? 6 : 0, transition: "margin 0.1s ease" }}>
+      {showInsertLeft && <div style={{ position: "absolute", left: -5, top: 0, bottom: 0, width: 4, background: "#6DBFA8", borderRadius: 2, zIndex: 3, boxShadow: "0 0 8px rgba(109,191,168,0.6), 0 0 3px rgba(109,191,168,0.4)" }} />}
       <div draggable={!disabled && size !== "sm"} onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop}
         onClick={disabled ? undefined : onTap}
         onDoubleClick={disabled || !onDoubleTap ? undefined : onDoubleTap}
         style={{
           position: "relative", cursor: disabled ? "default" : "grab", transition: "all 0.15s ease",
-          transform: selected ? "translateY(-6px) scale(1.05)" : "scale(1)",
+          transform: selected ? "translateY(-6px) scale(1.05)" : isDragging ? "scale(0.95)" : "scale(1)",
           boxShadow: isNew ? "0 0 10px rgba(109,191,168,0.4), 0 0 4px rgba(109,191,168,0.2)" : isHint ? "0 0 8px rgba(180,154,216,0.4)" : selected ? `0 0 14px ${cherry}33` : "none",
-          opacity: disabled ? 0.5 : 1, userSelect: "none", borderRadius: 10,
+          opacity: isDragging ? 0.35 : disabled ? 0.5 : 1, userSelect: "none", borderRadius: 10,
           outline: isNew ? "2px solid rgba(109,191,168,0.6)" : isHint ? "2px solid rgba(180,154,216,0.5)" : selected ? `2px solid ${cherry}` : "2px solid transparent",
         }}>
         <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size={size} /></div>
@@ -194,6 +194,13 @@ function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size =
 function EmptySlot() {
   return (
     <div style={{ width: 52, height: 72, borderRadius: 10, border: "2px dashed rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.03)", flexShrink: 0 }} />
+  );
+}
+
+// Empty slot for pass box (same size as md tile: 72×98)
+function EmptyPassSlot() {
+  return (
+    <div style={{ width: 72, height: 98, borderRadius: 10, border: "2px dashed rgba(224,48,80,0.2)", background: "rgba(255,255,255,0.04)", flexShrink: 0 }} />
   );
 }
 
@@ -536,13 +543,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 <button onClick={dealGame} style={{ display: "block", width: "100%", padding: "10px 0", marginBottom: 8, background: "rgba(224,48,80,0.06)", border: "1px solid rgba(224,48,80,0.2)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#E03050", fontFamily: "'Outfit',sans-serif" }}>🎯 Practice Again</button>
                 <button onClick={onBack} style={{ display: "block", width: "100%", padding: "10px 0", background: "rgba(107,63,160,0.06)", border: "1px solid rgba(107,63,160,0.15)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#6B3FA0", fontFamily: "'Outfit',sans-serif" }}>← Back to Practice</button>
               </div>
-            ) : (
+            ) : (() => {
+              const bScale = Math.max(0.55, Math.min(1, tileScale * 1.2));
+              const passBoxW = Math.ceil((72 * 3 + 3 * 2) * tileScale) + 14;
+              const passBoxH = Math.ceil(98 * tileScale) + 14;
+              const selectedTiles = humanHand.filter(t => selectedIds.has(t.instanceId));
+              return (
               <>
-                <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: level === "novice" ? "5px 14px" : "3px 12px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", textAlign: "center", maxWidth: 220 }}>
-                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 11, fontWeight: 700, color: "#E03050", letterSpacing: 1 }}>{step?.label} {step && dirArrow[step.dir]}</span>
-                  {isBlind && <span style={{ fontSize: 7, color: "#6DBFA8", fontWeight: 600, marginLeft: 6 }}>BLIND OK</span>}
+                <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: Math.round(14 * bScale), padding: `${Math.round(3 * bScale)}px ${Math.round(12 * bScale)}px`, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", textAlign: "center", maxWidth: Math.round(220 * bScale) }}>
+                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(11 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 1 }}>{step?.label} {step && dirArrow[step.dir]}</span>
+                  {isBlind && <span style={{ fontSize: Math.round(7 * bScale), color: "#6DBFA8", fontWeight: 600, marginLeft: 6 }}>BLIND OK</span>}
                   {level === "novice" && step && (
-                    <div style={{ fontSize: 7, color: "#6B5A82", marginTop: 2, lineHeight: 1.3 }}>
+                    <div style={{ fontSize: Math.round(7 * bScale), color: "#6B5A82", marginTop: 2, lineHeight: 1.3 }}>
                       {step.dir === "right" ? "Pass tiles to South (your right)" : step.dir === "across" ? "Pass tiles to West (across)" : "Pass tiles to North (your left)"}
                       {isBlind ? " · You won't see what comes back!" : ""}
                     </div>
@@ -551,24 +563,28 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 <div
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
                   onDrop={e => { e.preventDefault(); }}
-                  style={{ background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", padding: selectedIds.size > 0 ? 5 : "10px 16px", transition: "all 0.2s ease", overflow: "hidden" }}>
-                  {selectedIds.size === 0 ? (
-                    <span style={{ fontSize: 8, color: mat.text, fontStyle: "italic" }}>{isBlind ? "Tap or double-click tiles (0–3)" : "Double-click or tap 3 tiles"}</span>
-                  ) : (
-                    <div style={{ width: Math.ceil((72 * selectedIds.size + 3 * (selectedIds.size - 1)) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
-                      <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
-                        {humanHand.filter(t => selectedIds.has(t.instanceId)).map(t => (
-                          <TileCard key={t.instanceId} tile={t} selected={false} onTap={() => toggleTile(t)} cherry={U.cherry} size="md" disabled={false} />
-                        ))}
-                      </div>
+                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
+                  <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
+                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
+                      {[0, 1, 2].map(i => {
+                        const tile = selectedTiles[i];
+                        if (tile) return <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />;
+                        return <EmptyPassSlot key={`pass-empty-${i}`} />;
+                      })}
+                    </div>
+                  </div>
+                  {selectedIds.size === 0 && (
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Drag tiles here (0–3)" : "Drag or double-click 3 tiles"}</span>
                     </div>
                   )}
                 </div>
                 {(phase === "charleston" || phase === "courtesy") && (
-                  <button onClick={executePass} disabled={!canPass()} style={{ background: canPass() ? "#E03050" : "rgba(255,255,255,0.2)", color: canPass() ? "#FFFFFF" : mat.text, border: "none", borderRadius: 18, padding: "7px 28px", cursor: canPass() ? "pointer" : "not-allowed", fontSize: 12, fontWeight: 700, fontFamily: "'Bodoni Moda',serif", letterSpacing: 2, transition: "all 0.2s ease", opacity: canPass() ? 1 : 0.4, boxShadow: canPass() ? "0 0 14px rgba(224,48,80,0.25)" : "none" }}>{animating ? "..." : "PASS"}</button>
+                  <button onClick={executePass} disabled={!canPass()} style={{ background: canPass() ? "#E03050" : "rgba(255,255,255,0.2)", color: canPass() ? "#FFFFFF" : mat.text, border: "none", borderRadius: Math.round(18 * bScale), padding: `${Math.round(5 * bScale)}px ${Math.round(20 * bScale)}px`, cursor: canPass() ? "pointer" : "not-allowed", fontSize: Math.round(10 * bScale), fontWeight: 700, fontFamily: "'Bodoni Moda',serif", letterSpacing: 2, transition: "all 0.2s ease", opacity: canPass() ? 1 : 0.4, boxShadow: canPass() ? "0 0 14px rgba(224,48,80,0.25)" : "none" }}>{animating ? "..." : "PASS"}</button>
                 )}
               </>
-            )}
+              );
+            })()}
           </div>
 
           <div style={{ minWidth: 40 }}>
@@ -628,7 +644,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               onTap={() => { if (receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); toggleTile(tile); }}
               onDoubleTap={() => toggleTile(tile)}
               disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
-              cherry={U.cherry} isNew={tileIsNew(tile)} isHint={passHints.has(tile.instanceId)} showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
+              cherry={U.cherry} isNew={tileIsNew(tile)} isHint={passHints.has(tile.instanceId)} isDragging={dragIdx === idx}
+              showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} />
           ))}
           {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
