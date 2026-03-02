@@ -57,6 +57,8 @@ const STEPS = [
   { key: "2R", label: "Second Right", dir: "right" as const, blind: true },
 ];
 
+const CARD_COLORS: Record<string, string> = { red: '#C2413B', green: '#2E8B57', blue: '#4A7FA8' };
+
 const STEP_TO_ROL: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 4, 4: 5, 5: 6 };
 const WIND_ORDER: Record<string, number> = { N: 0, E: 1, W: 2, S: 3 };
 const DRAGON_ORDER: Record<string, number> = { red: 0, green: 1, white: 2 };
@@ -1011,7 +1013,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>👀 Peep Possible Hands!</span>
+            <span>{suggestionsOpen ? '🙈 Hide Possible Hands' : '👀 Peep Possible Hands!'}</span>
             <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
           </div>
           {suggestionsOpen && (
@@ -1031,7 +1033,17 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     outline: isActive ? "1.5px solid rgba(234,179,8,0.4)" : "1.5px solid transparent",
                     transition: "all 0.15s ease",
                   }}>
-                    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: isActive ? "#b8860b" : U.text, fontWeight: isActive ? 700 : 500, flex: 1 }}>{s.hand.displayPattern}</span>
+                    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, fontWeight: isActive ? 700 : 500, flex: 1 }}>
+                      {(() => {
+                        const pat = s.hand.patterns[s.patternIndex];
+                        const segs = s.hand.displayPattern.split(' ');
+                        return segs.map((seg, j) => {
+                          const grp = pat?.groups[j];
+                          const c = grp ? (CARD_COLORS[grp.color] || U.text) : U.text;
+                          return <span key={j} style={{ color: isActive ? "#b8860b" : c }}>{seg}{j < segs.length - 1 ? ' ' : ''}</span>;
+                        });
+                      })()}
+                    </span>
                     <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
                     <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
