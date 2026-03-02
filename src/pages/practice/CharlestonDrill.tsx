@@ -444,7 +444,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   // ── Recompute hand suggestions when hand changes ──
   useEffect(() => {
     if (!card || !humanHand.length || level === "advanced") { setSuggestions([]); return; }
-    // Very low threshold so we always show options even if only 3-4 tiles match
+    // Very low threshold so we catch any hand where at least 1 tile matches
     const matches = findPartialMatches(humanHand, card, 0.05);
     // Deduplicate by hand id — only keep the best match per unique hand
     const seen = new Set<string>();
@@ -454,7 +454,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         seen.add(m.hand.id);
         unique.push(m);
       }
-      if (unique.length >= 5) break;
+      if (unique.length >= 20) break;
     }
     setSuggestions(unique);
   }, [card, humanHand.length, humanHand.map(t => t.instanceId).join(","), level]);
@@ -464,10 +464,11 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return suggestions.map(s => computeRealMatchCount(s, humanHand));
   }, [suggestions, humanHand]);
 
-  // Sort suggestions by highest real match count first
+  // Sort suggestions by highest real match count first, filtering out 0/14
   const sortedSuggestions = useMemo(() => {
     return suggestions
       .map((s, i) => ({ match: s, realCount: realMatchCounts[i] ?? s.matchedCount }))
+      .filter(({ realCount }) => realCount > 0)
       .sort((a, b) => b.realCount - a.realCount);
   }, [suggestions, realMatchCounts]);
 
@@ -1035,8 +1036,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   <div key={s.hand.id + idx} onClick={() => activateHintHand(s)} style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 8, cursor: "pointer",
                     borderBottom: idx < sortedSuggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
-                    background: isActive ? "rgba(234,179,8,0.08)" : "transparent",
-                    outline: isActive ? "1.5px solid rgba(234,179,8,0.5)" : "1.5px solid transparent",
+                    background: isActive ? "rgba(234,179,8,0.035)" : "transparent",
+                    outline: isActive ? "1.5px solid rgba(234,179,8,0.4)" : "1.5px solid transparent",
                     transition: "all 0.15s ease",
                   }}>
                     <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, fontWeight: isActive ? 700 : 500, flex: 1 }}>
