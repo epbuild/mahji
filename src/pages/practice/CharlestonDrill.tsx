@@ -241,6 +241,29 @@ function EmptyPassSlot() {
   );
 }
 
+// Back of a tile (for blind pass animation)
+function TileBack() {
+  return (
+    <div style={{
+      width: 72, height: 98, borderRadius: 10,
+      background: "linear-gradient(135deg, #6B3FA0 0%, #4A2D73 100%)",
+      border: "2px solid rgba(180,154,216,0.4)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0,
+    }}>
+      <div style={{
+        width: 52, height: 74, borderRadius: 6,
+        border: "1px solid rgba(180,154,216,0.25)",
+        background: "linear-gradient(135deg, rgba(180,154,216,0.15) 0%, rgba(107,63,160,0.08) 100%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(180,154,216,0.2)", border: "1px solid rgba(180,154,216,0.15)" }} />
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // R-O-L ★ L-O-R INDICATOR
 // ═══════════════════════════════════════════════════════════════
@@ -338,6 +361,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [timer, setTimer] = useState(0);
   const [passCount, setPassCount] = useState(0);
   const [totalPassed, setTotalPassed] = useState(0);
+  const [passAnimPhase, setPassAnimPhase] = useState<'blind-join' | 'zip' | null>(null);
+  const [passAnimDir, setPassAnimDir] = useState<'right' | 'across' | 'left' | null>(null);
+  const [passBlindCount, setPassBlindCount] = useState(0);
 
   // ── Responsive tile scaling ──────────────────────────────────
   // Strategy: render tiles at full size inside an inner row, measure
@@ -388,6 +414,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setAnimating(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
+    setPassAnimPhase(null); setPassAnimDir(null); setPassBlindCount(0);
     setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null);
     // After first charleston practice in session, hide the "Ask Bam" message
     if (bamSessionUsed) setBamShowMessage(false);
@@ -457,7 +484,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const toPass = passable.slice(0, 3);
 
     let message = "";
-    const tileNames = toPass.map(t => t.displayName).join(", ");
+    const tileNames = toPass.map(t => t.suit === "flowers" ? "Flower" : t.displayName).join(", ");
     const count = top.matchedCount;
     const sectionName = SECTION_LABELS[top.hand.section] || top.hand.section;
 
@@ -599,7 +626,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
   const executePass = () => {
     if (!canPass()) return; setAnimating(true);
-    const sel = humanHand.filter(t => selectedIds.has(t.instanceId));
+    let sel = [...humanHand.filter(t => selectedIds.has(t.instanceId))];
+
+    // For blind passes, auto-fill to 3 with random non-joker tiles
+    let blindCount = 0;
+    if (isBlind && sel.length < 3) {
+      const remaining = humanHand.filter(t => !selectedIds.has(t.instanceId) && !isJoker(t));
+      const shuffled = [...remaining].sort(() => Math.random() - 0.5);
+      const autoFill = shuffled.slice(0, 3 - sel.length);
+      blindCount = autoFill.length;
+      sel = [...sel, ...autoFill];
+    }
+
     const selIds = new Set(sel.map(t => t.instanceId));
     setPassCount(c => c + 1); setTotalPassed(c => c + sel.length);
     const up = players!.map((p, i) => i === 0 ? { ...p, selectedForPass: sel } : p);
@@ -607,15 +645,28 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const nh = resolvePass(up, s);
     const oldIds = new Set(humanHand.filter(t => !selIds.has(t.instanceId)).map(t => t.instanceId));
     const newReceivedIds = new Set(nh[0].filter(t => !oldIds.has(t.instanceId)).map(t => t.instanceId));
-    setTimeout(() => {
+
+    setPassAnimDir(s.dir);
+    setPassBlindCount(blindCount);
+
+    const resolveHand = () => {
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
+      setPassAnimPhase(null); setPassAnimDir(null); setPassBlindCount(0);
       if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
       else { setPhase("courtesy_prompt"); setMessage(""); }
-    }, 600);
+    };
+
+    if (blindCount > 0) {
+      setPassAnimPhase('blind-join');
+      setTimeout(() => { setPassAnimPhase('zip'); setTimeout(resolveHand, 450); }, 400);
+    } else {
+      setPassAnimPhase('zip');
+      setTimeout(resolveHand, 500);
+    }
   };
 
   const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); } };
@@ -761,6 +812,14 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   return (
     <div style={{ flex: 1, background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80 }}>
 
+      {/* Pass animation keyframes */}
+      <style>{`
+        @keyframes zipRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(250px); opacity: 0; } }
+        @keyframes zipLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-250px); opacity: 0; } }
+        @keyframes zipAcross { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-250px); opacity: 0; } }
+        @keyframes blindSlideIn { 0% { transform: translateY(40px) scale(0.85); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+      `}</style>
+
       {/* Header with Back button */}
       <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -870,24 +929,48 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     }
                     setDragIdx(null); setDragOverIdx(null);
                   }}
-                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
+                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: passAnimPhase ? "visible" : "hidden", position: "relative" }}>
                   <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
-                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
-                      {[0, 1, 2].map(i => {
-                        const tile = selectedTiles[i];
-                        if (tile) return (
-                          <div key={tile.instanceId}
-                            draggable
-                            onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "passbox"); }}
-                          >
-                            <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />
-                          </div>
-                        );
-                        return <EmptyPassSlot key={`pass-empty-${i}`} />;
-                      })}
+                    <div style={{ transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
+                      <div style={{
+                        display: "flex", gap: 3,
+                        ...(passAnimPhase === 'zip' ? { animation: `zip${passAnimDir === 'right' ? 'Right' : passAnimDir === 'left' ? 'Left' : 'Across'} 0.45s ease-in forwards` } : {}),
+                      }}>
+                        {passAnimPhase ? (
+                          <>
+                            {selectedTiles.map(tile => (
+                              <div key={tile.instanceId}>
+                                <TileCard tile={tile} selected={false} onTap={() => {}} cherry={U.cherry} size="md" disabled={true} />
+                              </div>
+                            ))}
+                            {passBlindCount > 0 && Array.from({ length: passBlindCount }).map((_, i) => (
+                              <div key={`blind-${i}`} style={{
+                                animation: passAnimPhase === 'blind-join' ? `blindSlideIn 0.3s ease-out ${i * 100}ms both` : 'none',
+                              }}>
+                                <TileBack />
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          <>
+                            {[0, 1, 2].map(i => {
+                              const tile = selectedTiles[i];
+                              if (tile) return (
+                                <div key={tile.instanceId}
+                                  draggable
+                                  onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "passbox"); }}
+                                >
+                                  <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />
+                                </div>
+                              );
+                              return <EmptyPassSlot key={`pass-empty-${i}`} />;
+                            })}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {selectedIds.size === 0 && (
+                  {selectedIds.size === 0 && !passAnimPhase && (
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Drag tiles here (0–3)" : "Drag or double-click 3 tiles"}</span>
                     </div>
