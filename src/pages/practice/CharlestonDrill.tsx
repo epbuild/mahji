@@ -15,9 +15,10 @@ import { BirdIcon } from "../../components/ui/Icons";
 import {
   getCard, getAvailableYears, getCurrentYear,
   findPartialMatches, isTileUsefulForHand,
+  expandNumberConstraint, enumerateColorAssignments, resolveGroupToTileIds,
   SECTION_LABELS,
 } from "../../data/nmjl";
-import type { NMJLCard, PartialMatchResult } from "../../data/nmjl";
+import type { NMJLCard, PartialMatchResult, ColorAssignment } from "../../data/nmjl";
 
 // ─── TYPES ────────────────────────────────────────────────────
 
@@ -99,19 +100,6 @@ function botSelectAdvanced(hand: GameTile[], count = 3): GameTile[] {
   });
   // Pass the lowest-scored tiles
   return scored.sort((a, b) => a.score - b.score).slice(0, count).map(s => s.tile);
-}
-
-// Hint: identify tiles that are good candidates to pass (for novice mode)
-function getPassHints(hand: GameTile[]): Set<string> {
-  const hints = new Set<string>();
-  const nonJokers = hand.filter(t => !isJoker(t));
-  const idCounts: Record<string, number> = {};
-  nonJokers.forEach(t => { idCounts[t.id] = (idCounts[t.id] || 0) + 1; });
-  // Singletons (tiles you only have 1 of) are good to pass
-  nonJokers.forEach(t => {
-    if (idCounts[t.id] === 1) hints.add(t.instanceId);
-  });
-  return hints;
 }
 
 // Level config
@@ -375,8 +363,19 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   // ── Recompute hand suggestions when hand changes ──
   useEffect(() => {
     if (!card || !humanHand.length || level === "advanced") { setSuggestions([]); return; }
-    const matches = findPartialMatches(humanHand, card, 0.15);
-    setSuggestions(matches.slice(0, 3));
+    // Very low threshold so we always show options even if only 3-4 tiles match
+    const matches = findPartialMatches(humanHand, card, 0.05);
+    // Deduplicate by hand id — only keep the best match per unique hand
+    const seen = new Set<string>();
+    const unique: PartialMatchResult[] = [];
+    for (const m of matches) {
+      if (!seen.has(m.hand.id)) {
+        seen.add(m.hand.id);
+        unique.push(m);
+      }
+      if (unique.length >= 5) break;
+    }
+    setSuggestions(unique);
   }, [card, humanHand.length, humanHand.map(t => t.instanceId).join(","), level]);
 
   // ── Bam Bird advice generator (novice only) ──
@@ -427,7 +426,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setBamFirstUse(false);
   }, [card, humanHand, level]);
 
-  // ── Click a hint hand: rearrange tiles + yellow highlight ──
+  // ── Click a hint hand: rearrange tiles grouped by pattern, highlight in yellow ──
   const activateHintHand = useCallback((match: PartialMatchResult) => {
     if (activeHintHand === match.hand.id) {
       // Deselect
@@ -436,13 +435,64 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       return;
     }
     setActiveHintHand(match.hand.id);
-    // Find which tiles in hand are useful for this hand
-    const useful = humanHand.filter(t => isTileUsefulForHand(t.id, match.hand));
-    const usefulIds = new Set(useful.map(t => t.instanceId));
-    setHintTileIds(usefulIds);
-    // Rearrange: useful tiles first (left-justified), then non-useful
-    const nonUseful = humanHand.filter(t => !usefulIds.has(t.instanceId));
-    setPlayers(prev => prev!.map((p, i) => i === 0 ? { ...p, hand: [...useful, ...nonUseful] } : p));
+
+    // Use the match's colorAssignment + pattern to figure out which tiles
+    // belong to which group, then arrange them in group order.
+    const hand = match.hand;
+    const pattern = hand.patterns[match.patternIndex];
+    if (!pattern) return;
+
+    // Expand and find the best assignment
+    const expanded = expandNumberConstraint(pattern.numberConstraint, pattern);
+    let bestAssignment: ColorAssignment | undefined = match.colorAssignment;
+    let bestPattern = expanded[0];
+
+    // Find the expanded pattern that uses this assignment
+    for (const ep of expanded) {
+      const assignments = enumerateColorAssignments(ep);
+      for (const a of assignments) {
+        if (JSON.stringify(a) === JSON.stringify(bestAssignment)) {
+          bestPattern = ep;
+          break;
+        }
+      }
+    }
+    if (!bestAssignment && expanded.length > 0) {
+      bestPattern = expanded[0];
+      const assignments = enumerateColorAssignments(bestPattern);
+      bestAssignment = assignments[0];
+    }
+    if (!bestPattern || !bestAssignment) return;
+
+    // For each group in the pattern, resolve what tile IDs are needed
+    const arranged: GameTile[] = [];
+    const usedInstanceIds = new Set<string>();
+    const highlightIds = new Set<string>();
+
+    for (const group of bestPattern.groups) {
+      const neededIds = resolveGroupToTileIds(group, bestAssignment);
+      // For each needed tile, find it in the hand
+      for (const tileId of neededIds) {
+        let found: GameTile | undefined;
+        if (tileId === "__flower__") {
+          found = humanHand.find(t => t.suit === "flowers" && !usedInstanceIds.has(t.instanceId));
+        } else {
+          found = humanHand.find(t => t.id === tileId && !usedInstanceIds.has(t.instanceId));
+        }
+        if (found) {
+          arranged.push(found);
+          usedInstanceIds.add(found.instanceId);
+          highlightIds.add(found.instanceId);
+        }
+      }
+    }
+
+    // Add all non-matched tiles at the end
+    const remaining = humanHand.filter(t => !usedInstanceIds.has(t.instanceId));
+    const rearranged = [...arranged, ...remaining];
+
+    setHintTileIds(highlightIds);
+    setPlayers(prev => prev!.map((p, i) => i === 0 ? { ...p, hand: rearranged } : p));
   }, [activeHintHand, humanHand, card]);
 
   const dirName: Record<string, string> = { right: "RIGHT", across: "ACROSS (West)", left: "LEFT" };
@@ -523,7 +573,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   }, [stepIdx, phase, showStopPrompt, animating, level]);
 
   // Drag — insertion line appears BETWEEN tiles
-  const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(idx)); e.dataTransfer.setData("source", "hand"); const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); clearHintHighlight(); };
+  const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "all"; e.dataTransfer.setData("text/plain", String(idx)); e.dataTransfer.setData("source", "hand"); e.dataTransfer.setData("instanceId", visibleHand[idx]?.instanceId || ""); const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); clearHintHighlight(); };
   // Always clear drag state when drag ends (regardless of whether drop succeeded)
   const handleDragEnd = () => { setDragIdx(null); setDragOverIdx(null); };
   const handleDragOver = (e: React.DragEvent, idx: number) => {
@@ -567,9 +617,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const totalSlots = dealerSeat === 0 ? 14 : 13;
   const emptySlots = Math.max(0, totalSlots - visibleHand.length);
   const dirArrow: Record<string, string> = { right: "→", across: "↑", left: "←" };
-  const singletonHints = level === "novice" && phase === "charleston" && !showStopPrompt ? getPassHints(visibleHand) : new Set<string>();
-  // Merge singleton hints with bam bird advice hints
-  const passHints = bamAdvice ? new Set([...singletonHints, ...bamAdvice.tiles]) : singletonHints;
+  // Only show pass hints when Bam Bird is actively giving advice (not singletons by default)
+  const passHints = bamAdvice ? bamAdvice.tiles : new Set<string>();
 
   const years = getAvailableYears();
 
@@ -744,17 +793,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   )}
                 </div>
                 <div
-                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                   onDrop={e => {
-                    e.preventDefault();
+                    e.preventDefault(); e.stopPropagation();
                     const source = e.dataTransfer.getData("source") || "";
                     const data = e.dataTransfer.getData("text/plain");
                     if (source === "passbox") { /* already in pass box, ignore */ setDragIdx(null); setDragOverIdx(null); return; }
                     // Support both index-based (hand reorder drag) and instanceId-based drags
-                    const idx = parseInt(data, 10);
                     let tile: GameTile | undefined;
-                    if (!isNaN(idx) && visibleHand[idx]) { tile = visibleHand[idx]; }
-                    else { tile = visibleHand.find(t => t.instanceId === data); }
+                    const idx = parseInt(data, 10);
+                    if (source === "hand" && !isNaN(idx) && visibleHand[idx]) { tile = visibleHand[idx]; }
+                    else { tile = humanHand.find(t => t.instanceId === data) || visibleHand.find(t => t.instanceId === data); }
+                    if (!tile && !isNaN(idx)) { tile = visibleHand[idx]; }
                     if (tile && !selectedIds.has(tile.instanceId) && !isJoker(tile)) {
                       const max = reqCount !== null ? reqCount : 3;
                       if (selectedIds.size < max) toggleTile(tile);
@@ -810,9 +860,6 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         {level === "advanced" && timer > 0 && phase !== "complete" && !showStopPrompt && (
           <span style={{ fontSize: 9, fontWeight: 700, color: timer <= 10 ? U.cherry : U.seafoam, marginLeft: 8 }}>⏱ {timer}s</span>
         )}
-        {level === "novice" && phase === "charleston" && !showStopPrompt && singletonHints.size > 0 && selectedIds.size === 0 && !bamAdvice && (
-          <div style={{ fontSize: 8, color: "rgba(180,154,216,0.7)", marginTop: 1 }}>💡 Purple-highlighted tiles are singletons — good to pass!</div>
-        )}
       </div>
 
       {/* ── Suggestions Panel (Novice & Intermediate only) ── */}
@@ -822,7 +869,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>💡 Hint! Possible Hands</span>
+            <span>💡 Possible Hands</span>
             <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
           </div>
           {suggestionsOpen && (
@@ -854,13 +901,13 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         </div>
       )}
 
-      {/* ── Bam Bird Advice (Novice only) ── */}
+      {/* ── Bam Bird Advice (Novice only) — floats right ── */}
       {level === "novice" && phase === "charleston" && !showStopPrompt && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "0 10px 2px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-end", gap: 6, padding: "0 10px 2px", flexShrink: 0 }}>
           {bamAdvice && (
             <div style={{
-              flex: 1, maxWidth: 320, background: isDark ? "rgba(109,191,168,0.08)" : "rgba(109,191,168,0.06)",
-              border: "0.5px solid rgba(109,191,168,0.25)", borderRadius: 10, padding: "6px 10px",
+              maxWidth: 300, background: isDark ? "rgba(109,191,168,0.08)" : "rgba(109,191,168,0.06)",
+              border: "1.5px solid rgba(107,63,160,0.25)", borderRadius: 12, padding: "8px 10px",
               display: "flex", gap: 6, alignItems: "flex-start", animation: "entranceFade 0.3s ease both",
             }}>
               <BirdIcon size={14} color={C.seafoam} sw={2} />
@@ -873,11 +920,11 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
           {!bamAdvice && (
             <div onClick={generateBamAdvice} style={{
               display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
-              padding: "4px 10px", borderRadius: 14,
-              background: "rgba(109,191,168,0.1)", border: "1.5px solid rgba(180,154,216,0.4)",
+              padding: "5px 12px", borderRadius: 16,
+              background: "rgba(109,191,168,0.1)", border: "1.5px solid rgba(107,63,160,0.35)",
               transition: "all 0.2s",
             }}>
-              <BirdIcon size={12} color={C.seafoam} sw={2} />
+              <BirdIcon size={13} color={C.seafoam} sw={2} />
               {bamFirstUse && <span style={{ fontSize: 9, fontWeight: 500, color: U.seafoam }}>Ask Bam Bird</span>}
             </div>
           )}

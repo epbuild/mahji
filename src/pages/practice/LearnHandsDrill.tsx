@@ -625,7 +625,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
             background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12,
             padding: "4px 12px", cursor: "pointer", fontSize: 10, color: U.btnText,
             fontWeight: 600, fontFamily: "'Outfit',sans-serif",
-          }}>Sort by Tile</button>
+          }}>Sort by Suit</button>
         </div>
 
         {/* TILE BANK — multi-line wrap */}
