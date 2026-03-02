@@ -294,13 +294,13 @@ function ROLIndicator({ stepIdx, phase, showStopPrompt, stoppedEarly, cherry, te
 }
 
 function ReadyBadge() {
-  return <span style={{ fontSize: 7, color: "rgba(109,191,168,0.5)", fontWeight: 600 }}>Ready</span>;
+  return <span style={{ fontSize: 7, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>Ready</span>;
 }
 
 function SeatLabel({ name, isReady, showReady }: { name: string; isReady: boolean; showReady: boolean }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(60,90,140,0.55)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
       {isReady && showReady && <div style={{ marginTop: 2 }}><ReadyBadge /></div>}
     </div>
   );
@@ -464,17 +464,17 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return suggestions.map(s => computeRealMatchCount(s, humanHand));
   }, [suggestions, humanHand]);
 
-  // Filter & sort suggestions based on charleston phase:
-  // First Charleston (steps 0-2): show lines with 4+ matching tiles
-  // Second Charleston & Courtesy: show top 5 lines with 5+ matching tiles
+  // Filter & sort suggestions: top 5 most feasible hands
+  // First Charleston (steps 0-2): 4+ matching tiles
+  // Second Charleston & Courtesy: 5+ matching tiles
   const sortedSuggestions = useMemo(() => {
     const isFirstCharleston = phase === "charleston" && stepIdx <= 2;
     const minTiles = isFirstCharleston ? 4 : 5;
-    const filtered = suggestions
+    return suggestions
       .map((s, i) => ({ match: s, realCount: realMatchCounts[i] ?? s.matchedCount }))
       .filter(({ realCount }) => realCount >= minTiles)
-      .sort((a, b) => b.realCount - a.realCount);
-    return isFirstCharleston ? filtered : filtered.slice(0, 5);
+      .sort((a, b) => b.realCount - a.realCount)
+      .slice(0, 5);
   }, [suggestions, realMatchCounts, phase, stepIdx]);
 
   // ── Bam Bird advice generator (novice only) ──
@@ -910,13 +910,16 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               </div>
             ) : (() => {
               const bScale = Math.max(0.55, Math.min(1, tileScale * 1.2));
-              const passBoxW = Math.ceil((72 * 3 + 3 * 2) * tileScale) + 14;
+              const slotCount = phase === "courtesy" && courtesyCount !== null ? courtesyCount : isBlind ? 3 : 3;
+              const passBoxW = Math.ceil((72 * slotCount + 3 * Math.max(0, slotCount - 1)) * tileScale) + 14;
               const passBoxH = Math.ceil(98 * tileScale) + 14;
               const selectedTiles = humanHand.filter(t => selectedIds.has(t.instanceId));
+              const dirLabel = phase === "courtesy" ? "Courtesy Across" : step?.label;
+              const dirIcon = phase === "courtesy" ? "↑" : step ? dirArrow[step.dir] : "";
               return (
               <>
                 <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: Math.round(8 * bScale), padding: `${Math.round(2 * bScale)}px ${Math.round(8 * bScale)}px`, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center", maxWidth: Math.round(200 * bScale) }}>
-                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(10 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 0.5 }}>{step?.label} {step && dirArrow[step.dir]}</span>
+                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(10 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 0.5 }}>{dirLabel} {dirIcon}</span>
                   {isBlind && <span style={{ fontSize: Math.round(6 * bScale), color: "#6DBFA8", fontWeight: 600, marginLeft: 4 }}>BLIND OK</span>}
                   {level === "novice" && step && (
                     <div style={{ fontSize: Math.round(6 * bScale), color: "#6B5A82", marginTop: 1, lineHeight: 1.2 }}>
@@ -924,7 +927,13 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                       {isBlind ? " · You won't see what comes back!" : ""}
                     </div>
                   )}
+                  {level === "novice" && phase === "courtesy" && (
+                    <div style={{ fontSize: Math.round(6 * bScale), color: "#6B5A82", marginTop: 1, lineHeight: 1.2 }}>
+                      Pass {courtesyCount} tile{courtesyCount !== 1 ? "s" : ""} to West (across)
+                    </div>
+                  )}
                 </div>
+                {slotCount > 0 && (
                 <div
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                   onDrop={e => {
@@ -932,7 +941,6 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     const source = e.dataTransfer.getData("source") || "";
                     const data = e.dataTransfer.getData("text/plain");
                     if (source === "passbox") { /* already in pass box, ignore */ setDragIdx(null); setDragOverIdx(null); return; }
-                    // Support both index-based (hand reorder drag) and instanceId-based drags
                     let tile: GameTile | undefined;
                     const idx = parseInt(data, 10);
                     if (source === "hand" && !isNaN(idx) && visibleHand[idx]) { tile = visibleHand[idx]; }
@@ -945,7 +953,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     setDragIdx(null); setDragOverIdx(null);
                   }}
                   style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: passAnimPhase ? "visible" : "hidden", position: "relative" }}>
-                  <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
+                  <div style={{ width: Math.ceil((72 * slotCount + 3 * Math.max(0, slotCount - 1)) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
                     <div style={{ transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
                       <div style={{
                         display: "flex", gap: 3,
@@ -968,7 +976,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                           </>
                         ) : (
                           <>
-                            {[0, 1, 2].map(i => {
+                            {Array.from({ length: slotCount }).map((_, i) => {
                               const tile = selectedTiles[i];
                               if (tile) return (
                                 <div key={tile.instanceId}
@@ -987,11 +995,12 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   </div>
                   {selectedIds.size === 0 && !passAnimPhase && (
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Drag tiles here (0–3)" : "Drag or double-click 3 tiles"}</span>
+                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Drag or click tiles (0–3)" : `Drag or click ${reqCount ?? 3} tile${(reqCount ?? 3) !== 1 ? "s" : ""} to pass`}</span>
                     </div>
                   )}
                 </div>
-                {(phase === "charleston" || phase === "courtesy") && (
+                )}
+                {(phase === "charleston" || phase === "courtesy") && slotCount > 0 && (
                   <button onClick={executePass} disabled={!canPass()} style={{ background: canPass() ? "#E03050" : "rgba(255,255,255,0.2)", color: canPass() ? "#FFFFFF" : mat.text, border: "none", borderRadius: Math.round(14 * bScale), padding: `${Math.round(4 * bScale)}px ${Math.round(16 * bScale)}px`, cursor: canPass() ? "pointer" : "not-allowed", fontSize: Math.round(9 * bScale), fontWeight: 700, fontFamily: "'Bodoni Moda',serif", letterSpacing: 1.5, transition: "all 0.2s ease", opacity: canPass() ? 1 : 0.4, boxShadow: canPass() ? "0 0 10px rgba(224,48,80,0.2)" : "none" }}>{animating ? "..." : "PASS"}</button>
                 )}
               </>
@@ -1006,7 +1015,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
         {/* Bottom — You (East · Dealer) */}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 14px 8px", position: "relative" }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(60,90,140,0.55)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
           {showROL && <div style={{ position: "absolute", right: 14, bottom: 8 }}><ROLIndicator stepIdx={stepIdx} phase={phase} showStopPrompt={showStopPrompt} stoppedEarly={stoppedEarly} cherry={U.cherry} textFaded={mat.text} /></div>}
         </div>
       </div>
@@ -1026,7 +1035,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>{suggestionsOpen ? '🙈 Hide Possible Hands' : '👀 Peep Possible Hands!'}</span>
+            <span>{suggestionsOpen ? '🙈 Hide Suggested Hands' : '👀 Peep Suggested Hands!'}</span>
             <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
           </div>
           {suggestionsOpen && (
