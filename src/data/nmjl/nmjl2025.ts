@@ -322,18 +322,17 @@ const hands: HandDefinition[] = [
   {
     id: '2025-consec-7',
     section: 'consecutive_run',
-    displayPattern: '12345 1111 1111',
+    displayPattern: '12345 1111 11111',
     patterns: check14([{
       groups: [
         mixed([s(1), s(2), s(3), s(4), s(5)], 'green'),
-        pair(s(1), 'green'),
-        kong(s(1), 'green'), kong(s(1), 'red'),
+        kong(s(1), 'red'), quint(s(1), 'blue'),
       ],
       numberConstraint: { type: 'any_run', length: 5 },
     }]),
     points: 30, exposure: 'X', jokerPolicy: 'standard',
-    description: 'Any 5 Consec. Nos., Pair Any No. in Run, Kongs Match Pair',
-    needsReview: true, // tile count / grouping uncertain
+    description: 'Any 5 Consec. Nos., Kong+Quint of Any No. in Run',
+    needsReview: true, // tile count uncertain — verify grouping from card
   },
   {
     id: '2025-consec-8',
