@@ -464,13 +464,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return suggestions.map(s => computeRealMatchCount(s, humanHand));
   }, [suggestions, humanHand]);
 
-  // Sort suggestions by highest real match count first, filtering out 0/14
+  // Filter & sort suggestions based on charleston phase:
+  // First Charleston (steps 0-2): show lines with 4+ matching tiles
+  // Second Charleston & Courtesy: show top 5 lines with 5+ matching tiles
   const sortedSuggestions = useMemo(() => {
-    return suggestions
+    const isFirstCharleston = phase === "charleston" && stepIdx <= 2;
+    const minTiles = isFirstCharleston ? 4 : 5;
+    const filtered = suggestions
       .map((s, i) => ({ match: s, realCount: realMatchCounts[i] ?? s.matchedCount }))
-      .filter(({ realCount }) => realCount > 0)
+      .filter(({ realCount }) => realCount >= minTiles)
       .sort((a, b) => b.realCount - a.realCount);
-  }, [suggestions, realMatchCounts]);
+    return isFirstCharleston ? filtered : filtered.slice(0, 5);
+  }, [suggestions, realMatchCounts, phase, stepIdx]);
 
   // ── Bam Bird advice generator (novice only) ──
   const generateBamAdvice = useCallback(() => {
