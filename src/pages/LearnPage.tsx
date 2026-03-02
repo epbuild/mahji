@@ -3,6 +3,7 @@ import { C } from '../constants/colors';
 import { BirdIcon, I } from '../components/ui/Icons';
 import { PT, SH, Tag, Card, Cnt, BamFloat } from '../components/Layout';
 import { MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker, WIND_CFG } from '../components/TileComponents';
+import ReadTheCard from './learn/ReadTheCard';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -93,6 +94,7 @@ function LearnPage({ showChat, setShowChat }) {
   const [level, setLevel] = useState("All");
   const [format, setFormat] = useState("Text");
   if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} format={format}/>;
+  if (lesson === "Reading the NMJL Card") return <ReadTheCard onBack={() => setLesson(null)} />;
   if (lesson === "History") return (<>
     <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}>
       <div onClick={() => setLesson(null)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
@@ -123,7 +125,7 @@ function LearnPage({ showChat, setShowChat }) {
             {f === "Video" ? "📹" : "📖"} {f}</div>))}
         </div>}
       </div>
-      {sec.items.map((it) => { num++; return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={it.t === "Meet the Tiles" ? () => setLesson("Meet the Tiles") : undefined}/>; })}
+      {sec.items.map((it) => { num++; const clickable = it.t === "Meet the Tiles" || it.t === "Reading the NMJL Card"; return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
     {/* History bonus button */}
     <div onClick={() => setLesson("History")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: C.paleBlue || "#D9ECF5", border:`1px solid rgba(142,199,226,0.3)`, borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
