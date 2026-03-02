@@ -58,6 +58,47 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
+// ─── SORTING ──────────────────────────────────────────────────
+const WIND_ORDER: Record<string, number> = { N: 0, E: 1, W: 2, S: 3 };
+const DRAGON_ORDER: Record<string, number> = { red: 0, green: 1, white: 2 };
+
+function isJoker(tile: GameTile): boolean { return tile.suit === "jokers"; }
+
+function sortBySuit(hand: GameTile[]): GameTile[] {
+  return [...hand].sort((a, b) => {
+    const gk = (t: GameTile) => {
+      if (t.suit === "flowers") return -1;
+      if (isJoker(t)) return 99;
+      if (t.suit === "characters") return 1;
+      if (t.suit === "dragons" && t.type === "red") return 1.9; if (t.suit === "bamboo") return 2;
+      if (t.suit === "dragons" && t.type === "green") return 2.9; if (t.suit === "dots") return 3;
+      if (t.suit === "dragons" && t.type === "white") return 3.9; if (t.suit === "winds") return 4;
+      return 9;
+    };
+    const ga = gk(a), gb = gk(b); if (ga !== gb) return ga - gb;
+    if (a.suit === "winds" && b.suit === "winds") return (WIND_ORDER[a.type || ""] ?? 9) - (WIND_ORDER[b.type || ""] ?? 9);
+    if (a.suit === "flowers" && b.suit === "flowers") return (a.number ?? 0) - (b.number ?? 0);
+    return (a.number ?? 99) - (b.number ?? 99);
+  });
+}
+
+function sortByRank(hand: GameTile[]): GameTile[] {
+  return [...hand].sort((a, b) => {
+    if (a.suit === "flowers" && b.suit !== "flowers") return -1;
+    if (a.suit !== "flowers" && b.suit === "flowers") return 1;
+    if (a.suit === "flowers" && b.suit === "flowers") return (a.number ?? 0) - (b.number ?? 0);
+    if (isJoker(a) && !isJoker(b)) return 1;
+    if (!isJoker(a) && isJoker(b)) return -1;
+    if (isJoker(a) && isJoker(b)) return 0;
+    const mg = (t: GameTile) => { if (t.suit === "dots" || t.suit === "bamboo" || t.suit === "characters") return 0; if (t.suit === "winds") return 1; if (t.suit === "dragons") return 2; return 4; };
+    const ma = mg(a), mb = mg(b); if (ma !== mb) return ma - mb;
+    if (ma === 0) { if ((a.number ?? 0) !== (b.number ?? 0)) return (a.number ?? 0) - (b.number ?? 0); const so: Record<string, number> = { characters: 0, bamboo: 1, dots: 2 }; return (so[a.suit] ?? 9) - (so[b.suit] ?? 9); }
+    if (a.suit === "winds" && b.suit === "winds") return (WIND_ORDER[a.type || ""] ?? 9) - (WIND_ORDER[b.type || ""] ?? 9);
+    if (a.suit === "dragons" && b.suit === "dragons") return (DRAGON_ORDER[a.type || ""] ?? 9) - (DRAGON_ORDER[b.type || ""] ?? 9);
+    return 0;
+  });
+}
+
 /** Resolve a full hand to concrete GameTile instances */
 function resolveHandToTiles(
   hand: HandDefinition,
@@ -120,14 +161,15 @@ function generateDistractors(targetTiles: GameTile[], count: number): GameTile[]
 
 // ─── TILE CARD ────────────────────────────────────────────────
 
-function TileCard({ tile, selected, onTap, disabled, cherry, isDragging = false, isWrong = false, size = "sm" as "sm" | "md" }: {
+function TileCard({ tile, selected, onTap, disabled, cherry, isDragging = false, isWrong = false, onDragStart, onDragEnd }: {
   tile: GameTile; selected: boolean; onTap: () => void; disabled: boolean; cherry: string;
-  isDragging?: boolean; isWrong?: boolean; size?: "sm" | "md";
+  isDragging?: boolean; isWrong?: boolean; onDragStart?: (e: React.DragEvent) => void; onDragEnd?: (e: React.DragEvent) => void;
 }) {
   return (
     <div
       draggable={!disabled}
-      onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); }}
+      onDragStart={onDragStart || ((e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "bank"); })}
+      onDragEnd={onDragEnd}
       onClick={disabled ? undefined : onTap}
       style={{
         position: "relative", cursor: disabled ? "default" : "grab", transition: "all 0.15s ease",
@@ -138,27 +180,25 @@ function TileCard({ tile, selected, onTap, disabled, cherry, isDragging = false,
         flexShrink: 0,
       }}
     >
-      <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size={size} /></div>
+      <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size="md" /></div>
     </div>
   );
 }
 
 // ─── EMPTY SLOT ───────────────────────────────────────────────
 
-function EmptySlot({ onDrop, onTap, highlighted, size = "sm" }: {
-  onDrop: (instanceId: string) => void; onTap: () => void; highlighted: boolean; size?: "sm" | "md";
+function EmptySlot({ onDrop, onTap, highlighted }: {
+  onDrop: (instanceId: string, source: string) => void; onTap: () => void; highlighted: boolean;
 }) {
   const [over, setOver] = useState(false);
-  const w = size === "sm" ? 52 : 66;
-  const h = size === "sm" ? 72 : 90;
   return (
     <div
       onDragOver={(e) => { e.preventDefault(); setOver(true); }}
       onDragLeave={() => setOver(false)}
-      onDrop={(e) => { e.preventDefault(); setOver(false); const id = e.dataTransfer.getData("text/plain"); if (id) onDrop(id); }}
+      onDrop={(e) => { e.preventDefault(); setOver(false); const id = e.dataTransfer.getData("text/plain"); const source = e.dataTransfer.getData("source") || "bank"; if (id) onDrop(id, source); }}
       onClick={onTap}
       style={{
-        width: w, height: h, borderRadius: 8, flexShrink: 0,
+        width: 66, height: 90, borderRadius: 8, flexShrink: 0,
         border: over ? "2px solid #6DBFA8" : highlighted ? "2px dashed rgba(109,191,168,0.5)" : "2px dashed rgba(255,255,255,0.15)",
         background: over ? "rgba(109,191,168,0.1)" : "rgba(255,255,255,0.04)",
         transition: "all 0.15s ease", cursor: "pointer",
@@ -226,11 +266,9 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
 
     setBuildSlots(prev => {
       const next = [...prev];
-      // If a specific slot is targeted and it's empty
       if (targetSlotIdx !== undefined && next[targetSlotIdx] === null) {
         next[targetSlotIdx] = tile;
       } else {
-        // Find first empty slot
         const emptyIdx = next.findIndex(s => s === null);
         if (emptyIdx < 0) return prev;
         next[emptyIdx] = tile;
@@ -242,6 +280,27 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
     setSelectedBankTile(null);
     setWrongSlots(new Set());
   }, [bankTiles]);
+
+  // Move a tile from one build slot to an empty build slot
+  const moveBuildTile = useCallback((fromInstanceId: string, targetSlotIdx: number) => {
+    setBuildSlots(prev => {
+      const next = [...prev];
+      const fromIdx = next.findIndex(t => t?.instanceId === fromInstanceId);
+      if (fromIdx < 0) return prev;
+      if (next[targetSlotIdx] !== null) {
+        // Swap tiles between slots
+        const temp = next[targetSlotIdx];
+        next[targetSlotIdx] = next[fromIdx];
+        next[fromIdx] = temp;
+      } else {
+        // Move to empty slot
+        next[targetSlotIdx] = next[fromIdx];
+        next[fromIdx] = null;
+      }
+      return next;
+    });
+    setWrongSlots(new Set());
+  }, []);
 
   // Remove tile from build slot back to bank
   const removeTile = useCallback((slotIdx: number) => {
@@ -264,6 +323,14 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
     setWrongSlots(new Set());
     setSelectedBankTile(null);
   }, [buildSlots]);
+
+  // Sort bank tiles
+  const doSortBank = (fn: (tiles: GameTile[]) => GameTile[]) => {
+    setBankTiles(prev => fn(prev));
+  };
+
+  // Drag state for build zone tiles
+  const [dragFromSlot, setDragFromSlot] = useState<number | null>(null);
 
   // Check the hand
   const checkHand = useCallback(() => {
@@ -443,23 +510,42 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
                 const isGroupStart = groupStarts.includes(i) && i > 0;
                 return (
                   <React.Fragment key={i}>
-                    {isGroupStart && <div style={{ width: 8, flexShrink: 0 }} />}
+                    {isGroupStart && <div style={{ width: 10, flexShrink: 0 }} />}
                     {slot ? (
-                      <TileCard
-                        tile={slot}
-                        selected={false}
-                        onTap={() => removeTile(i)}
-                        disabled={phase === "success"}
-                        cherry={U.cherry}
-                        isWrong={wrongSlots.has(i)}
-                        size="sm"
-                      />
+                      <div
+                        draggable={phase !== "success"}
+                        onDragStart={(e) => { e.dataTransfer.setData("text/plain", slot.instanceId); e.dataTransfer.setData("source", "build"); setDragFromSlot(i); }}
+                        onDragEnd={() => setDragFromSlot(null)}
+                        onDragOver={(e) => { e.preventDefault(); }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const id = e.dataTransfer.getData("text/plain");
+                          const source = e.dataTransfer.getData("source") || "bank";
+                          if (source === "build") { moveBuildTile(id, i); }
+                          else { /* bank tile onto occupied slot — swap: send current to bank, place new */ removeTile(i); placeTile(id, i); }
+                          setDragFromSlot(null);
+                        }}
+                        style={{ flexShrink: 0 }}
+                      >
+                        <TileCard
+                          tile={slot}
+                          selected={false}
+                          onTap={() => removeTile(i)}
+                          disabled={phase === "success"}
+                          cherry={U.cherry}
+                          isWrong={wrongSlots.has(i)}
+                          isDragging={dragFromSlot === i}
+                        />
+                      </div>
                     ) : (
                       <EmptySlot
-                        onDrop={(id) => placeTile(id, i)}
+                        onDrop={(id, source) => {
+                          if (source === "build") { moveBuildTile(id, i); }
+                          else { placeTile(id, i); }
+                          setDragFromSlot(null);
+                        }}
                         onTap={() => { if (selectedBankTile) placeTile(selectedBankTile, i); }}
                         highlighted={selectedBankTile !== null}
-                        size="sm"
                       />
                     )}
                   </React.Fragment>
@@ -528,11 +614,39 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
           )}
         </div>
 
+        {/* Sort buttons */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "2px 0" }}>
+          <button onClick={() => doSortBank(sortByRank)} style={{
+            background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12,
+            padding: "4px 12px", cursor: "pointer", fontSize: 10, color: U.btnText,
+            fontWeight: 600, fontFamily: "'Outfit',sans-serif",
+          }}>Sort by Rank</button>
+          <button onClick={() => doSortBank(sortBySuit)} style={{
+            background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12,
+            padding: "4px 12px", cursor: "pointer", fontSize: 10, color: U.btnText,
+            fontWeight: 600, fontFamily: "'Outfit',sans-serif",
+          }}>Sort by Tile</button>
+        </div>
+
         {/* TILE BANK — multi-line wrap */}
-        <div style={{
-          background: isDark ? "rgba(180,154,216,0.04)" : "rgba(107,63,160,0.03)",
-          border: `0.5px solid ${U.cBorder}`, borderRadius: 14, padding: "12px",
-        }}>
+        <div
+          onDragOver={(e) => { e.preventDefault(); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const id = e.dataTransfer.getData("text/plain");
+            const source = e.dataTransfer.getData("source") || "bank";
+            if (source === "build" && id) {
+              // Drag from build slot back to bank
+              const slotIdx = buildSlots.findIndex(t => t?.instanceId === id);
+              if (slotIdx >= 0) removeTile(slotIdx);
+            }
+            setDragFromSlot(null);
+          }}
+          style={{
+            background: isDark ? "rgba(180,154,216,0.04)" : "rgba(107,63,160,0.03)",
+            border: `0.5px solid ${U.cBorder}`, borderRadius: 14, padding: "12px",
+          }}
+        >
           <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>
             Tile Bank ({bankTiles.length})
           </div>
@@ -546,9 +660,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
                   if (selectedBankTile === tile.instanceId) {
                     setSelectedBankTile(null);
                   } else {
-                    // If a bank tile is selected and user taps another, deselect first
                     setSelectedBankTile(tile.instanceId);
-                    // Auto-place if there's an empty slot
                     const emptyIdx = buildSlots.findIndex(s => s === null);
                     if (emptyIdx >= 0) {
                       placeTile(tile.instanceId);
@@ -557,7 +669,6 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
                 }}
                 disabled={phase === "success"}
                 cherry={U.cherry}
-                size="sm"
               />
             ))}
           </div>

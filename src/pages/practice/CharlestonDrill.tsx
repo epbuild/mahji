@@ -172,9 +172,9 @@ function sortByRank(hand: GameTile[]): GameTile[] {
 // TILE CARD — wraps MahjiTile with selection/halo/drag UI
 // ═══════════════════════════════════════════════════════════════
 
-function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, onDragEnd, showInsertLeft = false, isNew = false, isHint = false, isDragging = false }: {
+function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size = "md" as "sm"|"md", onDragStart, onDragOver, onDrop, onDragEnd, showInsertLeft = false, isNew = false, isHint = false, isYellowHint = false, isDragging = false }: {
   tile: GameTile; selected: boolean; onTap: () => void; onDoubleTap?: () => void; disabled: boolean; cherry: string; size?: "sm"|"md";
-  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; onDragEnd?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean; isHint?: boolean; isDragging?: boolean;
+  onDragStart?: (e: React.DragEvent) => void; onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; onDragEnd?: (e: React.DragEvent) => void; showInsertLeft?: boolean; isNew?: boolean; isHint?: boolean; isYellowHint?: boolean; isDragging?: boolean;
 }) {
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "stretch", marginLeft: showInsertLeft ? 6 : 0, transition: "margin 0.1s ease" }}>
@@ -185,13 +185,13 @@ function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size =
         style={{
           position: "relative", cursor: disabled ? "default" : "grab", transition: "all 0.15s ease",
           transform: selected ? "translateY(-6px) scale(1.05)" : isDragging ? "scale(0.95)" : "scale(1)",
-          boxShadow: isNew ? "0 0 10px rgba(109,191,168,0.4), 0 0 4px rgba(109,191,168,0.2)" : isHint ? "0 0 8px rgba(180,154,216,0.4)" : selected ? `0 0 14px ${cherry}33` : "none",
+          boxShadow: isYellowHint ? "0 0 10px rgba(234,179,8,0.45), 0 0 4px rgba(234,179,8,0.2)" : isNew ? "0 0 10px rgba(109,191,168,0.4), 0 0 4px rgba(109,191,168,0.2)" : isHint ? "0 0 8px rgba(180,154,216,0.4)" : selected ? `0 0 14px ${cherry}33` : "none",
           opacity: isDragging ? 0.35 : disabled ? 0.5 : 1, userSelect: "none", borderRadius: 10,
-          outline: isNew ? "2px solid rgba(109,191,168,0.6)" : isHint ? "2px solid rgba(180,154,216,0.5)" : selected ? `2px solid ${cherry}` : "2px solid transparent",
+          outline: isYellowHint ? "2.5px solid rgba(234,179,8,0.7)" : isNew ? "2px solid rgba(109,191,168,0.6)" : isHint ? "2px solid rgba(180,154,216,0.5)" : selected ? `2px solid ${cherry}` : "2px solid transparent",
         }}>
         <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size={size} /></div>
         {isNew && <div style={{ position: "absolute", top: -4, right: -4, fontSize: 7, fontWeight: 700, color: "#fff", background: "#6DBFA8", borderRadius: 6, padding: "1px 4px", zIndex: 2 }}>NEW</div>}
-        {isHint && <div style={{ position: "absolute", bottom: -3, left: "50%", transform: "translateX(-50%)", fontSize: 6, fontWeight: 700, color: "#fff", background: "rgba(180,154,216,0.7)", borderRadius: 4, padding: "0px 3px", zIndex: 2, whiteSpace: "nowrap" }}>HINT</div>}
+        {isHint && !isYellowHint && <div style={{ position: "absolute", bottom: -3, left: "50%", transform: "translateX(-50%)", fontSize: 6, fontWeight: 700, color: "#fff", background: "rgba(180,154,216,0.7)", borderRadius: 4, padding: "0px 3px", zIndex: 2, whiteSpace: "nowrap" }}>HINT</div>}
       </div>
     </div>
   );
@@ -274,6 +274,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [bamAdvice, setBamAdvice] = useState<{ tiles: Set<string>; message: string } | null>(null);
   const [bamFirstUse, setBamFirstUse] = useState(true);
+  const [activeHintHand, setActiveHintHand] = useState<string | null>(null); // hand id
+  const [hintTileIds, setHintTileIds] = useState<Set<string>>(new Set()); // instanceIds highlighted yellow
 
   // Load card when year changes
   useEffect(() => { getCard(cardYear).then(c => { if (c) setCard(c); }); }, [cardYear]);
@@ -349,6 +351,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
     setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null); setBamFirstUse(true);
+    setActiveHintHand(null); setHintTileIds(new Set());
   }, [dealerSeat]);
 
   // Don't auto-deal on mount — show setup screen first
@@ -358,7 +361,16 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const isBlind = step?.blind || false;
   const reqCount = phase === "courtesy" && courtesyCount !== null ? courtesyCount : isBlind ? null : 3;
   const humanHand = players?.[0]?.hand || [];
-  const doSort = (fn: (h: GameTile[]) => GameTile[]) => { if (!players) return; setPlayers(p => p!.map((pl, i) => (i === 0 ? { ...pl, hand: fn(pl.hand) } : pl))); };
+
+  // Clear hint highlight when user manually rearranges tiles
+  const clearHintHighlight = useCallback(() => {
+    if (activeHintHand) {
+      setActiveHintHand(null);
+      setHintTileIds(new Set());
+    }
+  }, [activeHintHand]);
+
+  const doSort = (fn: (h: GameTile[]) => GameTile[]) => { if (!players) return; setPlayers(p => p!.map((pl, i) => (i === 0 ? { ...pl, hand: fn(pl.hand) } : pl))); clearHintHighlight(); };
 
   // ── Recompute hand suggestions when hand changes ──
   useEffect(() => {
@@ -414,6 +426,24 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setBamAdvice({ tiles: new Set(toPass.map(t => t.instanceId)), message });
     setBamFirstUse(false);
   }, [card, humanHand, level]);
+
+  // ── Click a hint hand: rearrange tiles + yellow highlight ──
+  const activateHintHand = useCallback((match: PartialMatchResult) => {
+    if (activeHintHand === match.hand.id) {
+      // Deselect
+      setActiveHintHand(null);
+      setHintTileIds(new Set());
+      return;
+    }
+    setActiveHintHand(match.hand.id);
+    // Find which tiles in hand are useful for this hand
+    const useful = humanHand.filter(t => isTileUsefulForHand(t.id, match.hand));
+    const usefulIds = new Set(useful.map(t => t.instanceId));
+    setHintTileIds(usefulIds);
+    // Rearrange: useful tiles first (left-justified), then non-useful
+    const nonUseful = humanHand.filter(t => !usefulIds.has(t.instanceId));
+    setPlayers(prev => prev!.map((p, i) => i === 0 ? { ...p, hand: [...useful, ...nonUseful] } : p));
+  }, [activeHintHand, humanHand, card]);
 
   const dirName: Record<string, string> = { right: "RIGHT", across: "ACROSS (West)", left: "LEFT" };
   const getMsg = () => {
@@ -493,7 +523,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   }, [stepIdx, phase, showStopPrompt, animating, level]);
 
   // Drag — insertion line appears BETWEEN tiles
-  const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(idx)); const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); };
+  const handleDragStart = (e: React.DragEvent, idx: number) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(idx)); e.dataTransfer.setData("source", "hand"); const tile = visibleHand[idx]; if (tile && receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); clearHintHighlight(); };
   // Always clear drag state when drag ends (regardless of whether drop succeeded)
   const handleDragEnd = () => { setDragIdx(null); setDragOverIdx(null); };
   const handleDragOver = (e: React.DragEvent, idx: number) => {
@@ -715,13 +745,35 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 </div>
                 <div
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
-                  onDrop={e => { e.preventDefault(); const idxStr = e.dataTransfer.getData("text/plain"); const idx = parseInt(idxStr, 10); if (!isNaN(idx) && visibleHand[idx]) { const tile = visibleHand[idx]; if (!selectedIds.has(tile.instanceId) && !isJoker(tile)) { const max = reqCount !== null ? reqCount : 3; if (selectedIds.size < max) toggleTile(tile); } } setDragIdx(null); setDragOverIdx(null); }}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const source = e.dataTransfer.getData("source") || "";
+                    const data = e.dataTransfer.getData("text/plain");
+                    if (source === "passbox") { /* already in pass box, ignore */ setDragIdx(null); setDragOverIdx(null); return; }
+                    // Support both index-based (hand reorder drag) and instanceId-based drags
+                    const idx = parseInt(data, 10);
+                    let tile: GameTile | undefined;
+                    if (!isNaN(idx) && visibleHand[idx]) { tile = visibleHand[idx]; }
+                    else { tile = visibleHand.find(t => t.instanceId === data); }
+                    if (tile && !selectedIds.has(tile.instanceId) && !isJoker(tile)) {
+                      const max = reqCount !== null ? reqCount : 3;
+                      if (selectedIds.size < max) toggleTile(tile);
+                    }
+                    setDragIdx(null); setDragOverIdx(null);
+                  }}
                   style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
                   <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
                     <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
                       {[0, 1, 2].map(i => {
                         const tile = selectedTiles[i];
-                        if (tile) return <TileCard key={tile.instanceId} tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />;
+                        if (tile) return (
+                          <div key={tile.instanceId}
+                            draggable
+                            onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "passbox"); }}
+                          >
+                            <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />
+                          </div>
+                        );
                         return <EmptyPassSlot key={`pass-empty-${i}`} />;
                       })}
                     </div>
@@ -770,7 +822,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>Possible Hands</span>
+            <span>💡 Hint! Possible Hands</span>
             <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
           </div>
           {suggestionsOpen && (
@@ -779,14 +831,24 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               border: `0.5px solid ${U.cBorder}`, borderRadius: 10, padding: "6px 10px", marginBottom: 2,
               animation: "entranceFade 0.2s ease both",
             }}>
-              {suggestions.map((s, i) => (
-                <div key={s.hand.id + i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: i < suggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none" }}>
-                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: U.text, fontWeight: 500, flex: 1 }}>{s.hand.displayPattern}</span>
-                  <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: U.seafoam, minWidth: 36, textAlign: "right" }}>{s.matchedCount}/14</span>
-                  <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
-                </div>
-              ))}
+              {suggestions.map((s, i) => {
+                const isActive = activeHintHand === s.hand.id;
+                return (
+                  <div key={s.hand.id + i} onClick={() => activateHintHand(s)} style={{
+                    display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 8, cursor: "pointer",
+                    borderBottom: i < suggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
+                    background: isActive ? "rgba(234,179,8,0.1)" : "transparent",
+                    outline: isActive ? "1.5px solid rgba(234,179,8,0.4)" : "1.5px solid transparent",
+                    transition: "all 0.15s ease",
+                  }}>
+                    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: isActive ? "#b8860b" : U.text, fontWeight: isActive ? 700 : 500, flex: 1 }}>{s.hand.displayPattern}</span>
+                    <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{s.matchedCount}/14</span>
+                    <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
+                  </div>
+                );
+              })}
+              {activeHintHand && <div style={{ fontSize: 8, color: U.textLight, textAlign: "center", marginTop: 3, fontStyle: "italic" }}>Matching tiles highlighted in yellow · Drag to rearrange</div>}
             </div>
           )}
         </div>
@@ -831,14 +893,27 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       )}
 
       {/* Hand — two-div structure: outer clips to scaled height, inner holds tiles at natural size */}
-      <div ref={outerRef} style={{
-        width: "100%",
-        overflow: "hidden",
-        height: Math.ceil(rowNaturalH * tileScale) + 22,
-        minHeight: 60,
-        flexShrink: 0,
-        padding: "5px 0 16px",
-      }}>
+      <div ref={outerRef}
+        onDragOver={(e) => { const source = e.dataTransfer.types.includes("source") ? "" : ""; e.preventDefault(); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          const source = e.dataTransfer.getData("source") || "";
+          const instanceId = e.dataTransfer.getData("text/plain");
+          if (source === "passbox" && instanceId) {
+            // Remove from pass selection (deselect)
+            const tile = humanHand.find(t => t.instanceId === instanceId);
+            if (tile) { setSelectedIds(prev => { const next = new Set(prev); next.delete(tile.instanceId); return next; }); }
+          }
+          setDragIdx(null); setDragOverIdx(null);
+        }}
+        style={{
+          width: "100%",
+          overflow: "hidden",
+          height: Math.ceil(rowNaturalH * tileScale) + 22,
+          minHeight: 60,
+          flexShrink: 0,
+          padding: "5px 0 16px",
+        }}>
         <div ref={innerRef} style={{
           display: "flex",
           gap: 3,
@@ -856,7 +931,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               onTap={() => { if (receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId])); toggleTile(tile); }}
               onDoubleTap={() => toggleTile(tile)}
               disabled={phase === "complete" || phase === "courtesy_prompt" || animating || showStopPrompt}
-              cherry={U.cherry} isNew={tileIsNew(tile)} isHint={passHints.has(tile.instanceId)} isDragging={dragIdx === idx}
+              cherry={U.cherry} isNew={tileIsNew(tile)} isHint={passHints.has(tile.instanceId)} isYellowHint={hintTileIds.has(tile.instanceId)} isDragging={dragIdx === idx}
               showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} onDragEnd={handleDragEnd} />
           ))}
