@@ -3,8 +3,10 @@ import { C } from '../constants/colors';
 import { BirdIcon, I } from '../components/ui/Icons';
 import { PT, SH, Tag, Card, Tabs, Cnt, BamFloat } from '../components/Layout';
 import { useTheme } from '../constants/ThemeContext';
-// ─── NEW: Charleston drill import ───
+// ─── Drill imports ───
 import CharlestonDrill from './practice/CharlestonDrill';
+import LearnHandsDrill from './practice/LearnHandsDrill';
+import ReadExposuresDrill from './practice/ReadExposuresDrill';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -49,9 +51,15 @@ function PracticePage({ showChat, setShowChat }) {
   const filtered = level === "All" ? drillsData : drillsData.filter(d => d.lvls.includes(level));
   let num = 0;
 
-  // ─── NEW: Show Charleston drill when active ───
+  // ─── Show active drill ───
   if (activeDrill === "charleston") {
     return <CharlestonDrill onBack={() => setActiveDrill(null)} />;
+  }
+  if (activeDrill === "learn-hands") {
+    return <LearnHandsDrill onBack={() => setActiveDrill(null)} />;
+  }
+  if (activeDrill === "read-exposures") {
+    return <ReadExposuresDrill onBack={() => setActiveDrill(null)} />;
   }
 
   return (<><PT>Practice</PT><Cnt>
@@ -69,8 +77,13 @@ function PracticePage({ showChat, setShowChat }) {
     </div>
 
     <SH>Drills</SH>
-    {filtered.map((d,i) => { num++; return <Card key={i} title={d.t} desc={d.d} num={num} tags={d.lvls.map(lv=>(lt[lv]||"b"))}
-      onClick={d.t === "Practicing the Charleston" ? () => setActiveDrill("charleston") : undefined}
+    {filtered.map((d,i) => { num++; return <Card key={i} title={d.t} desc={d.d} num={num} tags={d.lvls.map(lv=>({t:lt[lv]||"b",l:lv}))}
+      onClick={
+        d.t === "Practicing the Charleston" ? () => setActiveDrill("charleston") :
+        d.t === "Learn the Hands" ? () => setActiveDrill("learn-hands") :
+        d.t === "Reading Exposures" ? () => setActiveDrill("read-exposures") :
+        undefined
+      }
     />; })}
     {filtered.length === 0 && <div style={{ textAlign: "center", padding: 30, color: C.light, fontSize: 12 }}>No drills at this level yet</div>}
 

@@ -187,7 +187,7 @@ function substituteAll(pattern: HandPattern, n: number): HandPattern {
 // GROUP → TILE ID RESOLUTION
 // ═══════════════════════════════════════════════════════════════
 
-function resolveGroupToTileIds(
+export function resolveGroupToTileIds(
   group: TileGroup,
   assignment: ColorAssignment,
 ): string[] {

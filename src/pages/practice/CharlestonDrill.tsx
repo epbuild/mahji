@@ -11,6 +11,13 @@ import { MahjiTile } from "../../components/tiles/MahjiTile";
 import { GameTile, getFullDeck, shuffleDeck } from "../../data/tileData";
 import { C, getThemeColors } from "../../constants/colors";
 import { useTheme } from "../../constants/ThemeContext";
+import { BirdIcon } from "../../components/ui/Icons";
+import {
+  getCard, getAvailableYears, getCurrentYear,
+  findPartialMatches, isTileUsefulForHand,
+  SECTION_LABELS,
+} from "../../data/nmjl";
+import type { NMJLCard, PartialMatchResult } from "../../data/nmjl";
 
 // ─── TYPES ────────────────────────────────────────────────────
 
@@ -259,6 +266,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   // Sync with app theme
   useEffect(() => { setUi(isDark ? "dark" : "light"); }, [isDark]);
 
+  // ── Card year & suggestions ──
+  const [cardYear, setCardYear] = useState(getCurrentYear());
+  const [card, setCard] = useState<NMJLCard | null>(null);
+  const [showSetup, setShowSetup] = useState(true);
+  const [suggestions, setSuggestions] = useState<PartialMatchResult[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [bamAdvice, setBamAdvice] = useState<{ tiles: Set<string>; message: string } | null>(null);
+  const [bamFirstUse, setBamFirstUse] = useState(true);
+
+  // Load card when year changes
+  useEffect(() => { getCard(cardYear).then(c => { if (c) setCard(c); }); }, [cardYear]);
+
   const [dealerSeat] = useState(0);
   const [phase, setPhase] = useState<string>("charleston");
   const [stepIdx, setStepIdx] = useState(0);
@@ -328,16 +347,73 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setPhase("charleston"); setStepIdx(0); setSelectedIds(new Set()); setBotsReady(false); setCourtesyCount(null);
     setAnimating(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
-    setTimer(0); setPassCount(0); setTotalPassed(0);
+    setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
+    setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null); setBamFirstUse(true);
   }, [dealerSeat]);
 
-  useEffect(() => { dealGame(); }, [dealGame]);
+  // Don't auto-deal on mount — show setup screen first
+  useEffect(() => { if (!showSetup) return; /* setup handles deal */ }, []);
 
   const step = phase === "charleston" ? STEPS[stepIdx] : null;
   const isBlind = step?.blind || false;
   const reqCount = phase === "courtesy" && courtesyCount !== null ? courtesyCount : isBlind ? null : 3;
   const humanHand = players?.[0]?.hand || [];
   const doSort = (fn: (h: GameTile[]) => GameTile[]) => { if (!players) return; setPlayers(p => p!.map((pl, i) => (i === 0 ? { ...pl, hand: fn(pl.hand) } : pl))); };
+
+  // ── Recompute hand suggestions when hand changes ──
+  useEffect(() => {
+    if (!card || !humanHand.length || level === "advanced") { setSuggestions([]); return; }
+    const matches = findPartialMatches(humanHand, card, 0.15);
+    setSuggestions(matches.slice(0, 3));
+  }, [card, humanHand.length, humanHand.map(t => t.instanceId).join(","), level]);
+
+  // ── Bam Bird advice generator (novice only) ──
+  const generateBamAdvice = useCallback(() => {
+    if (!card || !humanHand.length || level !== "novice") return;
+    const matches = findPartialMatches(humanHand, card, 0.15);
+    if (matches.length === 0) {
+      const nonJokers = humanHand.filter(t => t.suit !== "jokers");
+      const idCounts: Record<string, number> = {};
+      nonJokers.forEach(t => { idCounts[t.id] = (idCounts[t.id] || 0) + 1; });
+      const singletons = nonJokers.filter(t => idCounts[t.id] === 1).slice(0, 3);
+      setBamAdvice({
+        tiles: new Set(singletons.map(t => t.instanceId)),
+        message: "Your hand is tricky! Pass tiles you only have one of — they're harder to use.",
+      });
+      return;
+    }
+    const top = matches[0];
+    // Find tiles NOT useful for the best match
+    const nonJokers = humanHand.filter(t => t.suit !== "jokers");
+    const passable = nonJokers.filter(t => !isTileUsefulForHand(t.id, top.hand));
+    const toPass = passable.slice(0, 3);
+
+    let message = "";
+    const tileNames = toPass.map(t => t.displayName).join(", ");
+    const count = top.matchedCount;
+    const sectionName = SECTION_LABELS[top.hand.section] || top.hand.section;
+
+    if (matches.length >= 2) {
+      const second = matches[1];
+      const secondSection = SECTION_LABELS[second.hand.section] || second.hand.section;
+      if (top.matchedCount > second.matchedCount + 1) {
+        message = `You have ${count}/14 tiles for "${top.hand.displayPattern}" (${sectionName}). I'd go for this over the ${secondSection} hand since you're further along. Pass the ${tileNames}.`;
+      } else if (top.hand.exposure === "X" && second.hand.exposure === "C") {
+        message = `Between these options, go for "${top.hand.displayPattern}" — it's exposable, which is easier! You have ${count}/14 tiles. Pass the ${tileNames}.`;
+      } else {
+        message = `You have ${count}/14 tiles for "${top.hand.displayPattern}". The ${tileNames} don't help this hand — pass them!`;
+      }
+    } else {
+      if (top.hand.exposure === "C") {
+        message = `You're building toward "${top.hand.displayPattern}" (${count}/14 tiles). It's concealed, so hold your singles and pairs! Pass the ${tileNames}.`;
+      } else {
+        message = `You have ${count}/14 tiles for "${top.hand.displayPattern}". Pass the ${tileNames} — they don't fit this hand.`;
+      }
+    }
+
+    setBamAdvice({ tiles: new Set(toPass.map(t => t.instanceId)), message });
+    setBamFirstUse(false);
+  }, [card, humanHand, level]);
 
   const dirName: Record<string, string> = { right: "RIGHT", across: "ACROSS (West)", left: "LEFT" };
   const getMsg = () => {
@@ -395,7 +471,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setTimeout(() => {
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
-      setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set());
+      setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
       if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
@@ -461,7 +537,82 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const totalSlots = dealerSeat === 0 ? 14 : 13;
   const emptySlots = Math.max(0, totalSlots - visibleHand.length);
   const dirArrow: Record<string, string> = { right: "→", across: "↑", left: "←" };
-  const passHints = level === "novice" && phase === "charleston" && !showStopPrompt ? getPassHints(visibleHand) : new Set<string>();
+  const singletonHints = level === "novice" && phase === "charleston" && !showStopPrompt ? getPassHints(visibleHand) : new Set<string>();
+  // Merge singleton hints with bam bird advice hints
+  const passHints = bamAdvice ? new Set([...singletonHints, ...bamAdvice.tiles]) : singletonHints;
+
+  const years = getAvailableYears();
+
+  // ═══════════════════════════════════════════════════════════
+  // SETUP SCREEN (card year + level + deal)
+  // ═══════════════════════════════════════════════════════════
+
+  if (showSetup) {
+    return (
+      <div style={{ flex: 1, background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
+          <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Back</button>
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, padding: "0 24px" }}>
+          <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 22, color: U.cherry, letterSpacing: 3, textTransform: "uppercase", textAlign: "center", margin: 0 }}>CHARLESTON</h1>
+          <p style={{ fontSize: 12, color: U.textMid, textAlign: "center", maxWidth: 300, lineHeight: 1.6, margin: 0 }}>Practice the tile-passing ritual before the game begins.</p>
+
+          {/* Year selector */}
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, textAlign: "center" }}>Card Year</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {years.map(y => (
+                <div key={y} onClick={() => setCardYear(y)} style={{
+                  padding: "10px 24px", borderRadius: 12, cursor: "pointer",
+                  background: cardYear === y ? U.cherry : U.btnBg,
+                  color: cardYear === y ? "#fff" : U.btnText,
+                  border: `1px solid ${cardYear === y ? U.cherry : U.btnBorder}`,
+                  fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600, transition: "all 0.2s",
+                }}>{y}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Level selector */}
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, textAlign: "center" }}>Difficulty</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(["novice", "intermediate", "advanced"] as const).map(l => (
+                <div key={l} onClick={() => setLevel(l)} style={{
+                  padding: "8px 18px", borderRadius: 12, cursor: "pointer",
+                  background: level === l ? U.cherry : U.btnBg,
+                  color: level === l ? "#fff" : U.btnText,
+                  border: `1px solid ${level === l ? U.cherry : U.btnBorder}`,
+                  fontSize: 11, fontWeight: 600, textTransform: "capitalize", transition: "all 0.2s",
+                }}>{l}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mat colors */}
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, textAlign: "center" }}>Mat Color</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {MATS.map((m, i) => (
+                <div key={m.id} onClick={() => setMatIdx(i)} style={{
+                  width: 28, height: 28, borderRadius: 8, background: m.bg, cursor: "pointer",
+                  outline: matIdx === i ? `2px solid ${U.seafoam}` : "2px solid transparent",
+                  outlineOffset: 2, transition: "outline 0.2s",
+                }} />
+              ))}
+            </div>
+          </div>
+
+          <button onClick={dealGame} disabled={!card} style={{
+            padding: "12px 48px", borderRadius: 24, border: "none", cursor: card ? "pointer" : "not-allowed",
+            background: card ? U.seafoam : U.btnBg, color: card ? "#fff" : U.textLight,
+            fontFamily: "'Outfit',sans-serif", fontSize: 14, fontWeight: 600, letterSpacing: 0.5, transition: "all 0.2s",
+            marginTop: 8,
+          }}>{card ? "Deal & Start" : "Loading Card..."}</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!players) return null;
 
@@ -542,7 +693,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   <p style={{ fontSize: 9, color: "#6DBFA8", margin: "4px 0 10px", fontStyle: "italic" }}>Great job! The Charleston helps you trade unwanted tiles with other players.</p>
                 )}
                 {level !== "novice" && <p style={{ fontSize: 10, color: "#6B5A82", margin: "0 0 14px" }}>What would you like to do?</p>}
-                <button onClick={dealGame} style={{ display: "block", width: "100%", padding: "10px 0", marginBottom: 8, background: "rgba(224,48,80,0.06)", border: "1px solid rgba(224,48,80,0.2)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#E03050", fontFamily: "'Outfit',sans-serif" }}>🎯 Practice Again</button>
+                <button onClick={() => setShowSetup(true)} style={{ display: "block", width: "100%", padding: "10px 0", marginBottom: 8, background: "rgba(224,48,80,0.06)", border: "1px solid rgba(224,48,80,0.2)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#E03050", fontFamily: "'Outfit',sans-serif" }}>🎯 Practice Again</button>
                 <button onClick={onBack} style={{ display: "block", width: "100%", padding: "10px 0", background: "rgba(107,63,160,0.06)", border: "1px solid rgba(107,63,160,0.15)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#6B3FA0", fontFamily: "'Outfit',sans-serif" }}>← Back to Practice</button>
               </div>
             ) : (() => {
@@ -607,10 +758,69 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         {level === "advanced" && timer > 0 && phase !== "complete" && !showStopPrompt && (
           <span style={{ fontSize: 9, fontWeight: 700, color: timer <= 10 ? U.cherry : U.seafoam, marginLeft: 8 }}>⏱ {timer}s</span>
         )}
-        {level === "novice" && phase === "charleston" && !showStopPrompt && passHints.size > 0 && selectedIds.size === 0 && (
+        {level === "novice" && phase === "charleston" && !showStopPrompt && singletonHints.size > 0 && selectedIds.size === 0 && !bamAdvice && (
           <div style={{ fontSize: 8, color: "rgba(180,154,216,0.7)", marginTop: 1 }}>💡 Purple-highlighted tiles are singletons — good to pass!</div>
         )}
       </div>
+
+      {/* ── Suggestions Panel (Novice & Intermediate only) ── */}
+      {level !== "advanced" && suggestions.length > 0 && phase !== "complete" && phase !== "courtesy_prompt" && !showStopPrompt && (
+        <div style={{ margin: "0 10px", flexShrink: 0 }}>
+          <div onClick={() => setSuggestionsOpen(!suggestionsOpen)} style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
+            padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
+          }}>
+            <span>Possible Hands</span>
+            <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
+          </div>
+          {suggestionsOpen && (
+            <div style={{
+              background: isDark ? "rgba(180,154,216,0.05)" : "rgba(107,63,160,0.03)",
+              border: `0.5px solid ${U.cBorder}`, borderRadius: 10, padding: "6px 10px", marginBottom: 2,
+              animation: "entranceFade 0.2s ease both",
+            }}>
+              {suggestions.map((s, i) => (
+                <div key={s.hand.id + i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: i < suggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none" }}>
+                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: U.text, fontWeight: 500, flex: 1 }}>{s.hand.displayPattern}</span>
+                  <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: U.seafoam, minWidth: 36, textAlign: "right" }}>{s.matchedCount}/14</span>
+                  <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Bam Bird Advice (Novice only) ── */}
+      {level === "novice" && phase === "charleston" && !showStopPrompt && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "0 10px 2px", flexShrink: 0 }}>
+          {bamAdvice && (
+            <div style={{
+              flex: 1, maxWidth: 320, background: isDark ? "rgba(109,191,168,0.08)" : "rgba(109,191,168,0.06)",
+              border: "0.5px solid rgba(109,191,168,0.25)", borderRadius: 10, padding: "6px 10px",
+              display: "flex", gap: 6, alignItems: "flex-start", animation: "entranceFade 0.3s ease both",
+            }}>
+              <BirdIcon size={14} color={C.seafoam} sw={2} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 9, lineHeight: 1.4, color: U.textMid }}>{bamAdvice.message}</div>
+                <div onClick={() => setBamAdvice(null)} style={{ fontSize: 8, color: U.seafoam, fontWeight: 600, cursor: "pointer", marginTop: 3 }}>Got it</div>
+              </div>
+            </div>
+          )}
+          {!bamAdvice && (
+            <div onClick={generateBamAdvice} style={{
+              display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
+              padding: "4px 10px", borderRadius: 14,
+              background: "rgba(109,191,168,0.1)", border: "1.5px solid rgba(180,154,216,0.4)",
+              transition: "all 0.2s",
+            }}>
+              <BirdIcon size={12} color={C.seafoam} sw={2} />
+              {bamFirstUse && <span style={{ fontSize: 9, fontWeight: 500, color: U.seafoam }}>Ask Bam Bird</span>}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Sort */}
       {phase !== "complete" && phase !== "courtesy_prompt" && !showStopPrompt && (

@@ -47,6 +47,7 @@ export {
   enumerateColorAssignments,
   resolveTileRef,
   expandNumberConstraint,
+  resolveGroupToTileIds,
   validateHand,
   findAllMatches,
   findPartialMatches,
