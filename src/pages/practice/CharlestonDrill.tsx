@@ -6,7 +6,7 @@
 // shuffleDeck(), and MahjiTile. Zero duplicate tile art.
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { MahjiTile } from "../../components/tiles/MahjiTile";
 import { GameTile, getFullDeck, shuffleDeck } from "../../data/tileData";
 import { C, getThemeColors } from "../../constants/colors";
@@ -100,6 +100,48 @@ function botSelectAdvanced(hand: GameTile[], count = 3): GameTile[] {
   });
   // Pass the lowest-scored tiles
   return scored.sort((a, b) => a.score - b.score).slice(0, count).map(s => s.tile);
+}
+
+/** Compute how many tiles from hand actually match a suggestion's pattern groups */
+function computeRealMatchCount(
+  match: PartialMatchResult,
+  hand: GameTile[],
+): number {
+  const pattern = match.hand.patterns[match.patternIndex];
+  if (!pattern) return 0;
+  const expanded = expandNumberConstraint(pattern.numberConstraint, pattern);
+  let bestAssignment = match.colorAssignment;
+  let bestPattern = expanded[0];
+  for (const ep of expanded) {
+    const assignments = enumerateColorAssignments(ep);
+    for (const a of assignments) {
+      if (JSON.stringify(a) === JSON.stringify(bestAssignment)) {
+        bestPattern = ep;
+        break;
+      }
+    }
+  }
+  if (!bestAssignment && expanded.length > 0) {
+    bestPattern = expanded[0];
+    const assignments = enumerateColorAssignments(bestPattern);
+    bestAssignment = assignments[0];
+  }
+  if (!bestPattern || !bestAssignment) return 0;
+  const usedIds = new Set<string>();
+  let count = 0;
+  for (const group of bestPattern.groups) {
+    const neededIds = resolveGroupToTileIds(group, bestAssignment);
+    for (const tileId of neededIds) {
+      let found: GameTile | undefined;
+      if (tileId === "__flower__") {
+        found = hand.find(t => t.suit === "flowers" && !usedIds.has(t.instanceId));
+      } else {
+        found = hand.find(t => t.id === tileId && !usedIds.has(t.instanceId));
+      }
+      if (found) { usedIds.add(found.instanceId); count++; }
+    }
+  }
+  return count;
 }
 
 // Level config
@@ -261,7 +303,15 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [suggestions, setSuggestions] = useState<PartialMatchResult[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [bamAdvice, setBamAdvice] = useState<{ tiles: Set<string>; message: string } | null>(null);
-  const [bamFirstUse, setBamFirstUse] = useState(true);
+  // Bam Bird first-time UX: show "Ask Bam what to pass!" on first charleston per day
+  const [bamShowMessage, setBamShowMessage] = useState(() => {
+    try {
+      const last = localStorage.getItem("mahji_bam_seen_date");
+      const today = new Date().toISOString().slice(0, 10);
+      return last !== today; // Show message if not seen today
+    } catch { return true; }
+  });
+  const [bamSessionUsed, setBamSessionUsed] = useState(false); // tracks if used in this practice session
   const [activeHintHand, setActiveHintHand] = useState<string | null>(null); // hand id
   const [hintTileIds, setHintTileIds] = useState<Set<string>>(new Set()); // instanceIds highlighted yellow
 
@@ -338,7 +388,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setAnimating(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
-    setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null); setBamFirstUse(true);
+    setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null);
+    // After first charleston practice in session, hide the "Ask Bam" message
+    if (bamSessionUsed) setBamShowMessage(false);
     setActiveHintHand(null); setHintTileIds(new Set());
   }, [dealerSeat]);
 
@@ -377,6 +429,11 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     }
     setSuggestions(unique);
   }, [card, humanHand.length, humanHand.map(t => t.instanceId).join(","), level]);
+
+  // Compute real match counts for each suggestion (matches actual highlight count)
+  const realMatchCounts = useMemo(() => {
+    return suggestions.map(s => computeRealMatchCount(s, humanHand));
+  }, [suggestions, humanHand]);
 
   // ── Bam Bird advice generator (novice only) ──
   const generateBamAdvice = useCallback(() => {
@@ -423,7 +480,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     }
 
     setBamAdvice({ tiles: new Set(toPass.map(t => t.instanceId)), message });
-    setBamFirstUse(false);
+    setBamShowMessage(false);
+    setBamSessionUsed(true);
+    try { localStorage.setItem("mahji_bam_seen_date", new Date().toISOString().slice(0, 10)); } catch {}
   }, [card, humanHand, level]);
 
   // ── Click a hint hand: rearrange tiles grouped by pattern, highlight in yellow ──
@@ -869,7 +928,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>💡 Possible Hands</span>
+            <span>👀 Peep Possible Hands!</span>
             <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
           </div>
           {suggestionsOpen && (
@@ -880,6 +939,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             }}>
               {suggestions.map((s, i) => {
                 const isActive = activeHintHand === s.hand.id;
+                const realCount = realMatchCounts[i] ?? s.matchedCount;
                 return (
                   <div key={s.hand.id + i} onClick={() => activateHintHand(s)} style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 8, cursor: "pointer",
@@ -890,7 +950,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   }}>
                     <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: isActive ? "#b8860b" : U.text, fontWeight: isActive ? 700 : 500, flex: 1 }}>{s.hand.displayPattern}</span>
                     <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{s.matchedCount}/14</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
                     <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
                   </div>
                 );
@@ -903,32 +963,46 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
       {/* ── Bam Bird Advice (Novice only) — floats right ── */}
       {level === "novice" && phase === "charleston" && !showStopPrompt && (
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-end", gap: 6, padding: "0 10px 2px", flexShrink: 0 }}>
-          {bamAdvice && (
-            <div style={{
-              maxWidth: 300, background: isDark ? "rgba(109,191,168,0.08)" : "rgba(109,191,168,0.06)",
-              border: "1.5px solid rgba(107,63,160,0.25)", borderRadius: 12, padding: "8px 10px",
-              display: "flex", gap: 6, alignItems: "flex-start", animation: "entranceFade 0.3s ease both",
-            }}>
-              <BirdIcon size={14} color={C.seafoam} sw={2} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, lineHeight: 1.4, color: U.textMid }}>{bamAdvice.message}</div>
-                <div onClick={() => setBamAdvice(null)} style={{ fontSize: 8, color: U.seafoam, fontWeight: 600, cursor: "pointer", marginTop: 3 }}>Got it</div>
+        <>
+          <style>{`
+            @keyframes bamShake {
+              0%, 100% { transform: rotate(0deg); }
+              15% { transform: rotate(-6deg); }
+              30% { transform: rotate(6deg); }
+              45% { transform: rotate(-4deg); }
+              60% { transform: rotate(4deg); }
+              75% { transform: rotate(-2deg); }
+              90% { transform: rotate(2deg); }
+            }
+          `}</style>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-end", gap: 6, padding: "0 10px 2px", flexShrink: 0 }}>
+            {bamAdvice && (
+              <div style={{
+                maxWidth: 300, background: isDark ? "rgba(109,191,168,0.08)" : "rgba(109,191,168,0.06)",
+                border: "1.5px solid rgba(107,63,160,0.25)", borderRadius: 12, padding: "8px 10px",
+                display: "flex", gap: 6, alignItems: "flex-start", animation: "entranceFade 0.3s ease both",
+              }}>
+                <BirdIcon size={14} color={C.seafoam} sw={2} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9, lineHeight: 1.4, color: U.textMid }}>{bamAdvice.message}</div>
+                  <div onClick={() => setBamAdvice(null)} style={{ fontSize: 8, color: U.seafoam, fontWeight: 600, cursor: "pointer", marginTop: 3 }}>Got it</div>
+                </div>
               </div>
-            </div>
-          )}
-          {!bamAdvice && (
-            <div onClick={generateBamAdvice} style={{
-              display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
-              padding: "5px 12px", borderRadius: 16,
-              background: "rgba(109,191,168,0.1)", border: "1.5px solid rgba(107,63,160,0.35)",
-              transition: "all 0.2s",
-            }}>
-              <BirdIcon size={13} color={C.seafoam} sw={2} />
-              {bamFirstUse && <span style={{ fontSize: 9, fontWeight: 500, color: U.seafoam }}>Ask Bam Bird</span>}
-            </div>
-          )}
-        </div>
+            )}
+            {!bamAdvice && (
+              <div onClick={generateBamAdvice} style={{
+                display: "flex", alignItems: "center", gap: 5, cursor: "pointer",
+                padding: "5px 12px", borderRadius: 16,
+                background: "rgba(109,191,168,0.1)", border: "1.5px solid rgba(107,63,160,0.35)",
+                transition: "all 0.2s",
+                animation: bamShowMessage ? "bamShake 0.8s ease-in-out 0.5s" : "none",
+              }}>
+                <BirdIcon size={13} color={C.seafoam} sw={2} />
+                {bamShowMessage && <span style={{ fontSize: 9, fontWeight: 600, color: U.seafoam }}>Ask Bam what to pass!</span>}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Sort */}
