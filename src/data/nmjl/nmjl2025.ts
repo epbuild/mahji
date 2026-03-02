@@ -288,14 +288,13 @@ const hands: HandDefinition[] = [
   {
     id: '2025-consec-4',
     section: 'consecutive_run',
-    displayPattern: 'FF 123 4444 5555',
+    displayPattern: 'FFF 123 4444 5555',
     patterns: check14([{
-      groups: [pair(fl, 'blue'), mixed([s(1), s(2), s(3)], 'green'), kong(s(4), 'red'), quint(s(5), 'blue')],
+      groups: [pung(fl, 'blue'), mixed([s(1), s(2), s(3)], 'green'), kong(s(4), 'red'), kong(s(5), 'blue')],
       numberConstraint: { type: 'any_run', length: 5 },
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 3 Suits, Any 5 Consec. Nos.',
-    needsReview: true,
   },
   {
     id: '2025-consec-5',
@@ -322,17 +321,21 @@ const hands: HandDefinition[] = [
   {
     id: '2025-consec-7',
     section: 'consecutive_run',
-    displayPattern: '12345 1111 11111',
-    patterns: check14([{
-      groups: [
-        mixed([s(1), s(2), s(3), s(4), s(5)], 'green'),
-        kong(s(1), 'red'), quint(s(1), 'blue'),
-      ],
-      numberConstraint: { type: 'any_run', length: 5 },
-    }]),
+    displayPattern: '112345 1111 1111',
+    patterns: check14([
+      // Pair of 1st number in run, kongs match pair
+      { groups: [mixed([s(1), s(1), s(2), s(3), s(4), s(5)], 'green'), kong(s(1), 'red'), kong(s(1), 'blue')], numberConstraint: { type: 'any_run', length: 5 } },
+      // Pair of 2nd number in run
+      { groups: [mixed([s(1), s(2), s(2), s(3), s(4), s(5)], 'green'), kong(s(2), 'red'), kong(s(2), 'blue')], numberConstraint: { type: 'any_run', length: 5 } },
+      // Pair of 3rd number in run
+      { groups: [mixed([s(1), s(2), s(3), s(3), s(4), s(5)], 'green'), kong(s(3), 'red'), kong(s(3), 'blue')], numberConstraint: { type: 'any_run', length: 5 } },
+      // Pair of 4th number in run
+      { groups: [mixed([s(1), s(2), s(3), s(4), s(4), s(5)], 'green'), kong(s(4), 'red'), kong(s(4), 'blue')], numberConstraint: { type: 'any_run', length: 5 } },
+      // Pair of 5th number in run
+      { groups: [mixed([s(1), s(2), s(3), s(4), s(5), s(5)], 'green'), kong(s(5), 'red'), kong(s(5), 'blue')], numberConstraint: { type: 'any_run', length: 5 } },
+    ]),
     points: 30, exposure: 'X', jokerPolicy: 'standard',
-    description: 'Any 5 Consec. Nos., Kong+Quint of Any No. in Run',
-    needsReview: true, // tile count uncertain — verify grouping from card
+    description: 'Any 3 Suits, Any 5 Consec. Nos., Pair Any No. in Run, Kongs Match Pair',
   },
   {
     id: '2025-consec-8',
@@ -444,7 +447,6 @@ const hands: HandDefinition[] = [
     ]),
     points: 30, exposure: 'C', jokerPolicy: 'standard',
     description: 'Any 3 Suits',
-    needsReview: true,
   },
 
   // ─── WINDS & DRAGONS ────────────────────────────────────────
@@ -469,7 +471,6 @@ const hands: HandDefinition[] = [
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 3 Consec. Nos. in Any 1 Suit, Any 3 Dragons',
-    needsReview: true,
   },
   {
     id: '2025-wd-3',
@@ -597,7 +598,6 @@ const hands: HandDefinition[] = [
     }]),
     points: 30, exposure: 'C', jokerPolicy: 'standard',
     description: 'Any 3 Suits w Matching Dragons',
-    needsReview: true,
   },
 
   // ─── SINGLES AND PAIRS ──────────────────────────────────────
