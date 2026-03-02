@@ -464,6 +464,13 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return suggestions.map(s => computeRealMatchCount(s, humanHand));
   }, [suggestions, humanHand]);
 
+  // Sort suggestions by highest real match count first
+  const sortedSuggestions = useMemo(() => {
+    return suggestions
+      .map((s, i) => ({ match: s, realCount: realMatchCounts[i] ?? s.matchedCount }))
+      .sort((a, b) => b.realCount - a.realCount);
+  }, [suggestions, realMatchCounts]);
+
   // ── Bam Bird advice generator (novice only) ──
   const generateBamAdvice = useCallback(() => {
     if (!card || !humanHand.length || level !== "novice") return;
@@ -1022,15 +1029,14 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               border: `0.5px solid ${U.cBorder}`, borderRadius: 10, padding: "6px 10px", marginBottom: 2,
               animation: "entranceFade 0.2s ease both",
             }}>
-              {suggestions.map((s, i) => {
+              {sortedSuggestions.map(({ match: s, realCount }, idx) => {
                 const isActive = activeHintHand === s.hand.id;
-                const realCount = realMatchCounts[i] ?? s.matchedCount;
                 return (
-                  <div key={s.hand.id + i} onClick={() => activateHintHand(s)} style={{
+                  <div key={s.hand.id + idx} onClick={() => activateHintHand(s)} style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 8, cursor: "pointer",
-                    borderBottom: i < suggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
-                    background: isActive ? "rgba(234,179,8,0.1)" : "transparent",
-                    outline: isActive ? "1.5px solid rgba(234,179,8,0.4)" : "1.5px solid transparent",
+                    borderBottom: idx < sortedSuggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
+                    background: isActive ? "rgba(234,179,8,0.08)" : "transparent",
+                    outline: isActive ? "1.5px solid rgba(234,179,8,0.5)" : "1.5px solid transparent",
                     transition: "all 0.15s ease",
                   }}>
                     <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, fontWeight: isActive ? 700 : 500, flex: 1 }}>
@@ -1040,12 +1046,12 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                         return segs.map((seg, j) => {
                           const grp = pat?.groups[j];
                           const c = grp ? (CARD_COLORS[grp.color] || U.text) : U.text;
-                          return <span key={j} style={{ color: isActive ? "#b8860b" : c }}>{seg}{j < segs.length - 1 ? ' ' : ''}</span>;
+                          return <span key={j} style={{ color: c }}>{seg}{j < segs.length - 1 ? ' ' : ''}</span>;
                         });
                       })()}
                     </span>
                     <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
                     <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
                   </div>
                 );
