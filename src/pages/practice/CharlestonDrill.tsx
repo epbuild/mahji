@@ -57,8 +57,6 @@ const STEPS = [
   { key: "2R", label: "Second Right", dir: "right" as const, blind: true },
 ];
 
-const CARD_COLORS: Record<string, string> = { red: '#C2413B', green: '#2E8B57', blue: '#4A7FA8' };
-
 const STEP_TO_ROL: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 4, 4: 5, 5: 6 };
 const WIND_ORDER: Record<string, number> = { N: 0, E: 1, W: 2, S: 3 };
 const DRAGON_ORDER: Record<string, number> = { red: 0, green: 1, white: 2 };
@@ -243,29 +241,6 @@ function EmptyPassSlot() {
   );
 }
 
-// Back of a tile (for blind pass animation)
-function TileBack() {
-  return (
-    <div style={{
-      width: 72, height: 98, borderRadius: 10,
-      background: "linear-gradient(135deg, #6B3FA0 0%, #4A2D73 100%)",
-      border: "2px solid rgba(180,154,216,0.4)",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      flexShrink: 0,
-    }}>
-      <div style={{
-        width: 52, height: 74, borderRadius: 6,
-        border: "1px solid rgba(180,154,216,0.25)",
-        background: "linear-gradient(135deg, rgba(180,154,216,0.15) 0%, rgba(107,63,160,0.08) 100%)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(180,154,216,0.2)", border: "1px solid rgba(180,154,216,0.15)" }} />
-      </div>
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════════════════════════
 // R-O-L ★ L-O-R INDICATOR
 // ═══════════════════════════════════════════════════════════════
@@ -294,13 +269,13 @@ function ROLIndicator({ stepIdx, phase, showStopPrompt, stoppedEarly, cherry, te
 }
 
 function ReadyBadge() {
-  return <span style={{ fontSize: 7, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>Ready</span>;
+  return <span style={{ fontSize: 7, color: "rgba(109,191,168,0.5)", fontWeight: 600 }}>Ready</span>;
 }
 
 function SeatLabel({ name, isReady, showReady }: { name: string; isReady: boolean; showReady: boolean }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(60,90,140,0.55)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
       {isReady && showReady && <div style={{ marginTop: 2 }}><ReadyBadge /></div>}
     </div>
   );
@@ -363,9 +338,6 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [timer, setTimer] = useState(0);
   const [passCount, setPassCount] = useState(0);
   const [totalPassed, setTotalPassed] = useState(0);
-  const [passAnimPhase, setPassAnimPhase] = useState<'blind-join' | 'zip' | null>(null);
-  const [passAnimDir, setPassAnimDir] = useState<'right' | 'across' | 'left' | null>(null);
-  const [passBlindCount, setPassBlindCount] = useState(0);
 
   // ── Responsive tile scaling ──────────────────────────────────
   // Strategy: render tiles at full size inside an inner row, measure
@@ -416,7 +388,6 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setAnimating(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
-    setPassAnimPhase(null); setPassAnimDir(null); setPassBlindCount(0);
     setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null);
     // After first charleston practice in session, hide the "Ask Bam" message
     if (bamSessionUsed) setBamShowMessage(false);
@@ -444,7 +415,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   // ── Recompute hand suggestions when hand changes ──
   useEffect(() => {
     if (!card || !humanHand.length || level === "advanced") { setSuggestions([]); return; }
-    // Very low threshold so we catch any hand where at least 1 tile matches
+    // Very low threshold so we always show options even if only 3-4 tiles match
     const matches = findPartialMatches(humanHand, card, 0.05);
     // Deduplicate by hand id — only keep the best match per unique hand
     const seen = new Set<string>();
@@ -454,7 +425,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         seen.add(m.hand.id);
         unique.push(m);
       }
-      if (unique.length >= 20) break;
+      if (unique.length >= 5) break;
     }
     setSuggestions(unique);
   }, [card, humanHand.length, humanHand.map(t => t.instanceId).join(","), level]);
@@ -464,18 +435,22 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return suggestions.map(s => computeRealMatchCount(s, humanHand));
   }, [suggestions, humanHand]);
 
-  // Filter & sort suggestions: top 5 most feasible hands
-  // First Charleston (steps 0-2): 4+ matching tiles
-  // Second Charleston & Courtesy: 5+ matching tiles
-  const sortedSuggestions = useMemo(() => {
-    const isFirstCharleston = phase === "charleston" && stepIdx <= 2;
-    const minTiles = isFirstCharleston ? 4 : 5;
-    return suggestions
-      .map((s, i) => ({ match: s, realCount: realMatchCounts[i] ?? s.matchedCount }))
-      .filter(({ realCount }) => realCount >= minTiles)
-      .sort((a, b) => b.realCount - a.realCount)
-      .slice(0, 5);
-  }, [suggestions, realMatchCounts, phase, stepIdx]);
+  // ── Best tile count towards Mahjong (shown at completion) ──
+  const bestTileCount = useMemo(() => {
+    if (!card || !humanHand.length) return 0;
+    const matches = findPartialMatches(humanHand, card, 0.05);
+    if (matches.length === 0) return 0;
+    // Deduplicate by hand id — keep only the best per hand
+    const seen = new Set<string>();
+    let best = 0;
+    for (const m of matches) {
+      if (seen.has(m.hand.id)) continue;
+      seen.add(m.hand.id);
+      const count = computeRealMatchCount(m, humanHand);
+      if (count > best) best = count;
+    }
+    return best;
+  }, [card, humanHand]);
 
   // ── Bam Bird advice generator (novice only) ──
   const generateBamAdvice = useCallback(() => {
@@ -499,7 +474,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const toPass = passable.slice(0, 3);
 
     let message = "";
-    const tileNames = toPass.map(t => t.suit === "flowers" ? "Flower" : t.displayName).join(", ");
+    const tileNames = toPass.map(t => t.displayName).join(", ");
     const count = top.matchedCount;
     const sectionName = SECTION_LABELS[top.hand.section] || top.hand.section;
 
@@ -641,18 +616,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
   const executePass = () => {
     if (!canPass()) return; setAnimating(true);
-    let sel = [...humanHand.filter(t => selectedIds.has(t.instanceId))];
-
-    // For blind passes, auto-fill to 3 with random non-joker tiles
-    let blindCount = 0;
-    if (isBlind && sel.length < 3) {
-      const remaining = humanHand.filter(t => !selectedIds.has(t.instanceId) && !isJoker(t));
-      const shuffled = [...remaining].sort(() => Math.random() - 0.5);
-      const autoFill = shuffled.slice(0, 3 - sel.length);
-      blindCount = autoFill.length;
-      sel = [...sel, ...autoFill];
-    }
-
+    const sel = humanHand.filter(t => selectedIds.has(t.instanceId));
     const selIds = new Set(sel.map(t => t.instanceId));
     setPassCount(c => c + 1); setTotalPassed(c => c + sel.length);
     const up = players!.map((p, i) => i === 0 ? { ...p, selectedForPass: sel } : p);
@@ -660,28 +624,15 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const nh = resolvePass(up, s);
     const oldIds = new Set(humanHand.filter(t => !selIds.has(t.instanceId)).map(t => t.instanceId));
     const newReceivedIds = new Set(nh[0].filter(t => !oldIds.has(t.instanceId)).map(t => t.instanceId));
-
-    setPassAnimDir(s.dir);
-    setPassBlindCount(blindCount);
-
-    const resolveHand = () => {
+    setTimeout(() => {
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
-      setPassAnimPhase(null); setPassAnimDir(null); setPassBlindCount(0);
       if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
       else { setPhase("courtesy_prompt"); setMessage(""); }
-    };
-
-    if (blindCount > 0) {
-      setPassAnimPhase('blind-join');
-      setTimeout(() => { setPassAnimPhase('zip'); setTimeout(resolveHand, 450); }, 400);
-    } else {
-      setPassAnimPhase('zip');
-      setTimeout(resolveHand, 500);
-    }
+    }, 600);
   };
 
   const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); } };
@@ -827,14 +778,6 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   return (
     <div style={{ flex: 1, background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80 }}>
 
-      {/* Pass animation keyframes */}
-      <style>{`
-        @keyframes zipRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(250px); opacity: 0; } }
-        @keyframes zipLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-250px); opacity: 0; } }
-        @keyframes zipAcross { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-250px); opacity: 0; } }
-        @keyframes blindSlideIn { 0% { transform: translateY(40px) scale(0.85); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
-      `}</style>
-
       {/* Header with Back button */}
       <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -889,11 +832,27 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 ))}
               </div>
             ) : phase === "complete" ? (
-              <div style={{ background: "#FFFFFF", borderRadius: 14, padding: "20px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "center", minWidth: 200 }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>✨</div>
-                <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, color: "#E03050", margin: "0 0 4px", letterSpacing: 1 }}>Charleston Complete!</h3>
+              <div style={{ background: "#FFFFFF", borderRadius: 14, padding: "20px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "center", minWidth: 220 }}>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>
+                  {bestTileCount >= 10 ? "🏆" : bestTileCount >= 8 ? "🔥" : bestTileCount >= 5 ? "✨" : "📚"}
+                </div>
+                <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, color: "#E03050", margin: "0 0 8px", letterSpacing: 1 }}>Charleston Complete!</h3>
+
+                {/* Mahjong progress */}
+                <div style={{ margin: "0 0 12px", padding: "10px 14px", background: bestTileCount >= 10 ? "rgba(109,191,168,0.08)" : bestTileCount >= 8 ? "rgba(107,63,160,0.06)" : "rgba(107,63,160,0.04)", borderRadius: 10, border: `1px solid ${bestTileCount >= 10 ? "rgba(109,191,168,0.2)" : bestTileCount >= 8 ? "rgba(107,63,160,0.15)" : "rgba(107,63,160,0.1)"}` }}>
+                  <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 22, fontWeight: 700, color: bestTileCount >= 10 ? "#6DBFA8" : bestTileCount >= 8 ? "#6B3FA0" : "#E03050" }}>
+                    {bestTileCount} / 14
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#2D1B4E", marginTop: 2 }}>
+                    tiles towards Mahjong!
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 600, marginTop: 4, color: bestTileCount >= 10 ? "#6DBFA8" : bestTileCount >= 8 ? "#6B3FA0" : bestTileCount >= 5 ? "#b8860b" : "#9688AA" }}>
+                    {bestTileCount >= 10 ? "Excellent!" : bestTileCount >= 8 ? "Very Good!" : bestTileCount >= 5 ? "Solid Progress" : "Keep Practicing"}
+                  </div>
+                </div>
+
                 {level === "advanced" && (
-                  <div style={{ margin: "8px 0 12px", padding: "8px 12px", background: "rgba(107,63,160,0.04)", borderRadius: 8, border: "1px solid rgba(107,63,160,0.1)" }}>
+                  <div style={{ margin: "0 0 12px", padding: "8px 12px", background: "rgba(107,63,160,0.04)", borderRadius: 8, border: "1px solid rgba(107,63,160,0.1)" }}>
                     <div style={{ fontSize: 9, color: "#6B5A82", fontWeight: 600, marginBottom: 4 }}>Stats</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
                       <div><span style={{ fontSize: 16, fontWeight: 700, color: "#E03050" }}>{passCount}</span><div style={{ fontSize: 7, color: "#9688AA" }}>passes</div></div>
@@ -902,24 +861,20 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   </div>
                 )}
                 {level === "novice" && (
-                  <p style={{ fontSize: 9, color: "#6DBFA8", margin: "4px 0 10px", fontStyle: "italic" }}>Great job! The Charleston helps you trade unwanted tiles with other players.</p>
+                  <p style={{ fontSize: 9, color: "#6DBFA8", margin: "0 0 10px", fontStyle: "italic" }}>Great job! The Charleston helps you trade unwanted tiles with other players.</p>
                 )}
-                {level !== "novice" && <p style={{ fontSize: 10, color: "#6B5A82", margin: "0 0 14px" }}>What would you like to do?</p>}
                 <button onClick={() => setShowSetup(true)} style={{ display: "block", width: "100%", padding: "10px 0", marginBottom: 8, background: "rgba(224,48,80,0.06)", border: "1px solid rgba(224,48,80,0.2)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#E03050", fontFamily: "'Outfit',sans-serif" }}>🎯 Practice Again</button>
                 <button onClick={onBack} style={{ display: "block", width: "100%", padding: "10px 0", background: "rgba(107,63,160,0.06)", border: "1px solid rgba(107,63,160,0.15)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#6B3FA0", fontFamily: "'Outfit',sans-serif" }}>← Back to Practice</button>
               </div>
             ) : (() => {
               const bScale = Math.max(0.55, Math.min(1, tileScale * 1.2));
-              const slotCount = phase === "courtesy" && courtesyCount !== null ? courtesyCount : isBlind ? 3 : 3;
-              const passBoxW = Math.ceil((72 * slotCount + 3 * Math.max(0, slotCount - 1)) * tileScale) + 14;
+              const passBoxW = Math.ceil((72 * 3 + 3 * 2) * tileScale) + 14;
               const passBoxH = Math.ceil(98 * tileScale) + 14;
               const selectedTiles = humanHand.filter(t => selectedIds.has(t.instanceId));
-              const dirLabel = phase === "courtesy" ? "Courtesy Across" : step?.label;
-              const dirIcon = phase === "courtesy" ? "↑" : step ? dirArrow[step.dir] : "";
               return (
               <>
                 <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: Math.round(8 * bScale), padding: `${Math.round(2 * bScale)}px ${Math.round(8 * bScale)}px`, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", textAlign: "center", maxWidth: Math.round(200 * bScale) }}>
-                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(10 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 0.5 }}>{dirLabel} {dirIcon}</span>
+                  <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: Math.round(10 * bScale), fontWeight: 700, color: "#E03050", letterSpacing: 0.5 }}>{step?.label} {step && dirArrow[step.dir]}</span>
                   {isBlind && <span style={{ fontSize: Math.round(6 * bScale), color: "#6DBFA8", fontWeight: 600, marginLeft: 4 }}>BLIND OK</span>}
                   {level === "novice" && step && (
                     <div style={{ fontSize: Math.round(6 * bScale), color: "#6B5A82", marginTop: 1, lineHeight: 1.2 }}>
@@ -927,13 +882,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                       {isBlind ? " · You won't see what comes back!" : ""}
                     </div>
                   )}
-                  {level === "novice" && phase === "courtesy" && (
-                    <div style={{ fontSize: Math.round(6 * bScale), color: "#6B5A82", marginTop: 1, lineHeight: 1.2 }}>
-                      Pass {courtesyCount} tile{courtesyCount !== 1 ? "s" : ""} to West (across)
-                    </div>
-                  )}
                 </div>
-                {slotCount > 0 && (
                 <div
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                   onDrop={e => {
@@ -941,6 +890,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     const source = e.dataTransfer.getData("source") || "";
                     const data = e.dataTransfer.getData("text/plain");
                     if (source === "passbox") { /* already in pass box, ignore */ setDragIdx(null); setDragOverIdx(null); return; }
+                    // Support both index-based (hand reorder drag) and instanceId-based drags
                     let tile: GameTile | undefined;
                     const idx = parseInt(data, 10);
                     if (source === "hand" && !isNaN(idx) && visibleHand[idx]) { tile = visibleHand[idx]; }
@@ -952,55 +902,30 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     }
                     setDragIdx(null); setDragOverIdx(null);
                   }}
-                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: passAnimPhase ? "visible" : "hidden", position: "relative" }}>
-                  <div style={{ width: Math.ceil((72 * slotCount + 3 * Math.max(0, slotCount - 1)) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
-                    <div style={{ transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
-                      <div style={{
-                        display: "flex", gap: 3,
-                        ...(passAnimPhase === 'zip' ? { animation: `zip${passAnimDir === 'right' ? 'Right' : passAnimDir === 'left' ? 'Left' : 'Across'} 0.45s ease-in forwards` } : {}),
-                      }}>
-                        {passAnimPhase ? (
-                          <>
-                            {selectedTiles.map(tile => (
-                              <div key={tile.instanceId}>
-                                <TileCard tile={tile} selected={false} onTap={() => {}} cherry={U.cherry} size="md" disabled={true} />
-                              </div>
-                            ))}
-                            {passBlindCount > 0 && Array.from({ length: passBlindCount }).map((_, i) => (
-                              <div key={`blind-${i}`} style={{
-                                animation: passAnimPhase === 'blind-join' ? `blindSlideIn 0.3s ease-out ${i * 100}ms both` : 'none',
-                              }}>
-                                <TileBack />
-                              </div>
-                            ))}
-                          </>
-                        ) : (
-                          <>
-                            {Array.from({ length: slotCount }).map((_, i) => {
-                              const tile = selectedTiles[i];
-                              if (tile) return (
-                                <div key={tile.instanceId}
-                                  draggable
-                                  onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "passbox"); }}
-                                >
-                                  <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />
-                                </div>
-                              );
-                              return <EmptyPassSlot key={`pass-empty-${i}`} />;
-                            })}
-                          </>
-                        )}
-                      </div>
+                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
+                  <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
+                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
+                      {[0, 1, 2].map(i => {
+                        const tile = selectedTiles[i];
+                        if (tile) return (
+                          <div key={tile.instanceId}
+                            draggable
+                            onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "passbox"); }}
+                          >
+                            <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />
+                          </div>
+                        );
+                        return <EmptyPassSlot key={`pass-empty-${i}`} />;
+                      })}
                     </div>
                   </div>
-                  {selectedIds.size === 0 && !passAnimPhase && (
+                  {selectedIds.size === 0 && (
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Drag or click tiles (0–3)" : `Drag or click ${reqCount ?? 3} tile${(reqCount ?? 3) !== 1 ? "s" : ""} to pass`}</span>
+                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Drag tiles here (0–3)" : "Drag or double-click 3 tiles"}</span>
                     </div>
                   )}
                 </div>
-                )}
-                {(phase === "charleston" || phase === "courtesy") && slotCount > 0 && (
+                {(phase === "charleston" || phase === "courtesy") && (
                   <button onClick={executePass} disabled={!canPass()} style={{ background: canPass() ? "#E03050" : "rgba(255,255,255,0.2)", color: canPass() ? "#FFFFFF" : mat.text, border: "none", borderRadius: Math.round(14 * bScale), padding: `${Math.round(4 * bScale)}px ${Math.round(16 * bScale)}px`, cursor: canPass() ? "pointer" : "not-allowed", fontSize: Math.round(9 * bScale), fontWeight: 700, fontFamily: "'Bodoni Moda',serif", letterSpacing: 1.5, transition: "all 0.2s ease", opacity: canPass() ? 1 : 0.4, boxShadow: canPass() ? "0 0 10px rgba(224,48,80,0.2)" : "none" }}>{animating ? "..." : "PASS"}</button>
                 )}
               </>
@@ -1015,7 +940,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
         {/* Bottom — You (East · Dealer) */}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 14px 8px", position: "relative" }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(60,90,140,0.55)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
           {showROL && <div style={{ position: "absolute", right: 14, bottom: 8 }}><ROLIndicator stepIdx={stepIdx} phase={phase} showStopPrompt={showStopPrompt} stoppedEarly={stoppedEarly} cherry={U.cherry} textFaded={mat.text} /></div>}
         </div>
       </div>
@@ -1035,7 +960,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>{suggestionsOpen ? '🙈 Hide Suggested Hands' : '👀 Peep Suggested Hands!'}</span>
+            <span>👀 Peep Possible Hands!</span>
             <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
           </div>
           {suggestionsOpen && (
@@ -1044,29 +969,20 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               border: `0.5px solid ${U.cBorder}`, borderRadius: 10, padding: "6px 10px", marginBottom: 2,
               animation: "entranceFade 0.2s ease both",
             }}>
-              {sortedSuggestions.map(({ match: s, realCount }, idx) => {
+              {suggestions.map((s, i) => {
                 const isActive = activeHintHand === s.hand.id;
+                const realCount = realMatchCounts[i] ?? s.matchedCount;
                 return (
-                  <div key={s.hand.id + idx} onClick={() => activateHintHand(s)} style={{
+                  <div key={s.hand.id + i} onClick={() => activateHintHand(s)} style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 8, cursor: "pointer",
-                    borderBottom: idx < sortedSuggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
-                    background: isActive ? "rgba(234,179,8,0.035)" : "transparent",
+                    borderBottom: i < suggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
+                    background: isActive ? "rgba(234,179,8,0.1)" : "transparent",
                     outline: isActive ? "1.5px solid rgba(234,179,8,0.4)" : "1.5px solid transparent",
                     transition: "all 0.15s ease",
                   }}>
-                    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, fontWeight: isActive ? 700 : 500, flex: 1 }}>
-                      {(() => {
-                        const pat = s.hand.patterns[s.patternIndex];
-                        const segs = s.hand.displayPattern.split(' ');
-                        return segs.map((seg, j) => {
-                          const grp = pat?.groups[j];
-                          const c = grp ? (CARD_COLORS[grp.color] || U.text) : U.text;
-                          return <span key={j} style={{ color: c }}>{seg}{j < segs.length - 1 ? ' ' : ''}</span>;
-                        });
-                      })()}
-                    </span>
+                    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: isActive ? "#b8860b" : U.text, fontWeight: isActive ? 700 : 500, flex: 1 }}>{s.hand.displayPattern}</span>
                     <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
                     <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
                   </div>
                 );
