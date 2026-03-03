@@ -37,10 +37,10 @@ interface PlayerData {
 // ─── CONSTANTS ────────────────────────────────────────────────
 
 const MATS = [
-  { id: "coffee", name: "Coffee", bg: "linear-gradient(145deg,#4A3D32,#3E3228,#352A20)", text: "rgba(158,202,189,0.6)", accent: "rgba(158,202,189,0.18)", readyBg: "rgba(109,191,168,0.7)", readyText: "#fff", seatBg: "rgba(109,191,168,0.6)" },
-  { id: "seafoam", name: "Seafoam", bg: "linear-gradient(145deg,#8FBFB2,#7AAD9F,#6B9E90)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.65)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)" },
-  { id: "lavender", name: "Lavender", bg: "linear-gradient(145deg,#B5A8C8,#A496B8,#9688AA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.6)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)" },
-  { id: "cerulean", name: "Cerulean", bg: "linear-gradient(145deg,#A0C4D6,#8FB5C8,#80A6BA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.6)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)" },
+  { id: "coffee", name: "Coffee", bg: "linear-gradient(145deg,#4A3D32,#3E3228,#352A20)", text: "rgba(158,202,189,0.6)", accent: "rgba(158,202,189,0.18)", readyBg: "rgba(109,191,168,0.7)", readyText: "#fff", seatBg: "rgba(109,191,168,0.6)", readyColor: "#6DBFA8" },
+  { id: "seafoam", name: "Seafoam", bg: "linear-gradient(145deg,#8FBFB2,#7AAD9F,#6B9E90)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.65)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)", readyColor: "#4A3D32" },
+  { id: "lavender", name: "Lavender", bg: "linear-gradient(145deg,#B5A8C8,#A496B8,#9688AA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.6)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)", readyColor: "#4A3D32" },
+  { id: "cerulean", name: "Cerulean", bg: "linear-gradient(145deg,#A0C4D6,#8FB5C8,#80A6BA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.6)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)", readyColor: "#4A3D32" },
 ];
 
 const uiThemes = {
@@ -318,11 +318,11 @@ function ROLIndicator({ stepIdx, phase, showStopPrompt, stoppedEarly, cherry, te
   );
 }
 
-function SeatLabel({ name, isReady, showReady, seatBg, readyBg }: { name: string; isReady: boolean; showReady: boolean; seatBg: string; readyBg: string }) {
+function SeatLabel({ name, isReady, showReady, seatBg, readyColor }: { name: string; isReady: boolean; showReady: boolean; seatBg: string; readyColor: string }) {
   return (
     <div style={{ textAlign: "center" }}>
       <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: seatBg, padding: "2px 8px", borderRadius: 6 }}>{name}</span>
-      {isReady && showReady && <div style={{ marginTop: 2 }}><span style={{ fontSize: 7, fontWeight: 600, color: "#fff", background: readyBg, padding: "1px 5px", borderRadius: 4 }}>Ready</span></div>}
+      {isReady && showReady && <div style={{ marginTop: 2 }}><span style={{ fontSize: 7, fontWeight: 600, color: readyColor }}>Ready</span></div>}
     </div>
   );
 }
@@ -385,7 +385,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [passCount, setPassCount] = useState(0);
   const [totalPassed, setTotalPassed] = useState(0);
   const [passDir, setPassDir] = useState<"right" | "across" | "left" | null>(null);
-  const [blindFilling, setBlindFilling] = useState(false);
+  const [blindSlotCount, setBlindSlotCount] = useState(0);
 
   // ── Responsive tile scaling ──────────────────────────────────
   // Strategy: render tiles at full size inside an inner row, measure
@@ -433,7 +433,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const hands = [0,1,2,3].map(s => { const count = s === dealerSeat ? 14 : 13; const h = deck.slice(idx, idx + count); idx += count; return h; });
     setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (East)","South","West","North"][s], hand: hands[s], selectedForPass: [], isHuman: s === 0 })));
     setPhase("charleston"); setStepIdx(0); setSelectedIds(new Set()); setBotsReady(false); setCourtesyCount(null);
-    setAnimating(false); setBlindFilling(false); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
+    setAnimating(false); setBlindSlotCount(0); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
     setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null);
@@ -625,11 +625,17 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     if (animating) return; if (!levelLocked) setLevelLocked(true);
     if (receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId]));
     if (isJoker(tile)) { setMessage("⚠ Jokers cannot be passed in the Charleston"); setTimeout(() => setMessage(getMsg()), 2500); return; }
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(tile.instanceId)) { next.delete(tile.instanceId); } else { const max = reqCount !== null ? reqCount : 3; if (next.size >= max) return prev; next.add(tile.instanceId); }
-      return next;
-    });
+    if (selectedIds.has(tile.instanceId)) {
+      setSelectedIds(prev => { const next = new Set(prev); next.delete(tile.instanceId); return next; });
+    } else {
+      const max = reqCount !== null ? reqCount : 3;
+      const totalFilled = selectedIds.size + (isBlind ? blindSlotCount : 0);
+      if (totalFilled >= max) {
+        if (isBlind && blindSlotCount > 0) { setBlindSlotCount(c => c - 1); }
+        else return;
+      }
+      setSelectedIds(prev => { const next = new Set(prev); next.add(tile.instanceId); return next; });
+    }
   };
 
   useEffect(() => {
@@ -655,7 +661,14 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
   const executePass = () => {
     if (!canPass()) return; setAnimating(true);
-    const sel = humanHand.filter(t => selectedIds.has(t.instanceId));
+    let sel = humanHand.filter(t => selectedIds.has(t.instanceId));
+    // For blind passes, auto-select random tiles for blind slots
+    if (isBlind && blindSlotCount > 0) {
+      const selIds = new Set(sel.map(t => t.instanceId));
+      const available = humanHand.filter(t => !selIds.has(t.instanceId) && !isJoker(t));
+      const shuffled = [...available].sort(() => Math.random() - 0.5);
+      sel = [...sel, ...shuffled.slice(0, blindSlotCount)];
+    }
     const selIds = new Set(sel.map(t => t.instanceId));
     setPassCount(c => c + 1); setTotalPassed(c => c + sel.length);
     const up = players!.map((p, i) => i === 0 ? { ...p, selectedForPass: sel } : p);
@@ -664,7 +677,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     const oldIds = new Set(humanHand.filter(t => !selIds.has(t.instanceId)).map(t => t.instanceId));
     const newReceivedIds = new Set(nh[0].filter(t => !oldIds.has(t.instanceId)).map(t => t.instanceId));
     const doResolve = () => {
-      setPassDir(null); setBlindFilling(false);
+      setPassDir(null); setBlindSlotCount(0);
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
@@ -673,13 +686,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
       else { setPhase("courtesy_prompt"); setMessage(""); }
     };
-    if (isBlind) {
-      // Blind pass: fill remaining slots with tile backs first, THEN animate
-      setBlindFilling(true);
-      setTimeout(() => { setPassDir(s.dir); setTimeout(doResolve, 550); }, 400);
-    } else {
-      setPassDir(s.dir); setTimeout(doResolve, 600);
-    }
+    setPassDir(s.dir); setTimeout(doResolve, 600);
   };
 
   const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); } };
@@ -853,13 +860,13 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       <div style={{ flex: 1, margin: "2px 8px", background: mat.bg, borderRadius: 14, position: "relative", minHeight: 0, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden" }}>
         {/* West (across from East/you) */}
         <div style={{ padding: "6px 0 0" }}>
-          <SeatLabel name="West" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} seatBg={mat.seatBg} readyBg={mat.readyBg} />
+          <SeatLabel name="West" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} seatBg={mat.seatBg} readyColor={mat.readyColor} />
         </div>
 
         {/* Middle */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "0 10px" }}>
           <div style={{ minWidth: 40 }}>
-            <SeatLabel name="South" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} seatBg={mat.seatBg} readyBg={mat.readyBg} />
+            <SeatLabel name="South" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} seatBg={mat.seatBg} readyColor={mat.readyColor} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
@@ -891,7 +898,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   </div>
                 </div>
 
-                <button onClick={() => setShowSetup(true)} style={{ display: "flex", width: "100%", padding: "10px 0", marginBottom: 8, background: "#6B3FA0", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Practice Again <span style={{ fontSize: 14 }}>&#x21BB;</span></button>
+                <button onClick={() => setShowSetup(true)} style={{ display: "flex", width: "100%", padding: "10px 0", marginBottom: 8, background: "#6B3FA0", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Practice again <span style={{ fontSize: 14, display: "inline-block", transform: "scaleX(-1)" }}>&#x21BB;</span></button>
                 <button onClick={onBack} style={{ display: "flex", width: "100%", padding: "10px 0", background: "#E03050", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Continue this match <span style={{ fontSize: 14 }}>&rarr;</span></button>
               </div>
             ) : (() => {
@@ -920,21 +927,20 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     e.preventDefault(); e.stopPropagation();
                     const source = e.dataTransfer.getData("source") || "";
                     const data = e.dataTransfer.getData("text/plain");
-                    if (source === "passbox") { /* already in pass box, ignore */ setDragIdx(null); setDragOverIdx(null); return; }
+                    if (source === "passbox") { setDragIdx(null); setDragOverIdx(null); return; }
                     let tile: GameTile | undefined;
                     const idx = parseInt(data, 10);
                     if (source === "hand" && !isNaN(idx) && visibleHand[idx]) { tile = visibleHand[idx]; }
                     else { tile = humanHand.find(t => t.instanceId === data) || visibleHand.find(t => t.instanceId === data); }
                     if (!tile && !isNaN(idx)) { tile = visibleHand[idx]; }
                     if (tile && !selectedIds.has(tile.instanceId) && !isJoker(tile)) {
-                      const max = reqCount !== null ? reqCount : 3;
-                      if (selectedIds.size < max) toggleTile(tile);
+                      toggleTile(tile);
                     }
                     setDragIdx(null); setDragOverIdx(null);
                   }}
-                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 || blindFilling ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 || blindFilling ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: passDir ? "none" : "all 0.2s ease", overflow: "visible", position: "relative", animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
+                  style={{ width: passBoxW, height: passBoxH, background: (selectedIds.size > 0 || blindSlotCount > 0) ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${(selectedIds.size > 0 || blindSlotCount > 0) ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: passDir ? "none" : "all 0.2s ease", overflow: "visible", position: "relative", animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
                   <div style={{ width: Math.ceil((72 * passSlotCount + 3 * Math.max(0, passSlotCount - 1)) * bScale), height: Math.ceil(98 * bScale), position: "relative" }}>
-                    <div style={{ display: "flex", gap: 3, transform: `scale(${bScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
+                    <div style={{ display: "flex", gap: 3, flexWrap: "nowrap", transform: `scale(${bScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
                       {Array.from({ length: passSlotCount }, (_, i) => {
                         const tile = selectedTiles[i];
                         if (tile) return (
@@ -945,19 +951,29 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                             <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={animating} />
                           </div>
                         );
-                        // Blind pass: fill remaining slots with tile backs AFTER pressing PASS
-                        if (isBlind && blindFilling) return (
-                          <div key={`pass-blind-${i}`} style={{ opacity: 0.7 }}>
-                            <MahjiTile faceDown size="md" />
-                          </div>
-                        );
+                        // Blind pass: show tile back (clickable to remove) or B button
+                        if (isBlind) {
+                          const blindIdx = i - selectedTiles.length;
+                          if (blindIdx >= 0 && blindIdx < blindSlotCount) {
+                            return (
+                              <div key={`pass-blind-${i}`} onClick={() => !animating && setBlindSlotCount(c => c - 1)} style={{ cursor: "pointer", opacity: 0.85, transition: "opacity 0.15s" }}>
+                                <MahjiTile faceDown size="md" />
+                              </div>
+                            );
+                          }
+                          return (
+                            <div key={`pass-b-${i}`} onClick={() => { if (!animating && selectedIds.size + blindSlotCount < 3) setBlindSlotCount(c => c + 1); }} style={{ width: 72, height: 98, borderRadius: 10, border: "2px dashed rgba(224,48,80,0.25)", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.15s ease" }}>
+                              <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 24, fontWeight: 700, color: "rgba(224,48,80,0.35)" }}>B</span>
+                            </div>
+                          );
+                        }
                         return <EmptyPassSlot key={`pass-empty-${i}`} />;
                       })}
                     </div>
                   </div>
-                  {selectedIds.size === 0 && !blindFilling && (
+                  {!isBlind && selectedIds.size === 0 && (
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>{isBlind ? "Tap or drag tiles here (0–3)" : "Tap or drag tiles here"}</span>
+                      <span style={{ fontSize: Math.round(8 * bScale), color: mat.text, fontStyle: "italic" }}>Tap or drag tiles here</span>
                     </div>
                   )}
                 </div>
@@ -970,7 +986,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
           </div>
 
           <div style={{ minWidth: 40 }}>
-            <SeatLabel name="North" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} seatBg={mat.seatBg} readyBg={mat.readyBg} />
+            <SeatLabel name="North" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} seatBg={mat.seatBg} readyColor={mat.readyColor} />
           </div>
         </div>
 
