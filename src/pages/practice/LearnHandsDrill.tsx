@@ -510,8 +510,8 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
   return (
     <div style={{ flex: 1, background: U.bg, display: "flex", flexDirection: "column", overflow: "auto", paddingBottom: 80 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 8px" }}>
-        <div onClick={onBack} style={{ cursor: "pointer", fontSize: 13, color: U.textMid, fontWeight: 500 }}>‹ Back</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 12px 4px" }}>
+        <div onClick={onBack} style={{ cursor: "pointer", fontSize: 11, color: U.textMid, fontWeight: 500 }}>‹ Back</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {streak > 0 && <span style={{ fontSize: 10, color: U.seafoam, fontWeight: 600 }}>🔥 {streak}</span>}
           <span style={{ fontSize: 10, color: U.textLight }}>#{handCount}</span>
@@ -527,7 +527,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
         </div>
       </div>
 
-      <div style={{ padding: "0 16px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ padding: "0 12px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
 
         {/* Target hand display */}
         {targetHand && (
@@ -638,50 +638,46 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
           </div>
         )}
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+        {/* Action + sort buttons — single compact row */}
+        <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
           {phase === "building" && (
             <>
+              <button onClick={() => doSortBank(sortByRank)} style={{
+                background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 10,
+                padding: "3px 8px", cursor: "pointer", fontSize: 9, color: U.btnText,
+                fontWeight: 600, fontFamily: "'Outfit',sans-serif",
+              }}>Sort Rank</button>
+              <button onClick={() => doSortBank(sortBySuit)} style={{
+                background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 10,
+                padding: "3px 8px", cursor: "pointer", fontSize: 9, color: U.btnText,
+                fontWeight: 600, fontFamily: "'Outfit',sans-serif",
+              }}>Sort Suit</button>
               <button onClick={clearAll} style={{
-                padding: "8px 20px", borderRadius: 18, border: `1px solid ${U.btnBorder}`,
-                background: U.btnBg, color: U.btnText, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                padding: "3px 10px", borderRadius: 10, border: `1px solid ${U.btnBorder}`,
+                background: U.btnBg, color: U.btnText, fontSize: 9, fontWeight: 500, cursor: "pointer",
               }}>Clear All</button>
               <button onClick={checkHand} disabled={!allPlaced} style={{
-                padding: "8px 28px", borderRadius: 18, border: "none",
+                padding: "3px 14px", borderRadius: 10, border: "none",
                 background: allPlaced ? U.seafoam : U.btnBg,
                 color: allPlaced ? "#fff" : U.textLight,
-                fontSize: 12, fontWeight: 600, cursor: allPlaced ? "pointer" : "not-allowed",
+                fontSize: 10, fontWeight: 600, cursor: allPlaced ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
               }}>Check ✓</button>
             </>
           )}
           {phase === "wrong" && (
             <button onClick={() => setPhase("building")} style={{
-              padding: "8px 24px", borderRadius: 18, border: `1px solid ${U.btnBorder}`,
-              background: U.btnBg, color: U.btnText, fontSize: 11, fontWeight: 500, cursor: "pointer",
+              padding: "3px 12px", borderRadius: 10, border: `1px solid ${U.btnBorder}`,
+              background: U.btnBg, color: U.btnText, fontSize: 9, fontWeight: 500, cursor: "pointer",
             }}>Keep Trying</button>
           )}
           {(phase === "success" || phase === "wrong") && (
             <button onClick={generateHand} style={{
-              padding: "8px 28px", borderRadius: 18, border: "none",
+              padding: "3px 14px", borderRadius: 10, border: "none",
               background: U.cherry, color: "#fff",
-              fontSize: 12, fontWeight: 600, cursor: "pointer",
+              fontSize: 10, fontWeight: 600, cursor: "pointer",
             }}>Next Hand →</button>
           )}
-        </div>
-
-        {/* Sort buttons */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "2px 0" }}>
-          <button onClick={() => doSortBank(sortByRank)} style={{
-            background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12,
-            padding: "4px 12px", cursor: "pointer", fontSize: 10, color: U.btnText,
-            fontWeight: 600, fontFamily: "'Outfit',sans-serif",
-          }}>Sort by Rank</button>
-          <button onClick={() => doSortBank(sortBySuit)} style={{
-            background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12,
-            padding: "4px 12px", cursor: "pointer", fontSize: 10, color: U.btnText,
-            fontWeight: 600, fontFamily: "'Outfit',sans-serif",
-          }}>Sort by Suit</button>
         </div>
 
         {/* TILE BANK — multi-line wrap */}
@@ -700,10 +696,10 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
           }}
           style={{
             background: isDark ? "rgba(180,154,216,0.04)" : "rgba(107,63,160,0.03)",
-            border: `0.5px solid ${U.cBorder}`, borderRadius: 14, padding: "12px",
+            border: `0.5px solid ${U.cBorder}`, borderRadius: 12, padding: "8px 10px",
           }}
         >
-          <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>
+          <div style={{ fontSize: 8, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>
             Tile Bank ({bankTiles.length})
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
