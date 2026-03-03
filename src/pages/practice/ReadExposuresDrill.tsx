@@ -2,14 +2,13 @@
 // MAHJI — Reading Exposures Practice Drill
 // File: src/pages/practice/ReadExposuresDrill.tsx
 //
-// The player watches bot opponents expose melds and must
-// deduce which hand each bot is pursuing from the NMJL card.
+// Examine an opponent's exposed melds and identify ALL possible
+// hands they could be pursuing from the NMJL card.
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useCallback } from "react";
 import { MahjiTile } from "../../components/tiles/MahjiTile";
 import { GameTile, getFullDeck } from "../../data/tileData";
-import { C, getThemeColors } from "../../constants/colors";
 import { useTheme } from "../../constants/ThemeContext";
 import {
   getCard, getAvailableYears, getCurrentYear,
@@ -19,49 +18,60 @@ import {
 } from "../../data/nmjl";
 import type {
   NMJLCard, HandDefinition, HandPattern, TileGroup,
-  ColorAssignment, CardSection,
+  ColorAssignment, CardSection, CardColor,
 } from "../../data/nmjl";
 
 // ─── TYPES ────────────────────────────────────────────────────
 
 interface Props { onBack: () => void; }
 
-type Phase = "setup" | "playing" | "guessing" | "reveal" | "complete";
-type Level = "intermediate" | "advanced";
+type Phase = "setup" | "playing" | "results";
 
 interface ExposedMeld {
   tiles: GameTile[];
   groupType: string;
-  round: number;
 }
 
-interface BotPlayer {
-  name: string;
-  targetHand: HandDefinition;
-  targetPattern: HandPattern;
-  targetAssignment: ColorAssignment;
-  resolvedTileIds: string[];
-  exposedMelds: ExposedMeld[];
-  exposableGroups: TileGroup[]; // groups that CAN be exposed (pung/kong/quint)
-  nextExposeIdx: number; // which group to expose next
-  isRevealed: boolean;
+interface Puzzle {
+  melds: ExposedMeld[];
+  correctHandIds: Set<string>;
+}
+
+interface ScoreResult {
+  score: number;
+  correct: string[];
+  wrong: string[];
+  missed: string[];
 }
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 
-const MATS = [
-  { id: "coffee", name: "Coffee", bg: "linear-gradient(145deg,#4A3D32,#3E3228,#352A20)", text: "rgba(158,202,189,0.6)", accent: "rgba(158,202,189,0.18)" },
-  { id: "seafoam", name: "Seafoam", bg: "linear-gradient(145deg,#8FBFB2,#7AAD9F,#6B9E90)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)" },
-  { id: "lavender", name: "Lavender", bg: "linear-gradient(145deg,#B5A8C8,#A496B8,#9688AA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)" },
-  { id: "cerulean", name: "Cerulean", bg: "linear-gradient(145deg,#A0C4D6,#8FB5C8,#80A6BA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)" },
-];
-
-const uiT = {
-  light: { bg: "#F8F5FB", chrome: "#FFFFFF", cBorder: "rgba(107,63,160,0.1)", text: "#2D1B4E", textMid: "#6B5A82", textLight: "#9688AA", cherry: "#E03050", lavDeep: "#6B3FA0", seafoam: "#6DBFA8", btnBg: "rgba(107,63,160,0.06)", btnBorder: "rgba(107,63,160,0.12)", btnText: "#6B3FA0" },
-  dark: { bg: "#1A1225", chrome: "#251545", cBorder: "rgba(180,154,216,0.12)", text: "#F0EAF6", textMid: "#B49AD8", textLight: "#7E6A9A", cherry: "#FF4D6D", lavDeep: "#B49AD8", seafoam: "#7DD4B8", btnBg: "rgba(180,154,216,0.08)", btnBorder: "rgba(180,154,216,0.15)", btnText: "#B49AD8" },
+const CARD_COLOR_HEX: Record<CardColor, string> = {
+  red: "#C2413B",
+  green: "#2E8B57",
+  blue: "#4A7FA8",
 };
 
-const BOT_NAMES = ["South", "West", "North"];
+const OPERATOR_TOKENS = new Set(["+", "=", "or", "OR", "-or-"]);
+
+const uiT = {
+  light: {
+    bg: "#F8F5FB", chrome: "#FFFFFF", cBorder: "rgba(107,63,160,0.1)",
+    text: "#2D1B4E", textMid: "#6B5A82", textLight: "#9688AA",
+    cherry: "#E03050", lavDeep: "#6B3FA0", seafoam: "#6DBFA8",
+    btnBg: "rgba(107,63,160,0.06)", btnBorder: "rgba(107,63,160,0.12)", btnText: "#6B3FA0",
+    cardBg: "rgba(255,255,255,0.72)", cardShadow: "0 2px 12px rgba(107,63,160,0.06), inset 0 1px 0 rgba(255,255,255,0.8)",
+    meldBg: "rgba(107,63,160,0.03)", amber: "#b8860b", amberBg: "rgba(234,179,8,0.12)",
+  },
+  dark: {
+    bg: "#1A1225", chrome: "#251545", cBorder: "rgba(180,154,216,0.12)",
+    text: "#F0EAF6", textMid: "#B49AD8", textLight: "#7E6A9A",
+    cherry: "#FF4D6D", lavDeep: "#B49AD8", seafoam: "#7DD4B8",
+    btnBg: "rgba(180,154,216,0.08)", btnBorder: "rgba(180,154,216,0.15)", btnText: "#B49AD8",
+    cardBg: "rgba(37,21,69,0.72)", cardShadow: "0 2px 12px rgba(0,0,0,0.2), inset 0 0.5px 0 rgba(255,255,255,0.04)",
+    meldBg: "rgba(180,154,216,0.06)", amber: "#e5b84a", amberBg: "rgba(234,179,8,0.15)",
+  },
+};
 
 // ─── HELPERS ──────────────────────────────────────────────────
 
@@ -72,129 +82,6 @@ function shuffleArray<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-/** Pick hands for bots. For intermediate, pick distinctive hands. For advanced, pick ambiguous ones. */
-function pickBotHands(card: NMJLCard, level: Level): BotPlayer[] {
-  // Only exposable hands
-  const exposable = card.hands.filter(h => h.exposure === "X");
-
-  // Group by section for variety
-  const bySection = new Map<string, HandDefinition[]>();
-  for (const h of exposable) {
-    if (!bySection.has(h.section)) bySection.set(h.section, []);
-    bySection.get(h.section)!.push(h);
-  }
-
-  // For each hand, compute how many exposable groups it has and how distinctive they are
-  const scored = exposable.map(hand => {
-    let exposableGroupCount = 0;
-    const pattern = hand.patterns[0];
-    if (!pattern) return { hand, score: 0, exposableGroupCount: 0 };
-    for (const g of pattern.groups) {
-      if (g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet") {
-        exposableGroupCount++;
-      }
-    }
-    // For intermediate: prefer hands with distinctive groups (quints, specific dragons, etc.)
-    // For advanced: prefer hands with generic groups (common pungs)
-    let score = exposableGroupCount;
-    if (level === "intermediate") {
-      // Boost hands with quints, dragons, winds — they're distinctive
-      for (const g of pattern.groups) {
-        if (g.type === "quint") score += 3;
-        if (g.tiles.some(t => t.kind === "dragon" || t.kind === "wind")) score += 2;
-      }
-    } else {
-      // For advanced: prefer hands with plain suited groups (harder to narrow)
-      for (const g of pattern.groups) {
-        if (g.tiles.every(t => t.kind === "suited")) score += 2;
-      }
-    }
-    return { hand, score, exposableGroupCount };
-  }).filter(s => s.exposableGroupCount >= 1);
-
-  // Sort: intermediate picks highest score, advanced picks lowest
-  scored.sort((a, b) => level === "intermediate" ? b.score - a.score : a.score - b.score);
-
-  // Pick 3 from different sections
-  const picked: BotPlayer[] = [];
-  const usedSections = new Set<string>();
-
-  for (const { hand } of scored) {
-    if (picked.length >= 3) break;
-    if (usedSections.has(hand.section)) continue;
-
-    const pattern = hand.patterns[0];
-    const expanded = expandNumberConstraint(pattern.numberConstraint, pattern);
-    const ep = expanded[Math.floor(Math.random() * expanded.length)];
-    const assignments = enumerateColorAssignments(ep);
-    const assignment = assignments[Math.floor(Math.random() * assignments.length)];
-
-    const resolvedTileIds = ep.groups.flatMap(g => resolveGroupToTileIds(g, assignment));
-    const exposableGroups = ep.groups.filter(g =>
-      g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet"
-    );
-
-    // For intermediate: sort distinctive first. For advanced: sort ambiguous first.
-    const orderedGroups = level === "intermediate"
-      ? [...exposableGroups].sort((a, b) => {
-          const aDistinct = a.tiles.some(t => t.kind === "dragon" || t.kind === "wind") ? -1 : a.type === "quint" ? -1 : 0;
-          const bDistinct = b.tiles.some(t => t.kind === "dragon" || t.kind === "wind") ? -1 : b.type === "quint" ? -1 : 0;
-          return aDistinct - bDistinct;
-        })
-      : [...exposableGroups].sort((a, b) => {
-          const aAmbig = a.tiles.every(t => t.kind === "suited") ? -1 : 0;
-          const bAmbig = b.tiles.every(t => t.kind === "suited") ? -1 : 0;
-          return aAmbig - bAmbig;
-        });
-
-    picked.push({
-      name: BOT_NAMES[picked.length],
-      targetHand: hand,
-      targetPattern: ep,
-      targetAssignment: assignment,
-      resolvedTileIds,
-      exposedMelds: [],
-      exposableGroups: orderedGroups,
-      nextExposeIdx: 0,
-      isRevealed: false,
-    });
-    usedSections.add(hand.section);
-  }
-
-  // If we couldn't get 3 from different sections, fill from any
-  if (picked.length < 3) {
-    for (const { hand } of scored) {
-      if (picked.length >= 3) break;
-      if (picked.some(p => p.targetHand.id === hand.id)) continue;
-
-      const pattern = hand.patterns[0];
-      const expanded = expandNumberConstraint(pattern.numberConstraint, pattern);
-      const ep = expanded[Math.floor(Math.random() * expanded.length)];
-      const assignments = enumerateColorAssignments(ep);
-      const assignment = assignments[Math.floor(Math.random() * assignments.length)];
-
-      const resolvedTileIds = ep.groups.flatMap(g => resolveGroupToTileIds(g, assignment));
-      const exposableGroups = ep.groups.filter(g =>
-        g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet"
-      );
-
-      picked.push({
-        name: BOT_NAMES[picked.length],
-        targetHand: hand,
-        targetPattern: ep,
-        targetAssignment: assignment,
-        resolvedTileIds,
-        exposedMelds: [],
-        exposableGroups,
-        nextExposeIdx: 0,
-        isRevealed: false,
-      });
-    }
-  }
-
-  return picked;
 }
 
 /** Resolve a group to GameTile instances, possibly with joker substitutions */
@@ -247,7 +134,7 @@ function meldFitsHand(meld: ExposedMeld, hand: HandDefinition): boolean {
   return false;
 }
 
-/** Get all hands that could match ALL exposed melds for a bot */
+/** Get all hands that could match ALL exposed melds */
 function getPossibleHands(melds: ExposedMeld[], card: NMJLCard): HandDefinition[] {
   if (melds.length === 0) return card.hands.filter(h => h.exposure === "X");
   return card.hands.filter(hand => {
@@ -256,117 +143,153 @@ function getPossibleHands(melds: ExposedMeld[], card: NMJLCard): HandDefinition[
   });
 }
 
+/** Generate a puzzle: pick a hand, expose its melds, find all matching hands */
+function generateExposures(card: NMJLCard): Puzzle | null {
+  const exposable = card.hands.filter(h => h.exposure === "X");
+
+  // Score hands by exposable group count — prefer 2-3 for interesting puzzles
+  const candidates = exposable.map(hand => {
+    const pattern = hand.patterns[0];
+    if (!pattern) return null;
+    const expGroups = pattern.groups.filter(g =>
+      g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet"
+    );
+    if (expGroups.length < 1) return null;
+    return { hand, pattern, exposableGroups: expGroups };
+  }).filter(Boolean) as { hand: HandDefinition; pattern: HandPattern; exposableGroups: TileGroup[] }[];
+
+  if (candidates.length === 0) return null;
+
+  // Pick a random candidate
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+
+  // Choose a random color assignment
+  const expanded = expandNumberConstraint(picked.pattern.numberConstraint, picked.pattern);
+  const ep = expanded[Math.floor(Math.random() * expanded.length)];
+  const assignments = enumerateColorAssignments(ep);
+  const assignment = assignments[Math.floor(Math.random() * assignments.length)];
+
+  // Pick 1-3 exposable groups from the expanded pattern
+  const expGroups = ep.groups.filter(g =>
+    g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet"
+  );
+  const numToExpose = Math.min(expGroups.length, 1 + Math.floor(Math.random() * Math.min(3, expGroups.length)));
+  const shuffled = shuffleArray(expGroups);
+  const groupsToExpose = shuffled.slice(0, numToExpose);
+
+  // Resolve each group to actual GameTile instances
+  const melds: ExposedMeld[] = groupsToExpose.map(group => ({
+    tiles: resolveGroupToGameTiles(group, assignment),
+    groupType: group.type,
+  }));
+
+  // Compute ALL matching hands from the card
+  const correctHands = getPossibleHands(melds, card);
+  const correctHandIds = new Set(correctHands.map(h => h.id));
+
+  return { melds, correctHandIds };
+}
+
+/** Compute score from selections vs correct answers */
+function computeScore(selectedIds: Set<string>, correctIds: Set<string>): ScoreResult {
+  const correct = [...selectedIds].filter(id => correctIds.has(id));
+  const wrong = [...selectedIds].filter(id => !correctIds.has(id));
+  const missed = [...correctIds].filter(id => !selectedIds.has(id));
+
+  const totalCorrect = correctIds.size;
+  if (totalCorrect === 0) {
+    return { score: wrong.length === 0 ? 100 : 0, correct, wrong, missed };
+  }
+
+  const base = (correct.length / totalCorrect) * 100;
+  const penalty = wrong.length * 10;
+  const score = Math.max(0, Math.round(base - penalty));
+
+  return { score, correct, wrong, missed };
+}
+
+// ─── COLORED PATTERN SUB-COMPONENT ───────────────────────────
+
+function ColoredPattern({ hand, isDark, fontSize = 12 }: { hand: HandDefinition; isDark: boolean; fontSize?: number }) {
+  const pattern = hand.patterns[0];
+  const tokens = hand.displayPattern.split(" ");
+  const defaultColor = isDark ? "#F0EAF6" : "#2D1B4E";
+
+  if (!pattern) {
+    return <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, color: defaultColor }}>{hand.displayPattern}</span>;
+  }
+
+  // Map non-operator tokens to groups
+  let groupIdx = 0;
+  const rendered = tokens.map((token, i) => {
+    const isOp = OPERATOR_TOKENS.has(token);
+    let color = defaultColor;
+
+    if (!isOp && groupIdx < pattern.groups.length) {
+      const group = pattern.groups[groupIdx];
+      color = CARD_COLOR_HEX[group.color] || defaultColor;
+      groupIdx++;
+    } else if (isOp) {
+      color = isDark ? "#7E6A9A" : "#9688AA";
+    }
+
+    return (
+      <React.Fragment key={i}>
+        {i > 0 && <span style={{ letterSpacing: 2 }}>{" "}</span>}
+        <span style={{ color }}>{token}</span>
+      </React.Fragment>
+    );
+  });
+
+  return (
+    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
+      {rendered}
+    </span>
+  );
+}
+
 // ─── MAIN COMPONENT ───────────────────────────────────────────
 
 export default function ReadExposuresDrill({ onBack }: Props) {
   const { isDark } = useTheme();
   const U = uiT[isDark ? "dark" : "light"];
-  const [matIdx, setMatIdx] = useState(0);
-  const mat = MATS[matIdx];
 
   const [cardYear, setCardYear] = useState(getCurrentYear());
   const [card, setCard] = useState<NMJLCard | null>(null);
-  const [level, setLevel] = useState<Level>("intermediate");
   const [phase, setPhase] = useState<Phase>("setup");
 
-  const [bots, setBots] = useState<BotPlayer[]>([]);
-  const [round, setRound] = useState(0);
-  const [maxRounds, setMaxRounds] = useState(5);
-
-  // Guessing state
-  const [guessingBotIdx, setGuessingBotIdx] = useState(0);
-  const [selectedGuesses, setSelectedGuesses] = useState<Set<string>>(new Set());
-  const [sectionFilter, setSectionFilter] = useState<string>("all");
-  const [results, setResults] = useState<Array<{ botIdx: number; correct: boolean; score: number }>>([]);
-  const [timer, setTimer] = useState(0);
+  // Game state
+  const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
+  const [activeSection, setActiveSection] = useState<CardSection | null>(null);
+  const [selectedHandIds, setSelectedHandIds] = useState<Set<string>>(new Set());
+  const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
+  const [roundNumber, setRoundNumber] = useState(1);
 
   const years = getAvailableYears();
 
   useEffect(() => { getCard(cardYear).then(c => { if (c) setCard(c); }); }, [cardYear]);
 
-  // Start game
+  // Start a new round
   const startGame = useCallback(() => {
     if (!card) return;
-    const botPlayers = pickBotHands(card, level);
-    setBots(botPlayers);
-    setRound(0);
-    setMaxRounds(level === "intermediate" ? 5 : 3);
+    const p = generateExposures(card);
+    if (!p) return;
+    setPuzzle(p);
+    setActiveSection(null);
+    setSelectedHandIds(new Set());
+    setScoreResult(null);
     setPhase("playing");
-    setResults([]);
-    setGuessingBotIdx(0);
-    setSelectedGuesses(new Set());
-    setSectionFilter("all");
-  }, [card, level]);
+  }, [card]);
 
-  // Expose next meld
-  const exposeNext = useCallback(() => {
-    if (round >= maxRounds) return;
-    const newRound = round + 1;
-
-    setBots(prev => {
-      const next = [...prev];
-      // Cycle through bots: round 1 → bot 0, round 2 → bot 1, etc.
-      const botIdx = (newRound - 1) % next.length;
-      const bot = { ...next[botIdx] };
-
-      if (bot.nextExposeIdx < bot.exposableGroups.length) {
-        const group = bot.exposableGroups[bot.nextExposeIdx];
-        const tiles = resolveGroupToGameTiles(group, bot.targetAssignment);
-        bot.exposedMelds = [...bot.exposedMelds, { tiles, groupType: group.type, round: newRound }];
-        bot.nextExposeIdx++;
-      }
-
-      next[botIdx] = bot;
-      return next;
-    });
-
-    setRound(newRound);
-  }, [round, maxRounds]);
-
-  // Start guessing
-  const startGuessing = useCallback(() => {
-    setPhase("guessing");
-    setGuessingBotIdx(0);
-    setSelectedGuesses(new Set());
-    setSectionFilter("all");
-    if (level === "advanced") setTimer(60);
-  }, [level]);
-
-  // Submit guess for current bot
-  const submitGuess = useCallback(() => {
-    const bot = bots[guessingBotIdx];
-    const correct = selectedGuesses.has(bot.targetHand.id);
-    const speedBonus = Math.max(0, (maxRounds - round) * 15);
-    const precisionBonus = selectedGuesses.size === 1 ? 50 : selectedGuesses.size <= 3 ? 25 : 10;
-    const score = correct ? 100 + speedBonus + precisionBonus : 0;
-
-    setResults(prev => [...prev, { botIdx: guessingBotIdx, correct, score }]);
-
-    // Reveal this bot
-    setBots(prev => prev.map((b, i) => i === guessingBotIdx ? { ...b, isRevealed: true } : b));
-
-    if (guessingBotIdx < bots.length - 1) {
-      // Next bot
-      setGuessingBotIdx(guessingBotIdx + 1);
-      setSelectedGuesses(new Set());
-      setSectionFilter("all");
-      if (level === "advanced") setTimer(60);
-    } else {
-      setPhase("complete");
-    }
-  }, [bots, guessingBotIdx, selectedGuesses, maxRounds, round, level]);
-
-  // Advanced timer
-  useEffect(() => {
-    if (level !== "advanced" || phase !== "guessing") return;
-    if (timer <= 0) { submitGuess(); return; }
-    const iv = setInterval(() => setTimer(t => t - 1), 1000);
-    return () => clearInterval(iv);
-  }, [timer, phase, level]);
+  // Next round
+  const nextRound = useCallback(() => {
+    setRoundNumber(r => r + 1);
+    startGame();
+  }, [startGame]);
 
   // Toggle hand selection
-  const toggleGuess = (handId: string) => {
-    setSelectedGuesses(prev => {
+  const toggleHand = (handId: string) => {
+    setSelectedHandIds(prev => {
       const next = new Set(prev);
       if (next.has(handId)) next.delete(handId);
       else next.add(handId);
@@ -374,12 +297,29 @@ export default function ReadExposuresDrill({ onBack }: Props) {
     });
   };
 
-  const totalScore = results.reduce((sum, r) => sum + r.score, 0);
+  // Validate
+  const validate = useCallback(() => {
+    if (!puzzle) return;
+    const result = computeScore(selectedHandIds, puzzle.correctHandIds);
+    setScoreResult(result);
+    setPhase("results");
+  }, [puzzle, selectedHandIds]);
 
-  // ── SETUP SCREEN ──
+  // Sections that have at least one exposable hand
+  const exposableSections = card
+    ? [...new Set(card.hands.filter(h => h.exposure === "X").map(h => h.section))]
+        .sort((a, b) => SECTION_ORDER.indexOf(a) - SECTION_ORDER.indexOf(b))
+    : [];
+
+  // Hands from the active section (exposable only)
+  const sectionHands = card && activeSection
+    ? card.hands.filter(h => h.section === activeSection && h.exposure === "X")
+    : [];
+
+  // ── SETUP SCREEN ──────────────────────────────────────────
   if (phase === "setup") {
     return (
-      <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column" }}>
+      <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif" }}>
         <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
           <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontWeight: 600 }}>← Back</button>
         </div>
@@ -388,7 +328,7 @@ export default function ReadExposuresDrill({ onBack }: Props) {
             READING EXPOSURES
           </h1>
           <p style={{ fontSize: 12, color: U.textMid, textAlign: "center", maxWidth: 300, lineHeight: 1.6, margin: 0 }}>
-            Watch your opponents expose melds and figure out which hand they're going for.
+            Examine an opponent's exposed melds and identify all possible hands they could be pursuing.
           </p>
 
           {/* Year */}
@@ -407,73 +347,40 @@ export default function ReadExposuresDrill({ onBack }: Props) {
             </div>
           </div>
 
-          {/* Level */}
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, textAlign: "center" }}>Difficulty</div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {(["intermediate", "advanced"] as const).map(l => (
-                <div key={l} onClick={() => setLevel(l)} style={{
-                  padding: "8px 18px", borderRadius: 12, cursor: "pointer",
-                  background: level === l ? U.cherry : U.btnBg,
-                  color: level === l ? "#fff" : U.btnText,
-                  border: `1px solid ${level === l ? U.cherry : U.btnBorder}`,
-                  fontSize: 11, fontWeight: 600, textTransform: "capitalize", transition: "all 0.2s",
-                }}>{l}</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mat */}
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, textAlign: "center" }}>Mat Color</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {MATS.map((m, i) => (
-                <div key={m.id} onClick={() => setMatIdx(i)} style={{
-                  width: 28, height: 28, borderRadius: 8, background: m.bg, cursor: "pointer",
-                  outline: matIdx === i ? `2px solid ${U.seafoam}` : "2px solid transparent",
-                  outlineOffset: 2,
-                }} />
-              ))}
-            </div>
-          </div>
-
-          <button onClick={startGame} disabled={!card} style={{
+          <button onClick={() => { setRoundNumber(1); startGame(); }} disabled={!card} style={{
             padding: "12px 48px", borderRadius: 24, border: "none",
             cursor: card ? "pointer" : "not-allowed",
             background: card ? U.seafoam : U.btnBg, color: card ? "#fff" : U.textLight,
             fontSize: 14, fontWeight: 600, marginTop: 8, transition: "all 0.2s",
-          }}>{card ? "Start Game" : "Loading Card..."}</button>
+          }}>{card ? "Start" : "Loading Card..."}</button>
         </div>
       </div>
     );
   }
 
-  // ── Possible hands for current bot being guessed ──
-  const currentBot = bots[guessingBotIdx];
-  const possibleHands = phase === "guessing" && card && currentBot
-    ? getPossibleHands(currentBot.exposedMelds, card)
-    : [];
-
-  const filteredHands = sectionFilter === "all"
-    ? possibleHands
-    : possibleHands.filter(h => h.section === sectionFilter);
-
-  const activeSections = [...new Set(possibleHands.map(h => h.section))];
-
-  // ── PLAYING / GUESSING / COMPLETE SCREEN ──
+  // ── PLAYING & RESULTS SCREEN ──────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif" }}>
+
+      {/* ── CSS Animations ── */}
+      <style>{`
+        @keyframes entranceFade {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
         <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontWeight: 600 }}>← Back</button>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 9, color: U.textLight }}>{cardYear} · {level === "intermediate" ? "Int" : "Adv"}</span>
-          {MATS.map((m, i) => (
-            <div key={m.id} onClick={() => setMatIdx(i)} style={{
-              width: 14, height: 14, borderRadius: "50%", background: m.bg, cursor: "pointer",
-              border: i === matIdx ? `2px solid ${U.cherry}` : `1px solid ${U.cBorder}`,
-            }} />
-          ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 9, color: U.textLight, fontWeight: 500 }}>{cardYear} Card</span>
+          <span style={{ fontSize: 9, color: U.textLight }}>·</span>
+          <span style={{ fontSize: 9, color: U.seafoam, fontWeight: 600 }}>Round {roundNumber}</span>
         </div>
       </div>
 
@@ -481,194 +388,302 @@ export default function ReadExposuresDrill({ onBack }: Props) {
       <div style={{ textAlign: "center", padding: "8px 14px 4px" }}>
         <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 17, fontWeight: 700, color: U.cherry, letterSpacing: 3, margin: 0 }}>READING EXPOSURES</h1>
         <p style={{ fontSize: 9, color: U.textMid, margin: "2px 0 0" }}>
-          {phase === "playing" ? `Round ${round}/${maxRounds}` : phase === "guessing" ? `Guessing: ${currentBot?.name}` : "Results"}
+          {phase === "playing" ? "What hand could produce these melds?" : "Results"}
         </p>
       </div>
 
-      {/* ── Opponents Board ── */}
-      <div style={{ margin: "4px 8px", background: mat.bg, borderRadius: 14, padding: "12px", boxShadow: "inset 0 2px 8px rgba(0,0,0,0.15)" }}>
-        {bots.map((bot, bi) => (
-          <div key={bi} style={{
-            marginBottom: bi < bots.length - 1 ? 10 : 0,
-            opacity: phase === "guessing" && bi !== guessingBotIdx && !bot.isRevealed ? 0.4 : 1,
-            transition: "opacity 0.3s",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>{bot.name}</span>
-              {bot.isRevealed && (
-                <span style={{ fontSize: 8, color: results[bi]?.correct ? "#6DBFA8" : "#E03050", fontWeight: 600 }}>
-                  {results[bi]?.correct ? "✓ Correct!" : "✗ Wrong"}
-                </span>
-              )}
-              {bot.isRevealed && (
-                <span style={{ fontSize: 8, color: mat.text, fontStyle: "italic" }}>
-                  {bot.targetHand.displayPattern} ({SECTION_LABELS[bot.targetHand.section]})
-                </span>
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {bot.exposedMelds.length === 0 ? (
-                <span style={{ fontSize: 9, color: mat.text, fontStyle: "italic" }}>No exposures yet</span>
-              ) : (
-                bot.exposedMelds.map((meld, mi) => (
-                  <div key={mi} style={{
-                    display: "inline-flex", gap: 2, padding: "3px 4px",
-                    background: "rgba(255,255,255,0.08)", borderRadius: 8,
-                    border: "1px solid rgba(255,255,255,0.12)",
-                  }}>
-                    {meld.tiles.map((tile, ti) => (
-                      <div key={ti} style={{ pointerEvents: "none" }}>
-                        <MahjiTile tileId={tile.id} size="sm" />
-                      </div>
-                    ))}
-                  </div>
-                ))
-              )}
-            </div>
+      {/* ── Exposed Melds Card ── */}
+      {puzzle && (
+        <div style={{
+          margin: "4px 12px 8px", padding: "14px 16px", borderRadius: 16,
+          background: U.cardBg, border: `1px solid ${U.cBorder}`,
+          boxShadow: U.cardShadow,
+          animation: "entranceFade 0.3s ease both",
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>
+            Opponent's Exposures
           </div>
-        ))}
-      </div>
-
-      {/* ── Playing Controls ── */}
-      {phase === "playing" && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 10, padding: "10px 14px" }}>
-          {round < maxRounds && (
-            <button onClick={exposeNext} style={{
-              padding: "8px 24px", borderRadius: 18, border: "none",
-              background: U.cherry, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer",
-            }}>Next Exposure →</button>
-          )}
-          <button onClick={startGuessing} disabled={round === 0} style={{
-            padding: "8px 24px", borderRadius: 18, border: `1px solid ${U.btnBorder}`,
-            background: round === 0 ? U.btnBg : U.seafoam,
-            color: round === 0 ? U.textLight : "#fff",
-            fontSize: 12, fontWeight: 600, cursor: round === 0 ? "not-allowed" : "pointer",
-          }}>Make Your Guesses</button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            {puzzle.melds.map((meld, mi) => (
+              <div key={mi} style={{
+                display: "inline-flex", gap: 2, padding: "6px 8px",
+                background: U.meldBg, borderRadius: 10,
+                border: `1px solid ${U.cBorder}`,
+              }}>
+                {meld.tiles.map((tile, ti) => (
+                  <div key={ti} style={{ pointerEvents: "none" }}>
+                    <MahjiTile tileId={tile.id} size="sm" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* ── Guessing Panel ── */}
-      {phase === "guessing" && card && currentBot && (
-        <div style={{ flex: 1, padding: "6px 10px", overflow: "auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: U.text }}>What is {currentBot.name} going for?</span>
-            {level === "advanced" && timer > 0 && (
-              <span style={{ fontSize: 10, fontWeight: 700, color: timer <= 10 ? U.cherry : U.seafoam }}>⏱ {timer}s</span>
-            )}
-          </div>
+      {/* ── PLAYING PHASE ── */}
+      {phase === "playing" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-          {/* Section filter */}
-          <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
-            <div onClick={() => setSectionFilter("all")} style={{
-              padding: "3px 8px", borderRadius: 10, cursor: "pointer", fontSize: 8, fontWeight: 600,
-              background: sectionFilter === "all" ? U.cherry : U.btnBg,
-              color: sectionFilter === "all" ? "#fff" : U.btnText,
-              border: `1px solid ${sectionFilter === "all" ? U.cherry : U.btnBorder}`,
-            }}>All ({possibleHands.length})</div>
-            {activeSections.map(s => (
-              <div key={s} onClick={() => setSectionFilter(s)} style={{
-                padding: "3px 8px", borderRadius: 10, cursor: "pointer", fontSize: 8, fontWeight: 600,
-                background: sectionFilter === s ? U.cherry : U.btnBg,
-                color: sectionFilter === s ? "#fff" : U.btnText,
-                border: `1px solid ${sectionFilter === s ? U.cherry : U.btnBorder}`,
-              }}>{SECTION_LABELS[s as CardSection] || s}</div>
-            ))}
+          {/* Section pills */}
+          <div style={{ padding: "4px 12px 2px" }}>
+            <div style={{ fontSize: 9, color: U.textMid, marginBottom: 6, textAlign: "center" }}>
+              {activeSection ? `${SECTION_LABELS[activeSection]} · ${sectionHands.length} hand${sectionHands.length !== 1 ? "s" : ""}` : "Select a section to browse hands"}
+            </div>
+            <div style={{
+              display: "flex", gap: 6, overflowX: "auto", padding: "2px 0 6px",
+              WebkitOverflowScrolling: "touch" as any,
+              msOverflowStyle: "none", scrollbarWidth: "none",
+            }}>
+              {exposableSections.map(s => {
+                const isActive = activeSection === s;
+                return (
+                  <div key={s} onClick={() => setActiveSection(s)} style={{
+                    padding: "6px 14px", borderRadius: 16, cursor: "pointer",
+                    fontSize: 10, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
+                    background: isActive ? U.cherry : U.btnBg,
+                    color: isActive ? "#fff" : U.btnText,
+                    border: `1px solid ${isActive ? U.cherry : U.btnBorder}`,
+                    transition: "all 0.2s",
+                  }}>{SECTION_LABELS[s]}</div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Hand list */}
-          <div style={{
-            background: isDark ? "rgba(180,154,216,0.04)" : "rgba(107,63,160,0.02)",
-            border: `0.5px solid ${U.cBorder}`, borderRadius: 12, overflow: "hidden",
-          }}>
-            {filteredHands.map((hand, i) => {
-              const checked = selectedGuesses.has(hand.id);
-              return (
-                <div key={hand.id} onClick={() => toggleGuess(hand.id)} style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                  cursor: "pointer", background: checked ? (isDark ? "rgba(109,191,168,0.1)" : "rgba(109,191,168,0.06)") : "transparent",
-                  borderBottom: i < filteredHands.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
-                  transition: "background 0.15s",
-                }}>
-                  <div style={{
-                    width: 16, height: 16, borderRadius: 4, flexShrink: 0,
-                    border: checked ? `2px solid ${U.seafoam}` : `1.5px solid ${U.cBorder}`,
-                    background: checked ? U.seafoam : "transparent",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    transition: "all 0.15s",
-                  }}>
-                    {checked && <span style={{ color: "#fff", fontSize: 10, fontWeight: 700 }}>✓</span>}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 11, color: U.text, fontWeight: 500 }}>{hand.displayPattern}</div>
-                    {level === "intermediate" && (
-                      <div style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</div>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 8, color: U.textLight }}>{hand.points}pts</span>
-                  {hand.exposure === "C" && <span style={{ fontSize: 7, color: U.cherry, fontWeight: 600 }}>C</span>}
-                </div>
-              );
-            })}
-            {filteredHands.length === 0 && (
-              <div style={{ textAlign: "center", padding: 16, fontSize: 11, color: U.textLight }}>No hands match this filter</div>
-            )}
-          </div>
-
-          {/* Elimination hint (intermediate only) */}
-          {level === "intermediate" && currentBot.exposedMelds.length > 0 && (
-            <div style={{ fontSize: 9, color: U.textMid, fontStyle: "italic", textAlign: "center", padding: "6px 0" }}>
-              {card.hands.filter(h => h.exposure === "X").length - possibleHands.length} hands eliminated based on exposures
+          {activeSection && (
+            <div style={{
+              flex: 1, overflow: "auto", padding: "0 12px 8px",
+              animation: "entranceFade 0.2s ease both",
+            }}>
+              <div style={{
+                background: U.cardBg, border: `1px solid ${U.cBorder}`,
+                borderRadius: 14, overflow: "hidden",
+              }}>
+                {sectionHands.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: 20, fontSize: 11, color: U.textLight }}>No exposable hands in this section</div>
+                ) : (
+                  sectionHands.map((hand, i) => {
+                    const isSelected = selectedHandIds.has(hand.id);
+                    return (
+                      <div key={hand.id} onClick={() => toggleHand(hand.id)} style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+                        cursor: "pointer",
+                        background: isSelected ? (isDark ? "rgba(109,191,168,0.1)" : "rgba(109,191,168,0.06)") : "transparent",
+                        borderBottom: i < sectionHands.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
+                        transition: "background 0.15s",
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <ColoredPattern hand={hand} isDark={isDark} />
+                          <div style={{ display: "flex", gap: 8, marginTop: 3 }}>
+                            <span style={{ fontSize: 8, color: U.textLight }}>{hand.points}pts</span>
+                            {hand.exposure === "X" && (
+                              <span style={{ fontSize: 7, color: U.seafoam, fontWeight: 600, background: isDark ? "rgba(109,191,168,0.12)" : "rgba(109,191,168,0.08)", padding: "1px 5px", borderRadius: 4 }}>EXPOSED</span>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{
+                          width: 30, height: 30, borderRadius: "50%",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: isSelected ? U.seafoam : U.btnBg,
+                          border: `1.5px solid ${isSelected ? U.seafoam : U.btnBorder}`,
+                          color: isSelected ? "#fff" : U.btnText,
+                          fontSize: 16, fontWeight: 700, flexShrink: 0,
+                          transition: "all 0.15s",
+                        }}>
+                          {isSelected ? "✓" : "+"}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           )}
 
-          {/* Submit */}
-          <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>
-            <button onClick={submitGuess} disabled={selectedGuesses.size === 0} style={{
-              padding: "10px 32px", borderRadius: 20, border: "none",
-              background: selectedGuesses.size > 0 ? U.seafoam : U.btnBg,
-              color: selectedGuesses.size > 0 ? "#fff" : U.textLight,
-              fontSize: 12, fontWeight: 600, cursor: selectedGuesses.size > 0 ? "pointer" : "not-allowed",
+          {/* No section selected — show prompt */}
+          {!activeSection && (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                <div style={{ fontSize: 13, color: U.textMid, fontWeight: 500 }}>Pick a section above to start browsing</div>
+                <div style={{ fontSize: 10, color: U.textLight, marginTop: 4 }}>Find all hands that could match the exposed melds</div>
+              </div>
+            </div>
+          )}
+
+          {/* Selected hands tray + validate */}
+          <div style={{
+            padding: "8px 12px 16px", borderTop: `1px solid ${U.cBorder}`,
+            background: U.chrome, flexShrink: 0,
+          }}>
+            {/* Selected count & list */}
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: U.text, marginBottom: 4 }}>
+                Selected ({selectedHandIds.size})
+              </div>
+              {selectedHandIds.size === 0 ? (
+                <div style={{ fontSize: 9, color: U.textLight, fontStyle: "italic" }}>No hands selected yet</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {[...selectedHandIds].map(id => {
+                    const hand = card?.hands.find(h => h.id === id);
+                    if (!hand) return null;
+                    return (
+                      <div key={id} style={{
+                        display: "flex", alignItems: "center", gap: 8, padding: "5px 8px",
+                        background: isDark ? "rgba(109,191,168,0.06)" : "rgba(109,191,168,0.04)",
+                        borderRadius: 8, border: `0.5px solid ${isDark ? "rgba(109,191,168,0.15)" : "rgba(109,191,168,0.1)"}`,
+                        animation: "entranceFade 0.15s ease both",
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <ColoredPattern hand={hand} isDark={isDark} fontSize={10} />
+                        </div>
+                        <span style={{ fontSize: 7, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
+                        <div onClick={(e) => { e.stopPropagation(); toggleHand(id); }} style={{
+                          width: 22, height: 22, borderRadius: "50%",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: "rgba(224,48,80,0.08)", border: "1px solid rgba(224,48,80,0.2)",
+                          color: U.cherry, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}>−</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Validate button */}
+            <button onClick={validate} disabled={selectedHandIds.size === 0} style={{
+              width: "100%", padding: "14px 0", borderRadius: 24, border: "none",
+              background: selectedHandIds.size > 0 ? U.seafoam : U.btnBg,
+              color: selectedHandIds.size > 0 ? "#fff" : U.textLight,
+              fontSize: 14, fontWeight: 600, letterSpacing: 0.5,
+              cursor: selectedHandIds.size > 0 ? "pointer" : "not-allowed",
               transition: "all 0.2s",
-            }}>Submit Guess for {currentBot.name}</button>
+              boxShadow: selectedHandIds.size > 0 ? "0 2px 12px rgba(109,191,168,0.25)" : "none",
+            }}>Validate ✓</button>
           </div>
         </div>
       )}
 
-      {/* ── Complete Screen ── */}
-      {phase === "complete" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 24px", gap: 16 }}>
-          <div style={{ fontSize: 36 }}>🎯</div>
-          <h2 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 20, color: U.cherry, letterSpacing: 2, margin: 0 }}>
-            {results.every(r => r.correct) ? "Perfect!" : results.some(r => r.correct) ? "Nice Work!" : "Keep Practicing!"}
-          </h2>
-
-          <div style={{
-            background: isDark ? "rgba(180,154,216,0.06)" : "rgba(107,63,160,0.04)",
-            border: `0.5px solid ${U.cBorder}`, borderRadius: 14, padding: "16px 20px", width: "100%", maxWidth: 300,
-          }}>
-            {results.map((r, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: i < results.length - 1 ? `0.5px solid ${U.cBorder}` : "none" }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: U.text }}>{bots[r.botIdx]?.name}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 10, color: r.correct ? U.seafoam : U.cherry, fontWeight: 600 }}>{r.correct ? "✓" : "✗"}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: U.text }}>{r.score}</span>
-                </div>
-              </div>
-            ))}
-            <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, marginTop: 6, borderTop: `1px solid ${U.cBorder}` }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: U.text }}>Total</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: U.cherry }}>{totalScore}</span>
+      {/* ── RESULTS PHASE ── */}
+      {phase === "results" && scoreResult && (
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column", padding: "0 12px 24px",
+          overflow: "auto", animation: "slideUp 0.3s ease both",
+        }}>
+          {/* Score */}
+          <div style={{ textAlign: "center", padding: "16px 0 12px" }}>
+            <div style={{ fontSize: 36, marginBottom: 4 }}>
+              {scoreResult.score === 100 ? "🎯" : scoreResult.score >= 80 ? "✨" : scoreResult.score >= 50 ? "👍" : "📚"}
+            </div>
+            <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 28, fontWeight: 700, color: scoreResult.score >= 80 ? U.seafoam : scoreResult.score >= 50 ? U.amber : U.cherry }}>
+              {scoreResult.score}%
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: U.text, marginTop: 2 }}>
+              {scoreResult.score === 100 ? "Perfect!" : scoreResult.score >= 80 ? "Great!" : scoreResult.score >= 50 ? "Good try" : "Keep studying"}
+            </div>
+            <div style={{ fontSize: 9, color: U.textLight, marginTop: 4 }}>
+              {puzzle!.correctHandIds.size} possible hand{puzzle!.correctHandIds.size !== 1 ? "s" : ""} for these exposures
             </div>
           </div>
 
+          {/* Results breakdown */}
+          <div style={{
+            background: U.cardBg, border: `1px solid ${U.cBorder}`,
+            borderRadius: 14, overflow: "hidden", marginBottom: 16,
+          }}>
+            {/* Correct selections */}
+            {scoreResult.correct.length > 0 && (
+              <>
+                <div style={{ fontSize: 9, fontWeight: 600, color: U.seafoam, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1 }}>
+                  ✅ Correct ({scoreResult.correct.length})
+                </div>
+                {scoreResult.correct.map(id => {
+                  const hand = card?.hands.find(h => h.id === id);
+                  if (!hand) return null;
+                  return (
+                    <div key={id} style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
+                      background: isDark ? "rgba(109,191,168,0.06)" : "rgba(109,191,168,0.04)",
+                      borderBottom: `0.5px solid ${U.cBorder}`,
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
+                      </div>
+                      <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Wrong selections */}
+            {scoreResult.wrong.length > 0 && (
+              <>
+                <div style={{ fontSize: 9, fontWeight: 600, color: U.cherry, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1 }}>
+                  ❌ Wrong ({scoreResult.wrong.length})
+                </div>
+                {scoreResult.wrong.map(id => {
+                  const hand = card?.hands.find(h => h.id === id);
+                  if (!hand) return null;
+                  return (
+                    <div key={id} style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
+                      background: isDark ? "rgba(224,48,80,0.06)" : "rgba(224,48,80,0.03)",
+                      borderBottom: `0.5px solid ${U.cBorder}`,
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
+                      </div>
+                      <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Missed hands */}
+            {scoreResult.missed.length > 0 && (
+              <>
+                <div style={{ fontSize: 9, fontWeight: 600, color: U.amber, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1 }}>
+                  ⚠️ Missed ({scoreResult.missed.length})
+                </div>
+                {scoreResult.missed.map(id => {
+                  const hand = card?.hands.find(h => h.id === id);
+                  if (!hand) return null;
+                  return (
+                    <div key={id} style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
+                      background: U.amberBg,
+                      borderBottom: `0.5px solid ${U.cBorder}`,
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
+                      </div>
+                      <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          {/* Action buttons */}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setPhase("setup")} style={{
-              padding: "10px 24px", borderRadius: 20, border: "none",
-              background: U.cherry, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer",
-            }}>Play Again</button>
+            <button onClick={nextRound} style={{
+              flex: 1, padding: "12px 0", borderRadius: 20, border: "none",
+              background: U.cherry, color: "#fff", fontSize: 13, fontWeight: 600,
+              cursor: "pointer", transition: "all 0.2s",
+            }}>Next Round →</button>
             <button onClick={onBack} style={{
-              padding: "10px 24px", borderRadius: 20, border: `1px solid ${U.btnBorder}`,
-              background: U.btnBg, color: U.btnText, fontSize: 12, fontWeight: 600, cursor: "pointer",
+              flex: 1, padding: "12px 0", borderRadius: 20,
+              border: `1px solid ${U.btnBorder}`, background: U.btnBg,
+              color: U.btnText, fontSize: 13, fontWeight: 600,
+              cursor: "pointer", transition: "all 0.2s",
             }}>← Practice</button>
           </div>
         </div>
