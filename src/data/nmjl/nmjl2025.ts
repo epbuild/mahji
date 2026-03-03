@@ -605,7 +605,7 @@ const hands: HandDefinition[] = [
   {
     id: '2025-sp-1',
     section: 'singles_pairs',
-    displayPattern: 'NN EW SS 11 22 33 44',
+    displayPattern: 'NN E W SS 11 22 33 44',
     patterns: check14([{
       groups: [
         pair(wN, 'blue'), single(wE, 'blue'), single(wW, 'blue'), pair(wS, 'blue'),
