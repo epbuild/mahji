@@ -435,6 +435,23 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return suggestions.map(s => computeRealMatchCount(s, humanHand));
   }, [suggestions, humanHand]);
 
+  // ── Best tile count towards Mahjong (shown at completion) ──
+  const bestTileCount = useMemo(() => {
+    if (!card || !humanHand.length) return 0;
+    const matches = findPartialMatches(humanHand, card, 0.05);
+    if (matches.length === 0) return 0;
+    // Deduplicate by hand id — keep only the best per hand
+    const seen = new Set<string>();
+    let best = 0;
+    for (const m of matches) {
+      if (seen.has(m.hand.id)) continue;
+      seen.add(m.hand.id);
+      const count = computeRealMatchCount(m, humanHand);
+      if (count > best) best = count;
+    }
+    return best;
+  }, [card, humanHand]);
+
   // ── Bam Bird advice generator (novice only) ──
   const generateBamAdvice = useCallback(() => {
     if (!card || !humanHand.length || level !== "novice") return;
@@ -815,11 +832,27 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 ))}
               </div>
             ) : phase === "complete" ? (
-              <div style={{ background: "#FFFFFF", borderRadius: 14, padding: "20px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "center", minWidth: 200 }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>✨</div>
-                <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, color: "#E03050", margin: "0 0 4px", letterSpacing: 1 }}>Charleston Complete!</h3>
+              <div style={{ background: "#FFFFFF", borderRadius: 14, padding: "20px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", textAlign: "center", minWidth: 220 }}>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>
+                  {bestTileCount >= 10 ? "🏆" : bestTileCount >= 8 ? "🔥" : bestTileCount >= 5 ? "✨" : "📚"}
+                </div>
+                <h3 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, color: "#E03050", margin: "0 0 8px", letterSpacing: 1 }}>Charleston Complete!</h3>
+
+                {/* Mahjong progress */}
+                <div style={{ margin: "0 0 12px", padding: "10px 14px", background: bestTileCount >= 10 ? "rgba(109,191,168,0.08)" : bestTileCount >= 8 ? "rgba(107,63,160,0.06)" : "rgba(107,63,160,0.04)", borderRadius: 10, border: `1px solid ${bestTileCount >= 10 ? "rgba(109,191,168,0.2)" : bestTileCount >= 8 ? "rgba(107,63,160,0.15)" : "rgba(107,63,160,0.1)"}` }}>
+                  <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 22, fontWeight: 700, color: bestTileCount >= 10 ? "#6DBFA8" : bestTileCount >= 8 ? "#6B3FA0" : "#E03050" }}>
+                    {bestTileCount} / 14
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#2D1B4E", marginTop: 2 }}>
+                    tiles towards Mahjong!
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 600, marginTop: 4, color: bestTileCount >= 10 ? "#6DBFA8" : bestTileCount >= 8 ? "#6B3FA0" : bestTileCount >= 5 ? "#b8860b" : "#9688AA" }}>
+                    {bestTileCount >= 10 ? "Excellent!" : bestTileCount >= 8 ? "Very Good!" : bestTileCount >= 5 ? "Solid Progress" : "Keep Practicing"}
+                  </div>
+                </div>
+
                 {level === "advanced" && (
-                  <div style={{ margin: "8px 0 12px", padding: "8px 12px", background: "rgba(107,63,160,0.04)", borderRadius: 8, border: "1px solid rgba(107,63,160,0.1)" }}>
+                  <div style={{ margin: "0 0 12px", padding: "8px 12px", background: "rgba(107,63,160,0.04)", borderRadius: 8, border: "1px solid rgba(107,63,160,0.1)" }}>
                     <div style={{ fontSize: 9, color: "#6B5A82", fontWeight: 600, marginBottom: 4 }}>Stats</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
                       <div><span style={{ fontSize: 16, fontWeight: 700, color: "#E03050" }}>{passCount}</span><div style={{ fontSize: 7, color: "#9688AA" }}>passes</div></div>
@@ -828,9 +861,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   </div>
                 )}
                 {level === "novice" && (
-                  <p style={{ fontSize: 9, color: "#6DBFA8", margin: "4px 0 10px", fontStyle: "italic" }}>Great job! The Charleston helps you trade unwanted tiles with other players.</p>
+                  <p style={{ fontSize: 9, color: "#6DBFA8", margin: "0 0 10px", fontStyle: "italic" }}>Great job! The Charleston helps you trade unwanted tiles with other players.</p>
                 )}
-                {level !== "novice" && <p style={{ fontSize: 10, color: "#6B5A82", margin: "0 0 14px" }}>What would you like to do?</p>}
                 <button onClick={() => setShowSetup(true)} style={{ display: "block", width: "100%", padding: "10px 0", marginBottom: 8, background: "rgba(224,48,80,0.06)", border: "1px solid rgba(224,48,80,0.2)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#E03050", fontFamily: "'Outfit',sans-serif" }}>🎯 Practice Again</button>
                 <button onClick={onBack} style={{ display: "block", width: "100%", padding: "10px 0", background: "rgba(107,63,160,0.06)", border: "1px solid rgba(107,63,160,0.15)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#6B3FA0", fontFamily: "'Outfit',sans-serif" }}>← Back to Practice</button>
               </div>
