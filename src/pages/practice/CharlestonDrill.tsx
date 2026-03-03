@@ -851,26 +851,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   return (
     <div style={{ flex: 1, background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80 }}>
 
-      {/* Header with Back button */}
-      <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Back</button>
-        </div>
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          {(["novice","intermediate","advanced"] as const).map(l => (
-            <button key={l} onClick={() => !levelLocked && setLevel(l)} style={{ padding: "2px 7px", borderRadius: 10, cursor: levelLocked && level !== l ? "not-allowed" : "pointer", fontSize: 8, fontWeight: 600, background: level === l ? U.cherry : U.btnBg, color: level === l ? "#fff" : U.btnText, border: level === l ? `1px solid ${U.cherry}` : `1px solid ${U.btnBorder}`, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize", transition: "all 0.15s ease", opacity: levelLocked && level !== l ? 0.35 : 1 }}>{l.slice(0,3)}</button>
-          ))}
-          <div style={{ width: 1, height: 14, background: U.cBorder, margin: "0 2px" }} />
-          {MATS.map((m, i) => (
-            <div key={m.id} onClick={() => setMatIdx(i)} style={{ width: 14, height: 14, borderRadius: "50%", background: m.bg, cursor: "pointer", border: i === matIdx ? `2px solid ${U.cherry}` : `1px solid ${U.cBorder}` }} />
-          ))}
-        </div>
-      </div>
-
-      {/* Title */}
-      <div style={{ textAlign: "center", padding: "6px 14px 2px" }}>
-        <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 17, fontWeight: 700, color: U.cherry, letterSpacing: 3, margin: 0 }}>CHARLESTON</h1>
-        <div style={{ fontSize: 8, color: U.textLight, margin: "2px 0 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+      {/* Header — card info at top, then back + controls */}
+      <div style={{ background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "4px 14px 0", fontSize: 8, color: U.textLight }}>
           <span style={{ fontWeight: 600 }}>{cardYear}</span>
           <span style={{ opacity: 0.4 }}>·</span>
           <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{level}</span>
@@ -878,15 +861,32 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: mat.bg, border: `1px solid ${U.cBorder}`, display: "inline-block" }} />
           <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{mat.name}</span>
         </div>
-        <p style={{ fontSize: 9, color: U.textMid, margin: "2px 0 0", fontWeight: 500 }}>
+        <div style={{ padding: "4px 14px 6px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Back</button>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            {(["novice","intermediate","advanced"] as const).map(l => (
+              <button key={l} onClick={() => !levelLocked && setLevel(l)} style={{ padding: "2px 7px", borderRadius: 10, cursor: levelLocked && level !== l ? "not-allowed" : "pointer", fontSize: 8, fontWeight: 600, background: level === l ? U.cherry : U.btnBg, color: level === l ? "#fff" : U.btnText, border: level === l ? `1px solid ${U.cherry}` : `1px solid ${U.btnBorder}`, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize", transition: "all 0.15s ease", opacity: levelLocked && level !== l ? 0.35 : 1 }}>{l.slice(0,3)}</button>
+            ))}
+            <div style={{ width: 1, height: 14, background: U.cBorder, margin: "0 2px" }} />
+            {MATS.map((m, i) => (
+              <div key={m.id} onClick={() => setMatIdx(i)} style={{ width: 14, height: 14, borderRadius: "50%", background: m.bg, cursor: "pointer", border: i === matIdx ? `2px solid ${U.cherry}` : `1px solid ${U.cBorder}` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Title + step info */}
+      <div style={{ textAlign: "center", padding: "4px 14px 2px" }}>
+        <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 700, color: U.cherry, letterSpacing: 3, margin: 0 }}>CHARLESTON</h1>
+        <p style={{ fontSize: 9, color: U.textMid, margin: "1px 0 0", fontWeight: 500 }}>
           {phase === "complete" ? "Complete!" : phase === "courtesy_prompt" ? "Courtesy Pass" : showStopPrompt ? "Continue or Stop?" : `${step?.key?.startsWith("1") ? "First" : "Second"} Charleston · ${step?.label}`}
         </p>
       </div>
 
       {/* Board */}
-      <div style={{ flex: 1, margin: "4px 8px", background: mat.bg, borderRadius: 16, position: "relative", minHeight: 0, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden" }}>
+      <div style={{ flex: 1, margin: "2px 8px", background: mat.bg, borderRadius: 14, position: "relative", minHeight: 0, boxShadow: "inset 0 2px 12px rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden" }}>
         {/* West (across from East/you) */}
-        <div style={{ padding: "10px 0 0" }}>
+        <div style={{ padding: "6px 0 0" }}>
           <SeatLabel name="West" isReady={botsReady} showReady={phase === "charleston" && !showStopPrompt} />
         </div>
 
@@ -948,9 +948,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 <button onClick={onBack} style={{ display: "block", width: "100%", padding: "10px 0", background: "rgba(107,63,160,0.06)", border: "1px solid rgba(107,63,160,0.15)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#6B3FA0", fontFamily: "'Outfit',sans-serif" }}>← Back to Practice</button>
               </div>
             ) : (() => {
-              const bScale = Math.max(0.55, Math.min(1, tileScale * 1.2));
-              const passBoxW = Math.ceil((72 * 3 + 3 * 2) * tileScale) + 14;
-              const passBoxH = Math.ceil(98 * tileScale) + 14;
+              const bScale = Math.max(0.45, Math.min(0.85, tileScale));
+              const passBoxW = Math.ceil((72 * 3 + 3 * 2) * bScale) + 10;
+              const passBoxH = Math.ceil(98 * bScale) + 10;
               const selectedTiles = humanHand.filter(t => selectedIds.has(t.instanceId));
               return (
               <>
@@ -984,8 +984,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     setDragIdx(null); setDragOverIdx(null);
                   }}
                   style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
-                  <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
-                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0, animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
+                  <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * bScale), height: Math.ceil(98 * bScale), position: "relative" }}>
+                    <div style={{ display: "flex", gap: 3, transform: `scale(${bScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0, animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
                       {[0, 1, 2].map(i => {
                         const tile = selectedTiles[i];
                         if (tile) return (
@@ -1053,6 +1053,11 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               {suggestions.map((s, i) => {
                 const isActive = activeHintHand === s.hand.id;
                 const realCount = realMatchCounts[i] ?? s.matchedCount;
+                // Show only first variant for -or- patterns; description explains the rest
+                const firstVariant = s.hand.displayPattern.split(" -or- ")[0];
+                const displayHand = firstVariant !== s.hand.displayPattern
+                  ? { ...s.hand, displayPattern: firstVariant, patterns: [s.hand.patterns[0]] }
+                  : s.hand;
                 return (
                   <div key={s.hand.id + i} onClick={() => activateHintHand(s)} style={{
                     padding: "5px 6px", borderRadius: 8, cursor: "pointer",
@@ -1063,11 +1068,11 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{ flex: 1, overflow: "hidden" }}>
-                        <ColoredPattern hand={s.hand} isDark={isDark} fontSize={10} />
+                        <ColoredPattern hand={displayHand} isDark={isDark} fontSize={10} />
                       </div>
                       <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 30, textAlign: "right" }}>{realCount}/14</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 7, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
                       <span style={{ fontSize: 7, color: U.textLight }}>·</span>
                       <span style={{ fontSize: 7, color: U.textLight }}>{s.hand.points}pts</span>
@@ -1087,22 +1092,26 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         </div>
       )}
 
+      {/* ── Pass slide animations (all levels) ── */}
+      <style>{`
+        @keyframes passSlideRight {
+          0% { transform: translateX(0); opacity: 1; }
+          100% { transform: translateX(80px); opacity: 0; }
+        }
+        @keyframes passSlideLeft {
+          0% { transform: translateX(0); opacity: 1; }
+          100% { transform: translateX(-80px); opacity: 0; }
+        }
+        @keyframes passSlideUp {
+          0% { transform: translateY(0); opacity: 1; }
+          100% { transform: translateY(-60px); opacity: 0; }
+        }
+      `}</style>
+
       {/* ── Bam Bird Advice (Novice only) — floats right ── */}
       {level === "novice" && phase === "charleston" && !showStopPrompt && (
         <>
           <style>{`
-            @keyframes passSlideRight {
-              0% { transform: translateX(0); opacity: 1; }
-              100% { transform: translateX(80px); opacity: 0; }
-            }
-            @keyframes passSlideLeft {
-              0% { transform: translateX(0); opacity: 1; }
-              100% { transform: translateX(-80px); opacity: 0; }
-            }
-            @keyframes passSlideUp {
-              0% { transform: translateY(0); opacity: 1; }
-              100% { transform: translateY(-60px); opacity: 0; }
-            }
             @keyframes bamShake {
               0%, 100% { transform: rotate(0deg); }
               15% { transform: rotate(-6deg); }
