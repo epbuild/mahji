@@ -644,124 +644,110 @@ export default function ReadExposuresDrill({ onBack }: Props) {
       )}
 
       {/* ── RESULTS PHASE ── */}
-      {phase === "results" && scoreResult && (
-        <div style={{
-          flex: 1, display: "flex", flexDirection: "column", padding: "0 12px 24px",
-          overflow: "auto", animation: "slideUp 0.3s ease both",
-        }}>
-          {/* Score */}
-          <div style={{ textAlign: "center", padding: "16px 0 12px" }}>
-            <div style={{ fontSize: 36, marginBottom: 4 }}>
-              {scoreResult.score === 100 ? "🎯" : scoreResult.score >= 80 ? "✨" : scoreResult.score >= 50 ? "👍" : "📚"}
-            </div>
-            <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 28, fontWeight: 700, color: scoreResult.score >= 80 ? U.seafoam : scoreResult.score >= 50 ? U.amber : U.cherry }}>
-              {scoreResult.score}%
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: U.text, marginTop: 2 }}>
-              {scoreResult.score === 100 ? "Perfect!" : scoreResult.score >= 80 ? "Great!" : scoreResult.score >= 50 ? "Good try" : "Keep studying"}
-            </div>
-            <div style={{ fontSize: 9, color: U.textLight, marginTop: 4 }}>
-              {puzzle!.correctHandIds.size} possible hand{puzzle!.correctHandIds.size !== 1 ? "s" : ""} for these exposures
-            </div>
-          </div>
+      {phase === "results" && scoreResult && (() => {
+        // Collect the 3 categories with their hands
+        const categories: { key: string; label: string; icon: string; ids: string[]; color: string; bg: string }[] = [];
+        if (scoreResult.correct.length > 0)
+          categories.push({ key: "correct", label: "Correct", icon: "✅", ids: scoreResult.correct, color: U.seafoam, bg: isDark ? "rgba(109,191,168,0.08)" : "rgba(109,191,168,0.05)" });
+        if (scoreResult.wrong.length > 0)
+          categories.push({ key: "wrong", label: "Wrong", icon: "❌", ids: scoreResult.wrong, color: U.cherry, bg: isDark ? "rgba(224,48,80,0.08)" : "rgba(224,48,80,0.04)" });
+        if (scoreResult.missed.length > 0)
+          categories.push({ key: "missed", label: "Missed", icon: "⚠️", ids: scoreResult.missed, color: U.amber, bg: U.amberBg });
 
-          {/* Results breakdown */}
+        return (
           <div style={{
-            background: U.cardBg, border: `1px solid ${U.cBorder}`,
-            borderRadius: 14, overflow: "hidden", marginBottom: 16,
+            flex: 1, display: "flex", flexDirection: "column", overflow: "hidden",
+            animation: "slideUp 0.3s ease both",
           }}>
-            {/* Correct selections */}
-            {scoreResult.correct.length > 0 && (
-              <>
-                <div style={{ fontSize: 9, fontWeight: 600, color: U.seafoam, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1 }}>
-                  ✅ Correct ({scoreResult.correct.length})
-                </div>
-                {scoreResult.correct.map(id => {
-                  const hand = card?.hands.find(h => h.id === id);
-                  if (!hand) return null;
-                  return (
-                    <div key={id} style={{
-                      display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
-                      background: isDark ? "rgba(109,191,168,0.06)" : "rgba(109,191,168,0.04)",
-                      borderBottom: `0.5px solid ${U.cBorder}`,
-                    }}>
-                      <div style={{ flex: 1 }}>
-                        <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
-                      </div>
-                      <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
+            {/* Scrollable content area */}
+            <div style={{ flex: 1, overflow: "auto", padding: "0 12px" }}>
+              {/* Score banner — compact */}
+              <div style={{ textAlign: "center", padding: "10px 0 8px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                  <span style={{ fontSize: 28 }}>
+                    {scoreResult.score === 100 ? "🎯" : scoreResult.score >= 80 ? "✨" : scoreResult.score >= 50 ? "👍" : "📚"}
+                  </span>
+                  <div>
+                    <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 24, fontWeight: 700, color: scoreResult.score >= 80 ? U.seafoam : scoreResult.score >= 50 ? U.amber : U.cherry, lineHeight: 1 }}>
+                      {scoreResult.score}%
                     </div>
-                  );
-                })}
-              </>
-            )}
+                    <div style={{ fontSize: 10, fontWeight: 600, color: U.text }}>
+                      {scoreResult.score === 100 ? "Perfect!" : scoreResult.score >= 80 ? "Great!" : scoreResult.score >= 50 ? "Good try" : "Keep studying"}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 9, color: U.textLight, marginTop: 4 }}>
+                  {puzzle!.correctHandIds.size} possible hand{puzzle!.correctHandIds.size !== 1 ? "s" : ""} for these exposures
+                </div>
+              </div>
 
-            {/* Wrong selections */}
-            {scoreResult.wrong.length > 0 && (
-              <>
-                <div style={{ fontSize: 9, fontWeight: 600, color: U.cherry, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1 }}>
-                  ❌ Wrong ({scoreResult.wrong.length})
-                </div>
-                {scoreResult.wrong.map(id => {
-                  const hand = card?.hands.find(h => h.id === id);
-                  if (!hand) return null;
-                  return (
-                    <div key={id} style={{
-                      display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
-                      background: isDark ? "rgba(224,48,80,0.06)" : "rgba(224,48,80,0.03)",
-                      borderBottom: `0.5px solid ${U.cBorder}`,
+              {/* Horizontal columns: Correct | Wrong | Missed */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: categories.map(() => "1fr").join(" "),
+                gap: 8,
+                marginBottom: 12,
+              }}>
+                {categories.map(cat => (
+                  <div key={cat.key} style={{
+                    background: U.cardBg, border: `1px solid ${U.cBorder}`,
+                    borderRadius: 12, overflow: "hidden",
+                  }}>
+                    {/* Column header */}
+                    <div style={{
+                      padding: "8px 8px 6px", textAlign: "center",
+                      borderBottom: `1px solid ${U.cBorder}`,
+                      background: cat.bg,
                     }}>
-                      <div style={{ flex: 1 }}>
-                        <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
+                      <div style={{ fontSize: 14, marginBottom: 2 }}>{cat.icon}</div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: cat.color, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                        {cat.label} ({cat.ids.length})
                       </div>
-                      <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
                     </div>
-                  );
-                })}
-              </>
-            )}
+                    {/* Hand list */}
+                    <div style={{ padding: "4px 0" }}>
+                      {cat.ids.map(id => {
+                        const hand = card?.hands.find(h => h.id === id);
+                        if (!hand) return null;
+                        return (
+                          <div key={id} style={{
+                            padding: "6px 8px",
+                            borderBottom: `0.5px solid ${U.cBorder}`,
+                          }}>
+                            <ColoredPattern hand={hand} isDark={isDark} fontSize={10} />
+                            <div style={{ fontSize: 7, color: U.textLight, marginTop: 2 }}>
+                              {SECTION_LABELS[hand.section]} · {hand.points}pts
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            {/* Missed hands */}
-            {scoreResult.missed.length > 0 && (
-              <>
-                <div style={{ fontSize: 9, fontWeight: 600, color: U.amber, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1 }}>
-                  ⚠️ Missed ({scoreResult.missed.length})
-                </div>
-                {scoreResult.missed.map(id => {
-                  const hand = card?.hands.find(h => h.id === id);
-                  if (!hand) return null;
-                  return (
-                    <div key={id} style={{
-                      display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
-                      background: U.amberBg,
-                      borderBottom: `0.5px solid ${U.cBorder}`,
-                    }}>
-                      <div style={{ flex: 1 }}>
-                        <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
-                      </div>
-                      <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
-                    </div>
-                  );
-                })}
-              </>
-            )}
+            {/* Pinned action buttons */}
+            <div style={{
+              padding: "8px 12px 16px", borderTop: `1px solid ${U.cBorder}`,
+              background: U.chrome, flexShrink: 0,
+              display: "flex", gap: 8,
+            }}>
+              <button onClick={nextRound} style={{
+                flex: 1, padding: "12px 0", borderRadius: 20, border: "none",
+                background: U.cherry, color: "#fff", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", transition: "all 0.2s",
+              }}>Next Round →</button>
+              <button onClick={onBack} style={{
+                flex: 1, padding: "12px 0", borderRadius: 20,
+                border: `1px solid ${U.btnBorder}`, background: U.btnBg,
+                color: U.btnText, fontSize: 13, fontWeight: 600,
+                cursor: "pointer", transition: "all 0.2s",
+              }}>← Practice</button>
+            </div>
           </div>
-
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={nextRound} style={{
-              flex: 1, padding: "12px 0", borderRadius: 20, border: "none",
-              background: U.cherry, color: "#fff", fontSize: 13, fontWeight: 600,
-              cursor: "pointer", transition: "all 0.2s",
-            }}>Next Round →</button>
-            <button onClick={onBack} style={{
-              flex: 1, padding: "12px 0", borderRadius: 20,
-              border: `1px solid ${U.btnBorder}`, background: U.btnBg,
-              color: U.btnText, fontSize: 13, fontWeight: 600,
-              cursor: "pointer", transition: "all 0.2s",
-            }}>← Practice</button>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
