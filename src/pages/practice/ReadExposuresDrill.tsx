@@ -91,9 +91,17 @@ function resolveGroupToGameTiles(group: TileGroup, assignment: ColorAssignment):
   const used = new Set<string>();
   const tiles: GameTile[] = [];
 
-  // Maybe add jokers for realism
-  const jokerChance = group.type === "quint" ? 0.9 : 0.25;
-  const numJokers = Math.random() < jokerChance ? (group.type === "quint" ? (Math.random() < 0.5 ? 2 : 1) : 1) : 0;
+  // How many natural tiles of this type exist in the deck?
+  const isFlower = group.tiles[0]?.kind === "flower";
+  const naturalAvailable = isFlower ? 8 : 4; // 8 flowers, 4 of any other tile
+  const minJokers = Math.max(0, group.count - naturalAvailable);
+
+  // Add jokers for realism, but guarantee enough for groups that need them
+  const jokerChance = group.count >= 5 ? 0.9 : 0.25;
+  let numJokers = Math.random() < jokerChance
+    ? (group.count >= 5 ? (Math.random() < 0.5 ? 2 : 1) : 1)
+    : 0;
+  numJokers = Math.max(numJokers, minJokers);
 
   for (let i = 0; i < tileIds.length; i++) {
     if (i < numJokers) {
@@ -188,7 +196,8 @@ function getPossibleHands(melds: ExposedMeld[], card: NMJLCard): HandDefinition[
   });
 }
 
-/** Generate a puzzle: pick a hand, expose its melds, find all matching hands */
+/** Generate a puzzle: pick a hand, expose its melds, find all matching hands.
+ *  Includes runtime verification — retries if the source hand isn't in correct answers. */
 function generateExposures(card: NMJLCard): Puzzle | null {
   const exposable = card.hands.filter(h => h.exposure === "X");
 
@@ -205,34 +214,54 @@ function generateExposures(card: NMJLCard): Puzzle | null {
 
   if (candidates.length === 0) return null;
 
-  // Pick a random candidate
-  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+  // Try up to 10 times to generate a valid puzzle
+  for (let attempt = 0; attempt < 10; attempt++) {
+    // Pick a random candidate
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
 
-  // Choose a random color assignment
-  const expanded = expandNumberConstraint(picked.pattern.numberConstraint, picked.pattern);
-  const ep = expanded[Math.floor(Math.random() * expanded.length)];
-  const assignments = enumerateColorAssignments(ep);
-  const assignment = assignments[Math.floor(Math.random() * assignments.length)];
+    // Choose a random color assignment
+    const expanded = expandNumberConstraint(picked.pattern.numberConstraint, picked.pattern);
+    const ep = expanded[Math.floor(Math.random() * expanded.length)];
+    const assignments = enumerateColorAssignments(ep);
+    const assignment = assignments[Math.floor(Math.random() * assignments.length)];
 
-  // Pick 1-3 exposable groups from the expanded pattern
-  const expGroups = ep.groups.filter(g =>
-    g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet"
-  );
-  const numToExpose = Math.min(expGroups.length, 1 + Math.floor(Math.random() * Math.min(3, expGroups.length)));
-  const shuffled = shuffleArray(expGroups);
-  const groupsToExpose = shuffled.slice(0, numToExpose);
+    // Pick 1-3 exposable groups from the expanded pattern
+    const expGroups = ep.groups.filter(g =>
+      g.type === "pung" || g.type === "kong" || g.type === "quint" || g.type === "sextet"
+    );
+    const numToExpose = Math.min(expGroups.length, 1 + Math.floor(Math.random() * Math.min(3, expGroups.length)));
+    const shuffled = shuffleArray(expGroups);
+    const groupsToExpose = shuffled.slice(0, numToExpose);
 
-  // Resolve each group to actual GameTile instances
-  const melds: ExposedMeld[] = groupsToExpose.map(group => ({
-    tiles: resolveGroupToGameTiles(group, assignment),
-    groupType: group.type,
-  }));
+    // Resolve each group to actual GameTile instances
+    const melds: ExposedMeld[] = groupsToExpose.map(group => ({
+      tiles: resolveGroupToGameTiles(group, assignment),
+      groupType: group.type,
+    }));
 
-  // Compute ALL matching hands from the card
-  const correctHands = getPossibleHands(melds, card);
-  const correctHandIds = new Set(correctHands.map(h => h.id));
+    // VERIFY: every meld has the correct number of tiles
+    const allMeldsValid = melds.every((meld, i) => meld.tiles.length === groupsToExpose[i].count);
+    if (!allMeldsValid) {
+      console.warn(`[ReadExposures] Meld generation produced wrong tile count, retrying (attempt ${attempt + 1})`);
+      continue;
+    }
 
-  return { melds, correctHandIds };
+    // Compute ALL matching hands from the card
+    const correctHands = getPossibleHands(melds, card);
+    const correctHandIds = new Set(correctHands.map(h => h.id));
+
+    // VERIFY: the source hand must be in the correct answers
+    if (!correctHandIds.has(picked.hand.id)) {
+      console.warn(`[ReadExposures] Source hand "${picked.hand.displayPattern}" not in correct answers, retrying (attempt ${attempt + 1})`);
+      continue;
+    }
+
+    return { melds, correctHandIds };
+  }
+
+  // Fallback: should never reach here, but just in case
+  console.error("[ReadExposures] Failed to generate valid puzzle after 10 attempts");
+  return null;
 }
 
 /** Compute score from selections vs correct answers */
