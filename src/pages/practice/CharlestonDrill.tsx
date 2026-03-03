@@ -18,7 +18,7 @@ import {
   expandNumberConstraint, enumerateColorAssignments, resolveGroupToTileIds,
   SECTION_LABELS,
 } from "../../data/nmjl";
-import type { NMJLCard, PartialMatchResult, ColorAssignment } from "../../data/nmjl";
+import type { NMJLCard, PartialMatchResult, ColorAssignment, HandDefinition, HandPattern, CardColor } from "../../data/nmjl";
 
 // ─── TYPES ────────────────────────────────────────────────────
 
@@ -199,6 +199,57 @@ function sortByRank(hand: GameTile[]): GameTile[] {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// COLORED PATTERN — renders hand pattern with NMJL card colors
+// ═══════════════════════════════════════════════════════════════
+
+const CARD_COLOR_HEX: Record<CardColor, string> = { red: "#C2413B", green: "#2E8B57", blue: "#4A7FA8" };
+const OPERATOR_TOKENS = new Set(["+", "=", "x", "or", "OR", "-or-"]);
+
+function ColoredPattern({ hand, isDark, fontSize = 10 }: { hand: HandDefinition; isDark: boolean; fontSize?: number }) {
+  const defaultColor = isDark ? "#F0EAF6" : "#2D1B4E";
+  const opColor = isDark ? "#7E6A9A" : "#9688AA";
+  const renderHalf = (text: string, pattern: HandPattern | undefined, keyPrefix: string) => {
+    const tokens = text.split(" ");
+    let groupIdx = 0;
+    return tokens.map((token, i) => {
+      const isOp = OPERATOR_TOKENS.has(token);
+      let color = defaultColor;
+      if (!isOp && pattern && groupIdx < pattern.groups.length) {
+        color = CARD_COLOR_HEX[pattern.groups[groupIdx].color] || defaultColor;
+        groupIdx++;
+      } else if (isOp) { color = opColor; }
+      return (
+        <React.Fragment key={`${keyPrefix}-${i}`}>
+          {i > 0 && <span style={{ letterSpacing: 1 }}>{" "}</span>}
+          <span style={{ color }}>{token}</span>
+        </React.Fragment>
+      );
+    });
+  };
+  if (!hand.patterns[0]) {
+    return <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, color: defaultColor }}>{hand.displayPattern}</span>;
+  }
+  const orParts = hand.displayPattern.split(" -or- ");
+  if (orParts.length >= 2 && hand.patterns.length >= orParts.length) {
+    return (
+      <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
+        {orParts.map((part, pi) => (
+          <React.Fragment key={`or-${pi}`}>
+            {pi > 0 && <span style={{ color: opColor, fontSize: fontSize * 0.85 }}>{" -or- "}</span>}
+            {renderHalf(part, hand.patterns[pi], `P${pi}`)}
+          </React.Fragment>
+        ))}
+      </span>
+    );
+  }
+  return (
+    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
+      {renderHalf(hand.displayPattern, hand.patterns[0], "S")}
+    </span>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // TILE CARD — wraps MahjiTile with selection/halo/drag UI
 // ═══════════════════════════════════════════════════════════════
 
@@ -228,7 +279,15 @@ function TileCard({ tile, selected, onTap, onDoubleTap, disabled, cherry, size =
 }
 
 // Empty placeholder for missing tiles (shows 14 slots always)
-function EmptySlot() {
+// When isBlind=true, shows face-down tile backs instead of dashed outlines
+function EmptySlot({ isBlind = false }: { isBlind?: boolean }) {
+  if (isBlind) {
+    return (
+      <div style={{ flexShrink: 0, opacity: 0.7 }}>
+        <MahjiTile faceDown size="md" />
+      </div>
+    );
+  }
   return (
     <div style={{ width: 52, height: 72, borderRadius: 10, border: "2px dashed rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.03)", flexShrink: 0 }} />
   );
@@ -338,6 +397,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [timer, setTimer] = useState(0);
   const [passCount, setPassCount] = useState(0);
   const [totalPassed, setTotalPassed] = useState(0);
+  const [passDir, setPassDir] = useState<"right" | "across" | "left" | null>(null);
 
   // ── Responsive tile scaling ──────────────────────────────────
   // Strategy: render tiles at full size inside an inner row, measure
@@ -415,7 +475,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   // ── Recompute hand suggestions when hand changes ──
   useEffect(() => {
     if (!card || !humanHand.length || level === "advanced") { setSuggestions([]); return; }
-    // Very low threshold so we always show options even if only 3-4 tiles match
+    // Low threshold so we find all possible matches
     const matches = findPartialMatches(humanHand, card, 0.05);
     // Deduplicate by hand id — only keep the best match per unique hand
     const seen = new Set<string>();
@@ -425,9 +485,20 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         seen.add(m.hand.id);
         unique.push(m);
       }
-      if (unique.length >= 5) break;
     }
-    setSuggestions(unique);
+    // Compute real match counts, filter out ≤1 tile matches, sort by most tiles descending
+    const withCounts = unique.map(m => ({ match: m, count: computeRealMatchCount(m, humanHand) }));
+    const filtered = withCounts.filter(x => x.count >= 2);
+    filtered.sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count; // most tiles first
+      // Tie-break: exposed hands are easier to complete
+      const aExp = a.match.hand.exposure === "X" ? 1 : 0;
+      const bExp = b.match.hand.exposure === "X" ? 1 : 0;
+      if (bExp !== aExp) return bExp - aExp;
+      // Tie-break: fewer points = easier
+      return a.match.hand.points - b.match.hand.points;
+    });
+    setSuggestions(filtered.slice(0, 5).map(x => x.match));
   }, [card, humanHand.length, humanHand.map(t => t.instanceId).join(","), level]);
 
   // Compute real match counts for each suggestion (matches actual highlight count)
@@ -621,10 +692,12 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     setPassCount(c => c + 1); setTotalPassed(c => c + sel.length);
     const up = players!.map((p, i) => i === 0 ? { ...p, selectedForPass: sel } : p);
     const s = phase === "courtesy" ? { dir: "across" as const } : STEPS[stepIdx];
+    setPassDir(s.dir); // trigger slide animation
     const nh = resolvePass(up, s);
     const oldIds = new Set(humanHand.filter(t => !selIds.has(t.instanceId)).map(t => t.instanceId));
     const newReceivedIds = new Set(nh[0].filter(t => !oldIds.has(t.instanceId)).map(t => t.instanceId));
     setTimeout(() => {
+      setPassDir(null);
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
@@ -797,7 +870,15 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       {/* Title */}
       <div style={{ textAlign: "center", padding: "6px 14px 2px" }}>
         <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 17, fontWeight: 700, color: U.cherry, letterSpacing: 3, margin: 0 }}>CHARLESTON</h1>
-        <p style={{ fontSize: 9, color: U.textMid, margin: "2px 0 0" }}>
+        <div style={{ fontSize: 8, color: U.textLight, margin: "2px 0 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <span style={{ fontWeight: 600 }}>{cardYear}</span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{level}</span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: mat.bg, border: `1px solid ${U.cBorder}`, display: "inline-block" }} />
+          <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{mat.name}</span>
+        </div>
+        <p style={{ fontSize: 9, color: U.textMid, margin: "2px 0 0", fontWeight: 500 }}>
           {phase === "complete" ? "Complete!" : phase === "courtesy_prompt" ? "Courtesy Pass" : showStopPrompt ? "Continue or Stop?" : `${step?.key?.startsWith("1") ? "First" : "Second"} Charleston · ${step?.label}`}
         </p>
       </div>
@@ -904,7 +985,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   }}
                   style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
                   <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * tileScale), height: Math.ceil(98 * tileScale), position: "relative" }}>
-                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
+                    <div style={{ display: "flex", gap: 3, transform: `scale(${tileScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0, animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
                       {[0, 1, 2].map(i => {
                         const tile = selectedTiles[i];
                         if (tile) return (
@@ -960,8 +1041,8 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer",
             padding: "3px 0", fontSize: 9, fontWeight: 600, color: U.textLight,
           }}>
-            <span>👀 Peep Possible Hands!</span>
-            <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(90deg)" : "rotate(0)" }}>▸</span>
+            <span>{suggestionsOpen ? "Hide Possible Hands" : "👀 Peep Possible Hands!"}</span>
+            <span style={{ fontSize: 7, transition: "transform 0.2s", transform: suggestionsOpen ? "rotate(0)" : "rotate(0)" }}>{suggestionsOpen ? "▾" : "▸"}</span>
           </div>
           {suggestionsOpen && (
             <div style={{
@@ -974,16 +1055,29 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                 const realCount = realMatchCounts[i] ?? s.matchedCount;
                 return (
                   <div key={s.hand.id + i} onClick={() => activateHintHand(s)} style={{
-                    display: "flex", alignItems: "center", gap: 6, padding: "5px 6px", borderRadius: 8, cursor: "pointer",
+                    padding: "5px 6px", borderRadius: 8, cursor: "pointer",
                     borderBottom: i < suggestions.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
                     background: isActive ? "rgba(234,179,8,0.1)" : "transparent",
                     outline: isActive ? "1.5px solid rgba(234,179,8,0.4)" : "1.5px solid transparent",
                     transition: "all 0.15s ease",
                   }}>
-                    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, color: isActive ? "#b8860b" : U.text, fontWeight: isActive ? 700 : 500, flex: 1 }}>{s.hand.displayPattern}</span>
-                    <span style={{ fontSize: 8, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 36, textAlign: "right" }}>{realCount}/14</span>
-                    <span style={{ fontSize: 7, color: U.textLight, fontWeight: 500 }}>{s.hand.points}pts</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ flex: 1, overflow: "hidden" }}>
+                        <ColoredPattern hand={s.hand} isDark={isDark} fontSize={10} />
+                      </div>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: isActive ? "#b8860b" : U.seafoam, minWidth: 30, textAlign: "right" }}>{realCount}/14</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
+                      <span style={{ fontSize: 7, color: U.textLight }}>{SECTION_LABELS[s.hand.section]}</span>
+                      <span style={{ fontSize: 7, color: U.textLight }}>·</span>
+                      <span style={{ fontSize: 7, color: U.textLight }}>{s.hand.points}pts</span>
+                      <span style={{ fontSize: 7, color: U.textLight }}>·</span>
+                      <span style={{ fontSize: 7, color: U.textLight }}>{s.hand.exposure === "C" ? "Concealed" : "Exposed"}</span>
+                      {s.hand.description && <>
+                        <span style={{ fontSize: 7, color: U.textLight }}>·</span>
+                        <span style={{ fontSize: 7, color: U.textLight, fontStyle: "italic" }}>{s.hand.description}</span>
+                      </>}
+                    </div>
                   </div>
                 );
               })}
@@ -997,6 +1091,18 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       {level === "novice" && phase === "charleston" && !showStopPrompt && (
         <>
           <style>{`
+            @keyframes passSlideRight {
+              0% { transform: translateX(0); opacity: 1; }
+              100% { transform: translateX(80px); opacity: 0; }
+            }
+            @keyframes passSlideLeft {
+              0% { transform: translateX(0); opacity: 1; }
+              100% { transform: translateX(-80px); opacity: 0; }
+            }
+            @keyframes passSlideUp {
+              0% { transform: translateY(0); opacity: 1; }
+              100% { transform: translateY(-60px); opacity: 0; }
+            }
             @keyframes bamShake {
               0%, 100% { transform: rotate(0deg); }
               15% { transform: rotate(-6deg); }
@@ -1088,7 +1194,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} onDragEnd={handleDragEnd} />
           ))}
-          {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
+          {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} isBlind={isBlind} />)}
           <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={handleDropEnd} style={{ width: 8, flexShrink: 0 }} />
         </div>
       </div>
