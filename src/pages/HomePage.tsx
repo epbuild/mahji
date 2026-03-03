@@ -111,7 +111,7 @@ const PlayNowBanner = ({ t, isDark, onClick }) => (
 /* ── NAV ICONS ── */
 const BookIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>;
 const ClockIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>;
-const BagIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>;
+const StatsIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="16" y="4" width="4" height="17" rx="1"/></svg>;
 
 /* ═══════════════════════════════════
    HOME PAGE — Photorealistic
@@ -190,7 +190,7 @@ function HomePage({ onNav, signedIn }) {
               <FeatureCard title="Practice" desc="Drills & exercises" icon={<ClockIcon />} t={t} onClick={() => onNav("practice")} />
             </div>
             <div className="home-entrance-item">
-              <FeatureCard title="Shop" desc="Tiles, sets & accessories" icon={<BagIcon />} t={t} onClick={() => onNav("shop")} />
+              <FeatureCard title="Stats" desc="Your Mahjong IQ & insights" icon={<StatsIcon />} t={t} onClick={() => onNav("stats")} />
             </div>
             <div className="home-entrance-item">
               <FeatureCard title="Ask Bam Bird" desc="Your AI Mahj mentor" isBird t={t} onClick={() => onNav("bam")} />

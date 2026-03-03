@@ -40,14 +40,14 @@ const ProfileCircle = ({ size = 28, onClick }) => {
 };
 
 /* ═══ DESKTOP TOP NAV ═══ */
-export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, onCart }) => {
+export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, onCart = () => {} }) => {
   const [hovered, setHovered] = useState(null);
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
   const isHome = page === "home" || page === "profile";
   const items = [
     { id: "learn", label: "Learn" }, { id: "practice", label: "Practice" },
-    { id: "play", label: "Play" }, { id: "shop", label: "Shop" }, { id: "bam", label: "Ask" },
+    { id: "play", label: "Play" }, { id: "stats", label: "Stats" }, { id: "bam", label: "Ask" },
   ];
   const mahjiColor = isDark ? "#FFFFFF" : C.cherry;
 
@@ -76,10 +76,6 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <ModeToggle />
-          <div onClick={onCart} style={{ cursor: "pointer", position: "relative" }}>
-            <BagIcon color={t.lavDeep} size={17} />
-            {cartCount > 0 && <div style={{ position: "absolute", top: -4, right: -6, width: 14, height: 14, borderRadius: "50%", background: C.cherry, color: "#fff", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</div>}
-          </div>
           <ProfileCircle size={30} onClick={onProfile} />
         </div>
       </div>
@@ -89,21 +85,13 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
 };
 
 /* ═══ MOBILE HEADER ═══ */
-export const MobileHeader = ({ onHome, onProfile, isHome, cartCount = 0, onCart, page }) => {
+export const MobileHeader = ({ onHome, onProfile, isHome, cartCount = 0, onCart = () => {}, page }) => {
   const { isDark } = useTheme();
   return (
     <div className="mobile-header">
       <Logo onClick={onHome} showText={!isHome} isDark={isDark && !isHome} />
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <ModeToggle />
-        {page === "shop" && (
-          <div onClick={onCart} style={{ position: "relative", cursor: "pointer" }}>
-            <div style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <BagIcon color={isDark ? "#9B88BB" : C.lavDeep} size={18} />
-            </div>
-            {cartCount > 0 && <div style={{ position: "absolute", top: -2, right: -4, width: 16, height: 16, borderRadius: "50%", background: C.cherry, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</div>}
-          </div>
-        )}
         <ProfileCircle size={34} onClick={onProfile} />
       </div>
     </div>
@@ -141,7 +129,7 @@ export const MobileNav = ({ active, onNav }) => {
         { id: "learn", icon: I.book, label: "learn" },
         { id: "play", label: "play", isPlay: true },
         { id: "practice", icon: I.clock, label: "practice" },
-        { id: "shop", icon: I.bag, label: "shop" },
+        { id: "stats", icon: I.stats, label: "stats" },
       ].map(it => it.isPlay ? (
         <div key="play" className="mobile-play-wrap" onClick={() => onNav("play")}>
           <div style={{ width: 44, height: 44, borderRadius: "50%", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 14px rgba(178,34,52,0.2)`, border: `3px solid ${isDark ? 'rgba(26,16,40,0.8)' : 'rgba(255,255,255,0.8)'}`, position: "relative", overflow: "hidden" }}>

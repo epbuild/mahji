@@ -22,10 +22,13 @@ export const DotTile: React.FC<DotTileProps> = ({ number }) => {
 
   return (
     <>
-      <div className="absolute top-1 right-1.5 text-xs font-bold" style={{ fontFamily: "'Bodoni Moda', serif", color: '#4A3660' }}>
+      <div
+        className="absolute top-1 right-1.5 text-xs font-bold z-10"
+        style={{ fontFamily: "'Bodoni Moda', serif", color: '#4A3660', background: 'rgba(255,255,255,0.9)', padding: '0 2px', borderRadius: 2, lineHeight: 1.1 }}
+      >
         {number}
       </div>
-      <svg viewBox="-36 -36 72 72" width="72" height="72">
+      <svg viewBox="-36 -36 72 72" width="50" height="50">
         {layout.map(([x, y], i) => {
           const col = DOT_COLORS[i % 5];
           return (
