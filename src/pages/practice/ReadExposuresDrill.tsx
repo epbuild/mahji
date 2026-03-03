@@ -112,21 +112,66 @@ function resolveGroupToGameTiles(group: TileGroup, assignment: ColorAssignment):
   return tiles;
 }
 
-/** Check if an exposed meld could belong to a hand */
-function meldFitsHand(meld: ExposedMeld, hand: HandDefinition): boolean {
-  const naturalTiles = meld.tiles.filter(t => t.suit !== "jokers");
-  if (naturalTiles.length === 0) return true; // All jokers — could be anything
+/**
+ * Backtracking: try to assign each meld to a distinct exposable group
+ * within the same (pattern, expansion, colorAssignment).
+ * - Each meld maps to exactly one group (no sharing)
+ * - Meld size must match group.count (pung=3 can't match kong=4)
+ */
+function tryAssignMelds(
+  melds: ExposedMeld[],
+  mi: number,
+  groups: { group: TileGroup; idx: number }[],
+  assignment: ColorAssignment,
+  usedIndices: Set<number>,
+): boolean {
+  if (mi >= melds.length) return true;
+  const meld = melds[mi];
+  const natural = meld.tiles.filter(t => t.suit !== "jokers");
 
+  // All jokers — could be any unused group
+  if (natural.length === 0) {
+    for (const { group, idx } of groups) {
+      if (usedIndices.has(idx)) continue;
+      if (meld.tiles.length !== group.count) continue;
+      const next = new Set(usedIndices); next.add(idx);
+      if (tryAssignMelds(melds, mi + 1, groups, assignment, next)) return true;
+    }
+    return false;
+  }
+
+  const naturalIds = natural.map(t => t.suit === "flowers" ? "__flower__" : t.id);
+
+  for (const { group, idx } of groups) {
+    if (usedIndices.has(idx)) continue;
+    // Meld size must match group size (pung=3 can't match kong=4)
+    if (meld.tiles.length !== group.count) continue;
+    const groupIds = resolveGroupToTileIds(group, assignment);
+    if (naturalIds.every(id => groupIds.includes(id))) {
+      const next = new Set(usedIndices); next.add(idx);
+      if (tryAssignMelds(melds, mi + 1, groups, assignment, next)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if ALL melds could belong to a hand under the SAME
+ * number expansion and color assignment, each assigned to a distinct group.
+ */
+function allMeldsFitHand(melds: ExposedMeld[], hand: HandDefinition): boolean {
   for (const pattern of hand.patterns) {
     const expanded = expandNumberConstraint(pattern.numberConstraint, pattern);
     for (const ep of expanded) {
       const assignments = enumerateColorAssignments(ep);
       for (const assignment of assignments) {
-        for (const group of ep.groups) {
-          if (group.type !== "pung" && group.type !== "kong" && group.type !== "quint" && group.type !== "sextet") continue;
-          const groupIds = resolveGroupToTileIds(group, assignment);
-          const naturalIds = naturalTiles.map(t => t.suit === "flowers" ? "__flower__" : t.id);
-          if (naturalIds.every(id => groupIds.includes(id))) return true;
+        const expGroups = ep.groups
+          .map((g, i) => ({ group: g, idx: i }))
+          .filter(({ group }) =>
+            group.type === "pung" || group.type === "kong" || group.type === "quint" || group.type === "sextet"
+          );
+        if (tryAssignMelds(melds, 0, expGroups, assignment, new Set())) {
+          return true;
         }
       }
     }
@@ -139,7 +184,7 @@ function getPossibleHands(melds: ExposedMeld[], card: NMJLCard): HandDefinition[
   if (melds.length === 0) return card.hands.filter(h => h.exposure === "X");
   return card.hands.filter(hand => {
     if (hand.exposure === "C") return false;
-    return melds.every(meld => meldFitsHand(meld, hand));
+    return allMeldsFitHand(melds, hand);
   });
 }
 

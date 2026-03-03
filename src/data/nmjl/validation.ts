@@ -251,12 +251,18 @@ export function findPartialMatches(
       const expanded = expandNumberConstraint(pattern.numberConstraint, pattern);
       for (const ep of expanded) {
         const assignments = enumerateColorAssignments(ep);
+        // Find the BEST color assignment, not just the first valid one
+        let best: { partial: ReturnType<typeof computePartialMatch>; assignment: ColorAssignment } | null = null;
         for (const assignment of assignments) {
           const partial = computePartialMatch(tiles, ep, assignment);
           if (partial.completionPct >= minCompletionPct) {
-            results.push({ hand, patternIndex: pi, ...partial, colorAssignment: assignment });
-            break;
+            if (!best || partial.completionPct > best.partial.completionPct) {
+              best = { partial, assignment };
+            }
           }
+        }
+        if (best) {
+          results.push({ hand, patternIndex: pi, ...best.partial, colorAssignment: best.assignment });
         }
       }
     }
