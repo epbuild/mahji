@@ -386,6 +386,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const [totalPassed, setTotalPassed] = useState(0);
   const [passDir, setPassDir] = useState<"right" | "across" | "left" | null>(null);
   const [blindSlotCount, setBlindSlotCount] = useState(0);
+  const initialHandsRef = useRef<GameTile[][] | null>(null);
 
   // ── Responsive tile scaling ──────────────────────────────────
   // Strategy: render tiles at full size inside an inner row, measure
@@ -427,20 +428,29 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
     return () => { window.removeEventListener("resize", onResize); ro.disconnect(); };
   }, [recalcScale]);
 
-  const dealGame = useCallback(() => {
-    const deck = shuffleDeck(getFullDeck());
-    let idx = 0;
-    const hands = [0,1,2,3].map(s => { const count = s === dealerSeat ? 14 : 13; const h = deck.slice(idx, idx + count); idx += count; return h; });
-    setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (East)","South","West","North"][s], hand: hands[s], selectedForPass: [], isHuman: s === 0 })));
+  const resetCharlestonState = useCallback((hands: GameTile[][]) => {
+    setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (East)","South","West","North"][s], hand: [...hands[s]], selectedForPass: [], isHuman: s === 0 })));
     setPhase("charleston"); setStepIdx(0); setSelectedIds(new Set()); setBotsReady(false); setCourtesyCount(null);
     setAnimating(false); setBlindSlotCount(0); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
     setSuggestions([]); setSuggestionsOpen(false); setBamAdvice(null);
-    // After first charleston practice in session, hide the "Ask Bam" message
     if (bamSessionUsed) setBamShowMessage(false);
     setActiveHintHand(null); setHintTileIds(new Set());
-  }, [dealerSeat]);
+  }, []);
+
+  const dealGame = useCallback(() => {
+    const deck = shuffleDeck(getFullDeck());
+    let idx = 0;
+    const hands = [0,1,2,3].map(s => { const count = s === dealerSeat ? 14 : 13; const h = deck.slice(idx, idx + count); idx += count; return h; });
+    initialHandsRef.current = hands.map(h => [...h]);
+    resetCharlestonState(hands);
+  }, [dealerSeat, resetCharlestonState]);
+
+  const restartSameHand = useCallback(() => {
+    if (!initialHandsRef.current) return;
+    resetCharlestonState(initialHandsRef.current);
+  }, [resetCharlestonState]);
 
   // Don't auto-deal on mount — show setup screen first
   useEffect(() => { if (!showSetup) return; /* setup handles deal */ }, []);
@@ -898,8 +908,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                   </div>
                 </div>
 
-                <button onClick={() => setShowSetup(true)} style={{ display: "flex", width: "100%", padding: "10px 0", marginBottom: 8, background: "#6B3FA0", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Practice again <span style={{ fontSize: 14, display: "inline-block", transform: "scaleX(-1)" }}>&#x21BB;</span></button>
-                <button onClick={onBack} style={{ display: "flex", width: "100%", padding: "10px 0", background: "#E03050", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Continue this match <span style={{ fontSize: 14 }}>&rarr;</span></button>
+                <button onClick={onBack} style={{ display: "flex", width: "100%", padding: "10px 0", marginBottom: 8, background: "#E03050", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Continue this match <span style={{ fontSize: 14 }}>&rarr;</span></button>
+                <button onClick={restartSameHand} style={{ display: "flex", width: "100%", padding: "10px 0", marginBottom: 8, background: "#6B3FA0", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Practice these tiles again <span style={{ fontSize: 14, display: "inline-block", transform: "scaleX(-1)" }}>&#x21BB;</span></button>
+                <button onClick={dealGame} style={{ display: "flex", width: "100%", padding: "10px 0", background: "rgba(107,63,160,0.06)", border: "1px solid rgba(107,63,160,0.15)", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#6B3FA0", fontFamily: "'Outfit',sans-serif", alignItems: "center", justifyContent: "center", gap: 6 }}>Practice new tiles</button>
               </div>
             ) : (() => {
               const bScale = Math.max(0.45, Math.min(0.85, tileScale));
@@ -1066,19 +1077,19 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       {/* ── Pass animations — soft red zoom with directional drift ── */}
       <style>{`
         @keyframes passSlideRight {
-          0% { transform: scale(1) translateX(0); opacity: 1; box-shadow: 0 0 0 rgba(224,48,80,0); }
-          35% { transform: scale(1.08); opacity: 0.95; box-shadow: 0 0 24px rgba(224,48,80,0.35); }
-          100% { transform: scale(0.88) translateX(50px); opacity: 0; box-shadow: 0 0 30px rgba(224,48,80,0.2); }
+          0% { transform: scale(1) translateX(0); opacity: 1; box-shadow: 0 0 0 rgba(224,48,80,0); filter: blur(0); }
+          30% { transform: scale(1.18); opacity: 0.9; box-shadow: 0 0 36px rgba(224,48,80,0.45), 0 0 60px rgba(224,48,80,0.15); filter: blur(0.5px); }
+          100% { transform: scale(0.7) translateX(100px); opacity: 0; box-shadow: 0 0 50px rgba(224,48,80,0.25); filter: blur(2px); }
         }
         @keyframes passSlideLeft {
-          0% { transform: scale(1) translateX(0); opacity: 1; box-shadow: 0 0 0 rgba(224,48,80,0); }
-          35% { transform: scale(1.08); opacity: 0.95; box-shadow: 0 0 24px rgba(224,48,80,0.35); }
-          100% { transform: scale(0.88) translateX(-50px); opacity: 0; box-shadow: 0 0 30px rgba(224,48,80,0.2); }
+          0% { transform: scale(1) translateX(0); opacity: 1; box-shadow: 0 0 0 rgba(224,48,80,0); filter: blur(0); }
+          30% { transform: scale(1.18); opacity: 0.9; box-shadow: 0 0 36px rgba(224,48,80,0.45), 0 0 60px rgba(224,48,80,0.15); filter: blur(0.5px); }
+          100% { transform: scale(0.7) translateX(-100px); opacity: 0; box-shadow: 0 0 50px rgba(224,48,80,0.25); filter: blur(2px); }
         }
         @keyframes passSlideUp {
-          0% { transform: scale(1) translateY(0); opacity: 1; box-shadow: 0 0 0 rgba(224,48,80,0); }
-          35% { transform: scale(1.08); opacity: 0.95; box-shadow: 0 0 24px rgba(224,48,80,0.35); }
-          100% { transform: scale(0.88) translateY(-40px); opacity: 0; box-shadow: 0 0 30px rgba(224,48,80,0.2); }
+          0% { transform: scale(1) translateY(0); opacity: 1; box-shadow: 0 0 0 rgba(224,48,80,0); filter: blur(0); }
+          30% { transform: scale(1.18); opacity: 0.9; box-shadow: 0 0 36px rgba(224,48,80,0.45), 0 0 60px rgba(224,48,80,0.15); filter: blur(0.5px); }
+          100% { transform: scale(0.7) translateY(-80px); opacity: 0; box-shadow: 0 0 50px rgba(224,48,80,0.25); filter: blur(2px); }
         }
       `}</style>
 
@@ -1177,7 +1188,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
               showInsertLeft={dragOverIdx === idx && dragIdx !== null && dragIdx !== idx && dragIdx + 1 !== idx}
               onDragStart={e => handleDragStart(e, idx)} onDragOver={e => handleDragOver(e, idx)} onDrop={e => handleDrop(e, idx)} onDragEnd={handleDragEnd} />
           ))}
-          {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} isBlind={isBlind} />)}
+          {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
           <div onDragOver={e => { e.preventDefault(); setDragOverIdx(visibleHand.length); }} onDrop={handleDropEnd} style={{ width: 8, flexShrink: 0 }} />
         </div>
       </div>
