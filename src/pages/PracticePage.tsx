@@ -35,7 +35,7 @@ const drillsData = [
   { t: "Learn the Hands", d: "Match tiles to NMJL card patterns", lvls: ["Novice"] },
   { t: "How to Deal", d: "Roll dice, break the wall, deal correctly", lvls: ["Novice"] },
   { t: "Practicing the Charleston", d: "Master R-O-L→L-O-R and blind passes", lvls: ["Novice","Intermediate","Advanced"] },
-  { t: "Reading Exposures", d: "Narrow down opponent hands from melds", lvls: ["Intermediate","Advanced"] },
+  { t: "Reading Exposures", d: "Identify all possible hands from exposed melds", lvls: ["Intermediate"] },
   { t: "Playing Defense", d: "Choose the safest discard, stop feeding", lvls: ["Advanced"] },
 ];
 
