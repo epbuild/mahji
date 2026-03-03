@@ -10,8 +10,9 @@ const WIND_CONFIG = {
 
 interface WindTileProps { direction: 'E'|'S'|'W'|'N'; size?: string; }
 
-export const WindTile: React.FC<WindTileProps> = ({ direction }) => {
+export const WindTile: React.FC<WindTileProps> = ({ direction, size }) => {
   const cfg = WIND_CONFIG[direction];
+  const isXs = size === 'xs';
   return (
     <>
       {/* Compass star background */}
@@ -28,12 +29,14 @@ export const WindTile: React.FC<WindTileProps> = ({ direction }) => {
         <circle cx="40" cy="40" r="4" fill={cfg.compassCol} opacity="0.6"/>
       </svg>
       {/* Letter */}
-      <span className="relative z-10 leading-none" style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 36, fontWeight: 700, color: cfg.color }}>
+      <span className="relative z-10 leading-none" style={{ fontFamily: "'Bodoni Moda', serif", fontSize: isXs ? 20 : 36, fontWeight: 700, color: cfg.color }}>
         {direction}
       </span>
-      <span className="relative z-10" style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 8, letterSpacing: 2, fontWeight: 600, color: cfg.color }}>
-        {cfg.label}
-      </span>
+      {!isXs && (
+        <span className="relative z-10" style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 8, letterSpacing: 2, fontWeight: 600, color: cfg.color }}>
+          {cfg.label}
+        </span>
+      )}
     </>
   );
 };

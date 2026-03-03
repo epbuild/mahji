@@ -105,7 +105,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-2468-1',
     section: '2468',
-    displayPattern: '222 444 6666 8888',
+    displayPattern: '222 444 6666 8888 -or- 222 444 6666 8888',
     patterns: check14([
       { groups: [pung(s(2), 'green'), pung(s(4), 'green'), kong(s(6), 'green'), kong(s(8), 'green')] },
       { groups: [pung(s(2), 'green'), pung(s(4), 'red'), kong(s(6), 'red'), kong(s(8), 'red')] },
@@ -136,7 +136,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-2468-4',
     section: '2468',
-    displayPattern: 'FFFF 4444 x 6666 = 24',
+    displayPattern: 'FFFF 4444 x 6666 = 24 -or- FFFF 6666 x 8888 = 48',
     patterns: check14([
       { groups: [kong(fl, 'blue'), kong(s(4), 'green'), kong(s(6), 'red'), mixed([s(2), s(4)], 'blue')] },
       { groups: [kong(fl, 'blue'), kong(s(6), 'green'), kong(s(8), 'red'), mixed([s(4), s(8)], 'blue')] },
@@ -147,7 +147,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-2468-5',
     section: '2468',
-    displayPattern: 'FF 2222 44 66 8888',
+    displayPattern: 'FF 2222 44 66 8888 -or- FF 2222 44 66 8888',
     patterns: check14([
       { groups: [pair(fl, 'blue'), kong(s(2), 'green'), pair(s(4), 'green'), pair(s(6), 'green'), kong(s(8), 'green')] },
       { groups: [pair(fl, 'blue'), kong(s(2), 'green'), pair(s(4), 'red'), pair(s(6), 'red'), kong(s(8), 'red')] },
@@ -287,7 +287,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-consec-1',
     section: 'consecutive_run',
-    displayPattern: '111 22 3333 44 555',
+    displayPattern: '111 22 3333 44 555 -or- 555 66 7777 88 999',
     patterns: check14([
       { groups: [pung(s(1), 'green'), pair(s(2), 'green'), kong(s(3), 'green'), pair(s(4), 'green'), pung(s(5), 'green')] },
       { groups: [pung(s(5), 'green'), pair(s(6), 'green'), kong(s(7), 'green'), pair(s(8), 'green'), pung(s(9), 'green')] },
@@ -309,7 +309,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-consec-3',
     section: 'consecutive_run',
-    displayPattern: 'FF 1111 2222 3333',
+    displayPattern: 'FF 1111 2222 3333 -or- FF 1111 2222 3333',
     patterns: check14([
       { groups: [pair(fl, 'blue'), kong(s(1), 'green'), kong(s(2), 'green'), kong(s(3), 'green')], numberConstraint: { type: 'any_run', length: 3 } },
       { groups: [pair(fl, 'blue'), kong(s(1), 'red'), kong(s(2), 'green'), kong(s(3), 'red')], numberConstraint: { type: 'any_run', length: 3 } },
@@ -353,7 +353,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-consec-7',
     section: 'consecutive_run',
-    displayPattern: '111 222 3333 4444',
+    displayPattern: '111 222 3333 4444 -or- 111 222 3333 4444',
     patterns: check14([
       { groups: [pung(s(1), 'green'), pung(s(2), 'green'), kong(s(3), 'green'), kong(s(4), 'green')], numberConstraint: { type: 'any_run', length: 4 } },
       { groups: [pung(s(1), 'green'), pung(s(2), 'red'), kong(s(3), 'green'), kong(s(4), 'red')], numberConstraint: { type: 'any_run', length: 4 } },
@@ -378,7 +378,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-13579-1',
     section: '13579',
-    displayPattern: '111 33 5555 77 999',
+    displayPattern: '111 33 5555 77 999 -or- 111 33 5555 77 999',
     patterns: check14([
       { groups: [pung(s(1), 'green'), pair(s(3), 'green'), kong(s(5), 'green'), pair(s(7), 'green'), pung(s(9), 'green')] },
       { groups: [pung(s(1), 'red'), pair(s(3), 'red'), kong(s(5), 'red'), pair(s(7), 'red'), pung(s(9), 'red')] },
@@ -389,7 +389,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-13579-2',
     section: '13579',
-    displayPattern: '111 333 3333 5555',
+    displayPattern: '111 333 3333 5555 -or- 555 777 7777 9999',
     patterns: check14([
       { groups: [pung(s(1), 'green'), pung(s(3), 'red'), kong(s(3), 'red'), kong(s(5), 'red')] },
       { groups: [pung(s(5), 'green'), pung(s(7), 'red'), kong(s(7), 'red'), kong(s(9), 'red')] },
@@ -400,7 +400,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-13579-3',
     section: '13579',
-    displayPattern: 'FF 11 333 5555 DDD',
+    displayPattern: 'FF 11 333 5555 DDD -or- FF 55 777 9999 DDD',
     patterns: check14([
       { groups: [pair(fl, 'blue'), pair(s(1), 'green'), pung(s(3), 'green'), kong(s(5), 'green'), pung(dMatch, 'green')] },
       { groups: [pair(fl, 'blue'), pair(s(5), 'green'), pung(s(7), 'green'), kong(s(9), 'green'), pung(dMatch, 'green')] },
@@ -421,7 +421,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-13579-5',
     section: '13579',
-    displayPattern: 'FFFF 3333 x 5555 = 15',
+    displayPattern: 'FFFF 3333 x 5555 = 15 -or- FFFF 5555 x 7777 = 35',
     patterns: check14([
       { groups: [kong(fl, 'blue'), kong(s(3), 'green'), kong(s(5), 'red'), mixed([s(1), s(5)], 'blue')] },
       { groups: [kong(fl, 'blue'), kong(s(5), 'green'), kong(s(7), 'red'), mixed([s(3), s(5)], 'blue')] },
@@ -432,7 +432,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-13579-6',
     section: '13579',
-    displayPattern: '11 33 333 555 DDDD',
+    displayPattern: '11 33 333 555 DDDD -or- 55 77 777 999 DDDD',
     patterns: check14([
       { groups: [pair(s(1), 'green'), pair(s(3), 'green'), pung(s(3), 'red'), pung(s(5), 'red'), kong(dMatch, 'blue')] },
       { groups: [pair(s(5), 'green'), pair(s(7), 'green'), pung(s(7), 'red'), pung(s(9), 'red'), kong(dMatch, 'blue')] },
@@ -443,7 +443,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-13579-7',
     section: '13579',
-    displayPattern: '111 33 555 333 333',
+    displayPattern: '111 33 555 333 333 -or- 555 77 999 777 777',
     patterns: check14([
       { groups: [pung(s(1), 'green'), pair(s(3), 'green'), pung(s(5), 'green'), pung(s(3), 'red'), pung(s(3), 'blue')] },
       { groups: [pung(s(5), 'green'), pair(s(7), 'green'), pung(s(9), 'green'), pung(s(7), 'red'), pung(s(7), 'blue')] },
@@ -457,7 +457,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-wd-1',
     section: 'winds_dragons',
-    displayPattern: 'NNNN EEE WWW SSSS',
+    displayPattern: 'NNNN EEE WWW SSSS -or- NNN EEEE WWWW SSS',
     patterns: check14([
       { groups: [kong(wN, 'blue'), pung(wE, 'blue'), pung(wW, 'blue'), kong(wS, 'blue')] },
       { groups: [pung(wN, 'blue'), kong(wE, 'blue'), kong(wW, 'blue'), pung(wS, 'blue')] },
@@ -477,7 +477,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-wd-3',
     section: 'winds_dragons',
-    displayPattern: 'NNN SSS 1111 2222',
+    displayPattern: 'NNN SSS 1111 2222 -or- EEE WWW 1111 2222',
     patterns: check14([
       { groups: [pung(wN, 'blue'), pung(wS, 'blue'), kong(s(1), 'green'), kong(s(2), 'red')], numberConstraint: { type: 'any_run', length: 2 } },
       { groups: [pung(wE, 'blue'), pung(wW, 'blue'), kong(s(1), 'green'), kong(s(2), 'red')], numberConstraint: { type: 'any_run', length: 2 } },
@@ -497,7 +497,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-wd-5',
     section: 'winds_dragons',
-    displayPattern: 'NNNN 11 22 33 SSSS',
+    displayPattern: 'NNNN 11 22 33 SSSS -or- EEEE 11 22 33 WWWW',
     patterns: check14([
       { groups: [kong(wN, 'blue'), pair(s(1), 'green'), pair(s(2), 'green'), pair(s(3), 'green'), kong(wS, 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
       { groups: [kong(wE, 'blue'), pair(s(1), 'green'), pair(s(2), 'green'), pair(s(3), 'green'), kong(wW, 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
@@ -532,7 +532,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-369-1',
     section: '369',
-    displayPattern: '333 666 6666 9999',
+    displayPattern: '333 666 6666 9999 -or- 333 666 6666 9999',
     patterns: check14([
       { groups: [pung(s(3), 'green'), pung(s(6), 'green'), kong(s(6), 'green'), kong(s(9), 'green')] },
       { groups: [pung(s(3), 'green'), pung(s(6), 'red'), kong(s(6), 'red'), kong(s(9), 'red')] },
@@ -543,7 +543,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-369-2',
     section: '369',
-    displayPattern: 'FF 3 66 999 333 333',
+    displayPattern: 'FF 3 66 999 333 333 -or- FF 3 66 999 666 666 -or- FF 3 66 999 999 999',
     patterns: check14([
       // Like pungs of 3
       { groups: [pair(fl, 'blue'), single(s(3), 'green'), pair(s(6), 'green'), pung(s(9), 'green'), pung(s(3), 'red'), pung(s(3), 'blue')] },
@@ -558,7 +558,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-369-3',
     section: '369',
-    displayPattern: 'FF 3333 6666 9999',
+    displayPattern: 'FF 3333 6666 9999 -or- FF 3333 6666 9999',
     patterns: check14([
       { groups: [pair(fl, 'blue'), kong(s(3), 'green'), kong(s(6), 'green'), kong(s(9), 'green')] },
       { groups: [pair(fl, 'blue'), kong(s(3), 'red'), kong(s(6), 'green'), kong(s(9), 'red')] },
@@ -640,7 +640,7 @@ const hands: HandDefinition[] = [
   {
     id: '2024-sp-3',
     section: 'singles_pairs',
-    displayPattern: '112 11223 112233',
+    displayPattern: '112 11223 112233 -or- 998 99887 998877',
     patterns: check14([
       { groups: [mixed([s(1), s(1), s(2)], 'green'), mixed([s(1), s(1), s(2), s(2), s(3)], 'red'), mixed([s(1), s(1), s(2), s(2), s(3), s(3)], 'blue')] },
       { groups: [mixed([s(9), s(9), s(8)], 'green'), mixed([s(9), s(9), s(8), s(8), s(7)], 'red'), mixed([s(9), s(9), s(8), s(8), s(7), s(7)], 'blue')] },

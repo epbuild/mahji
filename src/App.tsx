@@ -4,7 +4,7 @@ import HomePage from "./pages/HomePage";
 import LearnPage from "./pages/LearnPage";
 import PracticePage from "./pages/PracticePage";
 import PlayPage from "./pages/PlayPage";
-import ShopPage from "./pages/ShopPage";
+import StatsPage from "./pages/StatsPage";
 import BamPage from "./pages/BamPage";
 import ProfilePage from "./pages/ProfilePage";
 import { C, getThemeColors } from "./constants/colors";
@@ -40,7 +40,6 @@ function AppInner() {
   const [prevPage, setPrevPage] = useState("home");
   const [showChat, setShowChat] = useState(false);
   const [signedIn, setSignedIn] = useState(true);
-  const [cart, setCart] = useState([]);
   const [showSplash, setShowSplash] = useState(true);
   const [splashDone, setSplashDone] = useState(false);
   const [entrancePlayed, setEntrancePlayed] = useState(false);
@@ -58,7 +57,6 @@ function AppInner() {
   const onProfile = () => { setPrevPage(page); setPage("profile"); };
   const onSignOut = () => { setSignedIn(false); setPage("home"); };
   const onSignIn = () => { setSignedIn(true); };
-  const onCart = () => {};
 
   const handleSplashDone = () => {
     setSplashDone(true);
@@ -90,17 +88,17 @@ function AppInner() {
 
       <div className="app-container" style={{ opacity: splashDone ? 1 : 0, transition: "opacity 0.4s ease" }}>
         {page !== "profile" && (
-          <DesktopHeader page={page} onNav={onNav} onHome={onHome} onProfile={onProfile} cartCount={cart.length} onCart={onCart} />
+          <DesktopHeader page={page} onNav={onNav} onHome={onHome} onProfile={onProfile} />
         )}
         {page !== "profile" && (
-          <MobileHeader onHome={onHome} onProfile={onProfile} isHome={page === "home"} cartCount={cart.length} onCart={onCart} page={page} />
+          <MobileHeader onHome={onHome} onProfile={onProfile} isHome={page === "home"} page={page} />
         )}
 
         {page === "home" && <HomePage onNav={onNav} signedIn={signedIn} />}
         {page === "learn" && <LearnPage key={navKey} showChat={showChat} setShowChat={setShowChat} />}
         {page === "practice" && <PracticePage key={navKey} showChat={showChat} setShowChat={setShowChat} />}
         {page === "play" && <PlayPage />}
-        {page === "shop" && <ShopPage key={navKey} cart={cart} setCart={setCart} />}
+        {page === "stats" && <StatsPage key={navKey} />}
         {page === "bam" && <BamPage />}
         {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
 

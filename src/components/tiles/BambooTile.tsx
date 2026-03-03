@@ -5,7 +5,7 @@ const BAM_COLS = ['#7FBFB3','#89B4D4','#B8A9C9','#8B7355'];
 const BAM_DARK = ['#5A9E93','#6A9AB8','#9484A8','#6B5540'];
 
 const BirdSvg = () => (
-  <svg viewBox="0 0 68 96" width="68" height="96">
+  <svg viewBox="0 0 68 96" width="54" height="76">
     <rect x="30" y="48" width="7" height="46" rx="3.5" fill="#7FBFB3"/>
     <rect x="28" y="58" width="11" height="3" rx="1.5" fill="#5A9E93"/>
     <rect x="28" y="70" width="11" height="3" rx="1.5" fill="#5A9E93"/>
@@ -86,16 +86,21 @@ function StalksSvg({ count }: { count: number }) {
     }
   }
 
-  return <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h}>{elements}</svg>;
+  return <svg viewBox={`0 0 ${w} ${h}`} width={54} height={76}>{elements}</svg>;
 }
 
 interface BambooTileProps { number: number; size?: string; }
 
-export const BambooTile: React.FC<BambooTileProps> = ({ number }) => (
-  <>
-    <div className="absolute top-1 right-1.5 text-xs font-bold" style={{ fontFamily: "'Bodoni Moda', serif", color: '#2E8B57' }}>
-      {number}
-    </div>
-    {number === 1 ? <BirdSvg /> : <StalksSvg count={number} />}
-  </>
-);
+export const BambooTile: React.FC<BambooTileProps> = ({ number }) => {
+  return (
+    <>
+      <div
+        className="absolute top-1 right-1.5 text-xs font-bold z-10"
+        style={{ fontFamily: "'Bodoni Moda', serif", color: '#2E8B57', background: 'rgba(255,255,255,0.9)', padding: '0 2px', borderRadius: 2, lineHeight: 1.1 }}
+      >
+        {number}
+      </div>
+      {number === 1 ? <BirdSvg /> : <StalksSvg count={number} />}
+    </>
+  );
+};

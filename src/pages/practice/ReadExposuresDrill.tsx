@@ -52,7 +52,7 @@ const CARD_COLOR_HEX: Record<CardColor, string> = {
   blue: "#4A7FA8",
 };
 
-const OPERATOR_TOKENS = new Set(["+", "=", "or", "OR", "-or-"]);
+const OPERATOR_TOKENS = new Set(["+", "=", "x", "or", "OR", "-or-"]);
 
 const uiT = {
   light: {
@@ -285,39 +285,54 @@ function computeScore(selectedIds: Set<string>, correctIds: Set<string>): ScoreR
 // ─── COLORED PATTERN SUB-COMPONENT ───────────────────────────
 
 function ColoredPattern({ hand, isDark, fontSize = 12 }: { hand: HandDefinition; isDark: boolean; fontSize?: number }) {
-  const pattern = hand.patterns[0];
-  const tokens = hand.displayPattern.split(" ");
   const defaultColor = isDark ? "#F0EAF6" : "#2D1B4E";
+  const opColor = isDark ? "#7E6A9A" : "#9688AA";
 
-  if (!pattern) {
+  // Render a half of the pattern (before or after -or-) using a specific pattern's group colors
+  const renderHalf = (text: string, pattern: HandPattern | undefined, keyPrefix: string) => {
+    const tokens = text.split(" ");
+    let groupIdx = 0;
+    return tokens.map((token, i) => {
+      const isOp = OPERATOR_TOKENS.has(token);
+      let color = defaultColor;
+      if (!isOp && pattern && groupIdx < pattern.groups.length) {
+        color = CARD_COLOR_HEX[pattern.groups[groupIdx].color] || defaultColor;
+        groupIdx++;
+      } else if (isOp) {
+        color = opColor;
+      }
+      return (
+        <React.Fragment key={`${keyPrefix}-${i}`}>
+          {i > 0 && <span style={{ letterSpacing: 2 }}>{" "}</span>}
+          <span style={{ color }}>{token}</span>
+        </React.Fragment>
+      );
+    });
+  };
+
+  if (!hand.patterns[0]) {
     return <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, color: defaultColor }}>{hand.displayPattern}</span>;
   }
 
-  // Map non-operator tokens to groups
-  let groupIdx = 0;
-  const rendered = tokens.map((token, i) => {
-    const isOp = OPERATOR_TOKENS.has(token);
-    let color = defaultColor;
-
-    if (!isOp && groupIdx < pattern.groups.length) {
-      const group = pattern.groups[groupIdx];
-      color = CARD_COLOR_HEX[group.color] || defaultColor;
-      groupIdx++;
-    } else if (isOp) {
-      color = isDark ? "#7E6A9A" : "#9688AA";
-    }
-
+  // Check for -or- alternatives: render each part with its own pattern's colors
+  const orParts = hand.displayPattern.split(" -or- ");
+  if (orParts.length >= 2 && hand.patterns.length >= orParts.length) {
     return (
-      <React.Fragment key={i}>
-        {i > 0 && <span style={{ letterSpacing: 2 }}>{" "}</span>}
-        <span style={{ color }}>{token}</span>
-      </React.Fragment>
+      <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
+        {orParts.map((part, pi) => (
+          <React.Fragment key={`or-${pi}`}>
+            {pi > 0 && <span style={{ color: opColor, fontSize: fontSize * 0.85 }}>{" -or- "}</span>}
+            {renderHalf(part, hand.patterns[pi], `P${pi}`)}
+          </React.Fragment>
+        ))}
+      </span>
     );
-  });
+  }
 
+  // Single pattern rendering
   return (
     <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
-      {rendered}
+      {renderHalf(hand.displayPattern, hand.patterns[0], "S")}
     </span>
   );
 }
@@ -393,7 +408,7 @@ export default function ReadExposuresDrill({ onBack }: Props) {
   // ── SETUP SCREEN ──────────────────────────────────────────
   if (phase === "setup") {
     return (
-      <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif" }}>
+      <div style={{ flex: 1, background: U.bg, display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif" }}>
         <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
           <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontWeight: 600 }}>← Back</button>
         </div>
@@ -434,10 +449,12 @@ export default function ReadExposuresDrill({ onBack }: Props) {
 
   // ── PLAYING & RESULTS SCREEN ──────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif" }}>
+    <div className="re-drill-root" style={{ flex: 1, background: U.bg, display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif", overflow: "hidden" }}>
 
-      {/* ── CSS Animations ── */}
+      {/* ── CSS Animations + responsive padding ── */}
       <style>{`
+        .re-drill-root { padding-bottom: 80px; }
+        @media (min-width: 768px) { .re-drill-root { padding-bottom: 0; } }
         @keyframes entranceFade {
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
@@ -449,7 +466,7 @@ export default function ReadExposuresDrill({ onBack }: Props) {
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
+      <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}`, flexShrink: 0 }}>
         <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontWeight: 600 }}>← Back</button>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 9, color: U.textLight, fontWeight: 500 }}>{cardYear} Card</span>
@@ -458,35 +475,27 @@ export default function ReadExposuresDrill({ onBack }: Props) {
         </div>
       </div>
 
-      {/* Title */}
-      <div style={{ textAlign: "center", padding: "8px 14px 4px" }}>
-        <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 17, fontWeight: 700, color: U.cherry, letterSpacing: 3, margin: 0 }}>READING EXPOSURES</h1>
-        <p style={{ fontSize: 9, color: U.textMid, margin: "2px 0 0" }}>
-          {phase === "playing" ? "What hand could produce these melds?" : "Results"}
-        </p>
-      </div>
-
-      {/* ── Exposed Melds Card ── */}
+      {/* ── Exposed Melds — single row, compact ── */}
       {puzzle && (
         <div style={{
-          margin: "4px 12px 8px", padding: "14px 16px", borderRadius: 16,
+          margin: "4px 12px 6px", padding: "8px 12px", borderRadius: 14,
           background: U.cardBg, border: `1px solid ${U.cBorder}`,
-          boxShadow: U.cardShadow,
+          boxShadow: U.cardShadow, flexShrink: 0,
           animation: "entranceFade 0.3s ease both",
         }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 8, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 }}>
             Opponent's Exposures
           </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: 5, flexWrap: "nowrap", justifyContent: "center", alignItems: "center", overflowX: "auto" }}>
             {puzzle.melds.map((meld, mi) => (
               <div key={mi} style={{
-                display: "inline-flex", gap: 2, padding: "6px 8px",
-                background: U.meldBg, borderRadius: 10,
+                display: "inline-flex", gap: 1, padding: "2px 3px",
+                background: U.meldBg, borderRadius: 5,
                 border: `1px solid ${U.cBorder}`,
               }}>
                 {meld.tiles.map((tile, ti) => (
                   <div key={ti} style={{ pointerEvents: "none" }}>
-                    <MahjiTile tileId={tile.id} size="sm" />
+                    <MahjiTile tileId={tile.id} size="xs" />
                   </div>
                 ))}
               </div>
@@ -579,9 +588,7 @@ export default function ReadExposuresDrill({ onBack }: Props) {
               ) : (
                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
-                    <div style={{ fontSize: 13, color: U.textMid, fontWeight: 500 }}>Pick a section above</div>
-                    <div style={{ fontSize: 10, color: U.textLight, marginTop: 4 }}>Find all matching hands</div>
+                    <div style={{ fontSize: 12, color: U.textMid, fontWeight: 500, fontStyle: "italic" }}>Select a section to browse hands</div>
                   </div>
                 </div>
               )}
@@ -670,18 +677,11 @@ export default function ReadExposuresDrill({ onBack }: Props) {
             <div style={{ flex: 1, overflow: "auto", padding: "0 12px" }}>
               {/* Score banner — compact */}
               <div style={{ textAlign: "center", padding: "10px 0 8px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                  <span style={{ fontSize: 28 }}>
-                    {scoreResult.score === 100 ? "🎯" : scoreResult.score >= 80 ? "✨" : scoreResult.score >= 50 ? "👍" : "📚"}
-                  </span>
-                  <div>
-                    <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 24, fontWeight: 700, color: scoreResult.score >= 80 ? U.seafoam : scoreResult.score >= 50 ? U.amber : U.cherry, lineHeight: 1 }}>
-                      {scoreResult.score}%
-                    </div>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: U.text }}>
-                      {scoreResult.score === 100 ? "Perfect!" : scoreResult.score >= 80 ? "Great!" : scoreResult.score >= 50 ? "Good try" : "Keep studying"}
-                    </div>
-                  </div>
+                <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 28, fontWeight: 700, color: scoreResult.score >= 80 ? U.seafoam : scoreResult.score >= 50 ? U.amber : U.cherry, lineHeight: 1 }}>
+                  {scoreResult.score}%
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 500, color: U.textMid, marginTop: 4, letterSpacing: 0.5, fontStyle: "italic" }}>
+                  {scoreResult.score === 100 ? "Flawless read" : scoreResult.score >= 80 ? "Sharp eye" : scoreResult.score >= 50 ? "Getting closer" : "Worth another look"}
                 </div>
                 <div style={{ fontSize: 9, color: U.textLight, marginTop: 4 }}>
                   {puzzle!.correctHandIds.size} possible hand{puzzle!.correctHandIds.size !== 1 ? "s" : ""} for these exposures
@@ -734,23 +734,17 @@ export default function ReadExposuresDrill({ onBack }: Props) {
               </div>
             </div>
 
-            {/* Pinned action buttons */}
+            {/* Pinned action button */}
             <div style={{
-              padding: "8px 12px 16px", borderTop: `1px solid ${U.cBorder}`,
+              padding: "8px 12px 12px", borderTop: `1px solid ${U.cBorder}`,
               background: U.chrome, flexShrink: 0,
-              display: "flex", gap: 8,
+              display: "flex", justifyContent: "center",
             }}>
               <button onClick={nextRound} style={{
-                flex: 1, padding: "12px 0", borderRadius: 20, border: "none",
-                background: U.cherry, color: "#fff", fontSize: 13, fontWeight: 600,
-                cursor: "pointer", transition: "all 0.2s",
+                padding: "9px 36px", borderRadius: 20, border: "none",
+                background: U.seafoam, color: "#fff", fontSize: 12, fontWeight: 600,
+                cursor: "pointer", transition: "all 0.2s", letterSpacing: 0.3,
               }}>Next Round →</button>
-              <button onClick={onBack} style={{
-                flex: 1, padding: "12px 0", borderRadius: 20,
-                border: `1px solid ${U.btnBorder}`, background: U.btnBg,
-                color: U.btnText, fontSize: 13, fontWeight: 600,
-                cursor: "pointer", transition: "all 0.2s",
-              }}>← Practice</button>
             </div>
           </div>
         );

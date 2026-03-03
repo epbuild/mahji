@@ -18,8 +18,63 @@ import {
   SECTION_LABELS, SECTION_ORDER,
 } from "../../data/nmjl";
 import type {
-  NMJLCard, HandDefinition, HandPattern, ColorAssignment, TileGroup,
+  NMJLCard, HandDefinition, HandPattern, ColorAssignment, TileGroup, CardColor,
 } from "../../data/nmjl";
+
+// ─── COLORED PATTERN ─────────────────────────────────────────
+
+const CARD_COLOR_HEX: Record<CardColor, string> = {
+  red: "#C2413B", green: "#2E8B57", blue: "#4A7FA8",
+};
+const OPERATOR_TOKENS = new Set(["+", "=", "x", "or", "OR", "-or-"]);
+
+function ColoredPattern({ hand, isDark, fontSize = 12 }: { hand: HandDefinition; isDark: boolean; fontSize?: number }) {
+  const defaultColor = isDark ? "#F0EAF6" : "#2D1B4E";
+  const opColor = isDark ? "#7E6A9A" : "#9688AA";
+
+  const renderHalf = (text: string, pattern: HandPattern | undefined, keyPrefix: string) => {
+    const tokens = text.split(" ");
+    let groupIdx = 0;
+    return tokens.map((token, i) => {
+      const isOp = OPERATOR_TOKENS.has(token);
+      let color = defaultColor;
+      if (!isOp && pattern && groupIdx < pattern.groups.length) {
+        color = CARD_COLOR_HEX[pattern.groups[groupIdx].color] || defaultColor;
+        groupIdx++;
+      } else if (isOp) { color = opColor; }
+      return (
+        <React.Fragment key={`${keyPrefix}-${i}`}>
+          {i > 0 && <span style={{ letterSpacing: 2 }}>{" "}</span>}
+          <span style={{ color }}>{token}</span>
+        </React.Fragment>
+      );
+    });
+  };
+
+  if (!hand.patterns[0]) {
+    return <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, color: defaultColor }}>{hand.displayPattern}</span>;
+  }
+
+  const orParts = hand.displayPattern.split(" -or- ");
+  if (orParts.length >= 2 && hand.patterns.length >= orParts.length) {
+    return (
+      <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
+        {orParts.map((part, pi) => (
+          <React.Fragment key={`or-${pi}`}>
+            {pi > 0 && <div style={{ color: opColor, fontSize: fontSize * 0.7, margin: "2px 0" }}>-or-</div>}
+            <div style={{ whiteSpace: "nowrap" }}>{renderHalf(part, hand.patterns[pi], `P${pi}`)}</div>
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize, fontWeight: 600, letterSpacing: 0.5 }}>
+      {renderHalf(hand.displayPattern, hand.patterns[0], "S")}
+    </span>
+  );
+}
 
 // ─── TYPES ────────────────────────────────────────────────────
 
@@ -180,7 +235,7 @@ function TileCard({ tile, selected, onTap, disabled, cherry, isDragging = false,
         flexShrink: 0,
       }}
     >
-      <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size="md" /></div>
+      <div style={{ pointerEvents: "none" }}><MahjiTile tileId={tile.id} size="xs" /></div>
     </div>
   );
 }
@@ -249,8 +304,8 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
     // Build slot array (14 nulls)
     setBuildSlots(new Array(14).fill(null));
 
-    // Bank: correct tiles + distractors
-    const distractors = generateDistractors(result.tiles, 12);
+    // Bank: correct tiles + distractors (24 total = 3 clean rows of 8 on mobile)
+    const distractors = generateDistractors(result.tiles, 24 - result.tiles.length);
     setBankTiles(shuffleArray([...result.tiles, ...distractors]));
 
     setSelectedBankTile(null);
@@ -392,7 +447,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
   // ── SETUP SCREEN ──
   if (phase === "setup") {
     return (
-      <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, background: U.bg, display: "flex", flexDirection: "column", overflow: "auto" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 8px" }}>
           <div onClick={onBack} style={{ cursor: "pointer", fontSize: 13, color: U.textMid, fontWeight: 500 }}>‹ Back</div>
@@ -453,7 +508,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: U.bg, display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: 1, background: U.bg, display: "flex", flexDirection: "column", overflow: "auto", paddingBottom: 80 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 8px" }}>
         <div onClick={onBack} style={{ cursor: "pointer", fontSize: 13, color: U.textMid, fontWeight: 500 }}>‹ Back</div>
@@ -484,8 +539,8 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
             <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>
               {SECTION_LABELS[targetHand.section]} · {targetHand.points} pts · {targetHand.exposure === "C" ? "Concealed" : "Exposed"}
             </div>
-            <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 22, color: U.text, fontWeight: 600, letterSpacing: 2, marginBottom: targetHand.description ? 4 : 0 }}>
-              {targetHand.displayPattern}
+            <div style={{ marginBottom: targetHand.description ? 4 : 0 }}>
+              <ColoredPattern hand={targetHand} isDark={isDark} fontSize={22} />
             </div>
             {targetHand.description && (
               <div style={{ fontSize: 11, color: U.textMid, fontStyle: "italic" }}>{targetHand.description}</div>
@@ -675,7 +730,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
         </div>
       </div>
 
-      <div style={{ height: 20 }} />
+      <div style={{ height: 90, flexShrink: 0 }} />
     </div>
   );
 }

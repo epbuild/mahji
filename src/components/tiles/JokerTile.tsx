@@ -18,13 +18,13 @@ export const JokerTile: React.FC<JokerTileProps> = ({ index }) => {
   const c = STAR_COLS[(index - 1) % 8];
   return (
     <div className="flex flex-col items-center justify-center" style={{ background: 'linear-gradient(180deg, #FBF8FE 0%, #F8F4FB 100%)', borderRadius: 'inherit', width: '100%', height: '100%' }}>
-      <span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 13, fontWeight: 700, fontStyle: 'italic', letterSpacing: 3, color: c.star }}>
+      <span style={{ fontFamily: "'Bodoni Moda', serif", fontSize: 10, fontWeight: 700, fontStyle: 'italic', letterSpacing: 1.5, color: c.star }}>
         JOKER
       </span>
-      <svg viewBox="0 0 12 12" width="12" height="12" className="my-0.5">
+      <svg viewBox="0 0 12 12" width="10" height="10" style={{ margin: '1px 0' }}>
         <polygon points="6,0 7.5,4 12,4 8.5,7 9.5,12 6,9 2.5,12 3.5,7 0,4 4.5,4" fill={c.trail} opacity="0.5"/>
       </svg>
-      <svg viewBox="0 0 66 50" width="66" height="50">
+      <svg viewBox="0 0 66 50" width={44} height={34}>
         <path d="M8 40 Q20 32 30 26 Q38 22 42 18" fill="none" stroke={c.trail} strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
         <path d="M12 42 Q22 34 32 28 Q40 24 44 20" fill="none" stroke={c.trail} strokeWidth="1.5" strokeLinecap="round" opacity="0.3"/>
         <circle cx="14" cy="38" r="1" fill={c.trail} opacity="0.4"/>
