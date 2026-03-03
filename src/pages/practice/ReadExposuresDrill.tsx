@@ -525,120 +525,127 @@ export default function ReadExposuresDrill({ onBack }: Props) {
             </div>
           </div>
 
-          {/* Hand list */}
-          {activeSection && (
+          {/* Two-column body: Hand browser (left) + Selected hands (right) */}
+          <div style={{ flex: 1, display: "flex", overflow: "hidden", gap: 0 }}>
+
+            {/* LEFT: Hand browser */}
             <div style={{
-              flex: 1, overflow: "auto", padding: "0 12px 8px",
-              animation: "entranceFade 0.2s ease both",
+              flex: selectedHandIds.size > 0 ? "0 0 58%" : "1 1 100%",
+              overflow: "auto", padding: "0 0 8px 12px",
+              transition: "flex 0.25s ease",
             }}>
-              <div style={{
-                background: U.cardBg, border: `1px solid ${U.cBorder}`,
-                borderRadius: 14, overflow: "hidden",
-              }}>
-                {sectionHands.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: 20, fontSize: 11, color: U.textLight }}>No exposable hands in this section</div>
-                ) : (
-                  sectionHands.map((hand, i) => {
-                    const isSelected = selectedHandIds.has(hand.id);
-                    return (
-                      <div key={hand.id} onClick={() => toggleHand(hand.id)} style={{
-                        display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-                        cursor: "pointer",
-                        background: isSelected ? (isDark ? "rgba(109,191,168,0.1)" : "rgba(109,191,168,0.06)") : "transparent",
-                        borderBottom: i < sectionHands.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
-                        transition: "background 0.15s",
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <ColoredPattern hand={hand} isDark={isDark} />
-                          <div style={{ display: "flex", gap: 8, marginTop: 3 }}>
-                            <span style={{ fontSize: 8, color: U.textLight }}>{hand.points}pts</span>
-                            {hand.exposure === "X" && (
-                              <span style={{ fontSize: 7, color: U.seafoam, fontWeight: 600, background: isDark ? "rgba(109,191,168,0.12)" : "rgba(109,191,168,0.08)", padding: "1px 5px", borderRadius: 4 }}>EXPOSED</span>
-                            )}
+              {activeSection ? (
+                <div style={{
+                  background: U.cardBg, border: `1px solid ${U.cBorder}`,
+                  borderRadius: 14, overflow: "hidden",
+                  marginRight: selectedHandIds.size > 0 ? 0 : 12,
+                  animation: "entranceFade 0.2s ease both",
+                }}>
+                  {sectionHands.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: 20, fontSize: 11, color: U.textLight }}>No exposable hands in this section</div>
+                  ) : (
+                    sectionHands.map((hand, i) => {
+                      const isSelected = selectedHandIds.has(hand.id);
+                      return (
+                        <div key={hand.id} onClick={() => toggleHand(hand.id)} style={{
+                          display: "flex", alignItems: "center", gap: 6, padding: "10px 10px",
+                          cursor: "pointer",
+                          background: isSelected ? (isDark ? "rgba(109,191,168,0.1)" : "rgba(109,191,168,0.06)") : "transparent",
+                          borderBottom: i < sectionHands.length - 1 ? `0.5px solid ${U.cBorder}` : "none",
+                          transition: "background 0.15s",
+                        }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <ColoredPattern hand={hand} isDark={isDark} fontSize={11} />
+                            <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                              <span style={{ fontSize: 7, color: U.textLight }}>{hand.points}pts</span>
+                            </div>
+                          </div>
+                          <div style={{
+                            width: 26, height: 26, borderRadius: "50%",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            background: isSelected ? U.seafoam : U.btnBg,
+                            border: `1.5px solid ${isSelected ? U.seafoam : U.btnBorder}`,
+                            color: isSelected ? "#fff" : U.btnText,
+                            fontSize: 14, fontWeight: 700, flexShrink: 0,
+                            transition: "all 0.15s",
+                          }}>
+                            {isSelected ? "✓" : "+"}
                           </div>
                         </div>
-                        <div style={{
-                          width: 30, height: 30, borderRadius: "50%",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          background: isSelected ? U.seafoam : U.btnBg,
-                          border: `1.5px solid ${isSelected ? U.seafoam : U.btnBorder}`,
-                          color: isSelected ? "#fff" : U.btnText,
-                          fontSize: 16, fontWeight: 700, flexShrink: 0,
-                          transition: "all 0.15s",
-                        }}>
-                          {isSelected ? "✓" : "+"}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* No section selected — show prompt */}
-          {!activeSection && (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
-                <div style={{ fontSize: 13, color: U.textMid, fontWeight: 500 }}>Pick a section above to start browsing</div>
-                <div style={{ fontSize: 10, color: U.textLight, marginTop: 4 }}>Find all hands that could match the exposed melds</div>
-              </div>
-            </div>
-          )}
-
-          {/* Selected hands tray + validate */}
-          <div style={{
-            padding: "8px 12px 16px", borderTop: `1px solid ${U.cBorder}`,
-            background: U.chrome, flexShrink: 0,
-          }}>
-            {/* Selected count & list */}
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: U.text, marginBottom: 4 }}>
-                Selected ({selectedHandIds.size})
-              </div>
-              {selectedHandIds.size === 0 ? (
-                <div style={{ fontSize: 9, color: U.textLight, fontStyle: "italic" }}>No hands selected yet</div>
+                      );
+                    })
+                  )}
+                </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                    <div style={{ fontSize: 13, color: U.textMid, fontWeight: 500 }}>Pick a section above</div>
+                    <div style={{ fontSize: 10, color: U.textLight, marginTop: 4 }}>Find all matching hands</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT: Selected hands column — slides in when selections exist */}
+            {selectedHandIds.size > 0 && (
+              <div style={{
+                flex: "0 0 42%", display: "flex", flexDirection: "column",
+                borderLeft: `1px solid ${U.cBorder}`,
+                background: isDark ? "rgba(37,21,69,0.5)" : "rgba(107,63,160,0.02)",
+                animation: "entranceFade 0.2s ease both",
+              }}>
+                {/* Header */}
+                <div style={{
+                  padding: "8px 10px 6px", borderBottom: `1px solid ${U.cBorder}`,
+                  background: isDark ? "rgba(109,191,168,0.06)" : "rgba(109,191,168,0.03)",
+                }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: U.seafoam, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                    Selected ({selectedHandIds.size})
+                  </div>
+                </div>
+
+                {/* Selected hand list */}
+                <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
                   {[...selectedHandIds].map(id => {
                     const hand = card?.hands.find(h => h.id === id);
                     if (!hand) return null;
                     return (
                       <div key={id} style={{
-                        display: "flex", alignItems: "center", gap: 8, padding: "5px 8px",
-                        background: isDark ? "rgba(109,191,168,0.06)" : "rgba(109,191,168,0.04)",
-                        borderRadius: 8, border: `0.5px solid ${isDark ? "rgba(109,191,168,0.15)" : "rgba(109,191,168,0.1)"}`,
+                        display: "flex", alignItems: "center", gap: 4, padding: "6px 8px",
+                        borderBottom: `0.5px solid ${U.cBorder}`,
                         animation: "entranceFade 0.15s ease both",
                       }}>
-                        <div style={{ flex: 1 }}>
-                          <ColoredPattern hand={hand} isDark={isDark} fontSize={10} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <ColoredPattern hand={hand} isDark={isDark} fontSize={9} />
+                          <div style={{ fontSize: 7, color: U.textLight, marginTop: 1 }}>
+                            {SECTION_LABELS[hand.section]}
+                          </div>
                         </div>
-                        <span style={{ fontSize: 7, color: U.textLight }}>{SECTION_LABELS[hand.section]}</span>
                         <div onClick={(e) => { e.stopPropagation(); toggleHand(id); }} style={{
-                          width: 22, height: 22, borderRadius: "50%",
+                          width: 20, height: 20, borderRadius: "50%",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           background: "rgba(224,48,80,0.08)", border: "1px solid rgba(224,48,80,0.2)",
-                          color: U.cherry, fontSize: 12, fontWeight: 700, cursor: "pointer",
-                          transition: "all 0.15s",
-                        }}>−</div>
+                          color: U.cherry, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                          flexShrink: 0, transition: "all 0.15s",
+                        }}>×</div>
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
 
-            {/* Validate button */}
-            <button onClick={validate} disabled={selectedHandIds.size === 0} style={{
-              width: "100%", padding: "14px 0", borderRadius: 24, border: "none",
-              background: selectedHandIds.size > 0 ? U.seafoam : U.btnBg,
-              color: selectedHandIds.size > 0 ? "#fff" : U.textLight,
-              fontSize: 14, fontWeight: 600, letterSpacing: 0.5,
-              cursor: selectedHandIds.size > 0 ? "pointer" : "not-allowed",
-              transition: "all 0.2s",
-              boxShadow: selectedHandIds.size > 0 ? "0 2px 12px rgba(109,191,168,0.25)" : "none",
-            }}>Validate ✓</button>
+                {/* Validate button pinned at bottom of right column */}
+                <div style={{ padding: "8px 8px 12px", flexShrink: 0 }}>
+                  <button onClick={validate} style={{
+                    width: "100%", padding: "12px 0", borderRadius: 20, border: "none",
+                    background: U.seafoam, color: "#fff",
+                    fontSize: 12, fontWeight: 600, letterSpacing: 0.5,
+                    cursor: "pointer", transition: "all 0.2s",
+                    boxShadow: "0 2px 12px rgba(109,191,168,0.25)",
+                  }}>Validate ✓</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
