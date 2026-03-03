@@ -253,8 +253,8 @@ function EmptySlot({ onDrop, onTap, highlighted }: {
       onDrop={(e) => { e.preventDefault(); setOver(false); const id = e.dataTransfer.getData("text/plain"); const source = e.dataTransfer.getData("source") || "bank"; if (id) onDrop(id, source); }}
       onClick={onTap}
       style={{
-        width: 66, height: 90, borderRadius: 8, flexShrink: 0,
-        border: over ? "2px solid #6DBFA8" : highlighted ? "2px dashed rgba(109,191,168,0.5)" : "2px dashed rgba(255,255,255,0.15)",
+        width: 34, height: 46, borderRadius: 6, flexShrink: 0,
+        border: over ? "2px solid #6DBFA8" : highlighted ? "1.5px dashed rgba(109,191,168,0.5)" : "1.5px dashed rgba(255,255,255,0.15)",
         background: over ? "rgba(109,191,168,0.1)" : "rgba(255,255,255,0.04)",
         transition: "all 0.15s ease", cursor: "pointer",
       }}
@@ -548,24 +548,24 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
           </div>
         )}
 
-        {/* BUILD ZONE — always one line, horizontal scroll */}
+        {/* BUILD ZONE — all 14 slots visible, no scroll */}
         <div style={{
-          background: mat.bg, borderRadius: 14, padding: "16px 12px",
+          background: mat.bg, borderRadius: 12, padding: "10px 8px",
           boxShadow: "inset 0 2px 8px rgba(0,0,0,0.2)",
         }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: mat.text, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, textAlign: "center" }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: mat.text, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, textAlign: "center" }}>
             Build the hand
           </div>
-          <div ref={buildRef} style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 4 }}>
+          <div ref={buildRef} style={{ overflow: "hidden", height: 46 * buildScale + 4, display: "flex", justifyContent: "center" }}>
             <div ref={buildInnerRef} style={{
-              display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap",
-              transform: `scale(${buildScale})`, transformOrigin: "left center",
+              display: "inline-flex", alignItems: "center", gap: 2, whiteSpace: "nowrap",
+              transform: `scale(${buildScale})`, transformOrigin: "top center",
             }}>
               {buildSlots.map((slot, i) => {
                 const isGroupStart = groupStarts.includes(i) && i > 0;
                 return (
                   <React.Fragment key={i}>
-                    {isGroupStart && <div style={{ width: 10, flexShrink: 0 }} />}
+                    {isGroupStart && <div style={{ width: 6, flexShrink: 0 }} />}
                     {slot ? (
                       <div
                         draggable={phase !== "success"}
@@ -590,6 +590,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
                           cherry={U.cherry}
                           isWrong={wrongSlots.has(i)}
                           isDragging={dragFromSlot === i}
+                          size="xs"
                         />
                       </div>
                     ) : (
