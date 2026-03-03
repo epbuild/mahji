@@ -328,13 +328,13 @@ function ROLIndicator({ stepIdx, phase, showStopPrompt, stoppedEarly, cherry, te
 }
 
 function ReadyBadge() {
-  return <span style={{ fontSize: 7, color: "rgba(109,191,168,0.5)", fontWeight: 600 }}>Ready</span>;
+  return <span style={{ fontSize: 7, color: "rgba(74,61,50,0.55)", fontWeight: 600 }}>Ready</span>;
 }
 
 function SeatLabel({ name, isReady, showReady }: { name: string; isReady: boolean; showReady: boolean }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(58,46,36,0.55)", padding: "2px 8px", borderRadius: 6 }}>{name}</span>
       {isReady && showReady && <div style={{ marginTop: 2 }}><ReadyBadge /></div>}
     </div>
   );
@@ -851,27 +851,19 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   return (
     <div style={{ flex: 1, background: U.bg, fontFamily: "'Outfit',sans-serif", color: U.text, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80 }}>
 
-      {/* Header — card info at top, then back + controls */}
-      <div style={{ background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "4px 14px 0", fontSize: 8, color: U.textLight }}>
-          <span style={{ fontWeight: 600 }}>{cardYear}</span>
-          <span style={{ opacity: 0.4 }}>·</span>
-          <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{level}</span>
-          <span style={{ opacity: 0.4 }}>·</span>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: mat.bg, border: `1px solid ${U.cBorder}`, display: "inline-block" }} />
-          <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{mat.name}</span>
-        </div>
-        <div style={{ padding: "4px 14px 6px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Back</button>
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {(["novice","intermediate","advanced"] as const).map(l => (
-              <button key={l} onClick={() => !levelLocked && setLevel(l)} style={{ padding: "2px 7px", borderRadius: 10, cursor: levelLocked && level !== l ? "not-allowed" : "pointer", fontSize: 8, fontWeight: 600, background: level === l ? U.cherry : U.btnBg, color: level === l ? "#fff" : U.btnText, border: level === l ? `1px solid ${U.cherry}` : `1px solid ${U.btnBorder}`, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize", transition: "all 0.15s ease", opacity: levelLocked && level !== l ? 0.35 : 1 }}>{l.slice(0,3)}</button>
-            ))}
-            <div style={{ width: 1, height: 14, background: U.cBorder, margin: "0 2px" }} />
-            {MATS.map((m, i) => (
-              <div key={m.id} onClick={() => setMatIdx(i)} style={{ width: 14, height: 14, borderRadius: "50%", background: m.bg, cursor: "pointer", border: i === matIdx ? `2px solid ${U.cherry}` : `1px solid ${U.cBorder}` }} />
-            ))}
-          </div>
+      {/* Header — single row: Back, year, difficulty, mat colors */}
+      <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: U.chrome, borderBottom: `1px solid ${U.cBorder}` }}>
+        <button onClick={onBack} style={{ background: U.btnBg, border: `1px solid ${U.btnBorder}`, borderRadius: 12, padding: "3px 10px", cursor: "pointer", fontSize: 10, color: U.btnText, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Back</button>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 10, fontWeight: 700, color: U.cherry }}>{cardYear}</span>
+          <div style={{ width: 1, height: 14, background: U.cBorder, margin: "0 2px" }} />
+          {(["novice","intermediate","advanced"] as const).map(l => (
+            <button key={l} onClick={() => !levelLocked && setLevel(l)} style={{ padding: "2px 7px", borderRadius: 10, cursor: levelLocked && level !== l ? "not-allowed" : "pointer", fontSize: 8, fontWeight: 600, background: level === l ? U.cherry : U.btnBg, color: level === l ? "#fff" : U.btnText, border: level === l ? `1px solid ${U.cherry}` : `1px solid ${U.btnBorder}`, fontFamily: "'Outfit',sans-serif", textTransform: "capitalize", transition: "all 0.15s ease", opacity: levelLocked && level !== l ? 0.35 : 1 }}>{l.slice(0,3)}</button>
+          ))}
+          <div style={{ width: 1, height: 14, background: U.cBorder, margin: "0 2px" }} />
+          {MATS.map((m, i) => (
+            <div key={m.id} onClick={() => setMatIdx(i)} style={{ width: 14, height: 14, borderRadius: "50%", background: m.bg, cursor: "pointer", border: i === matIdx ? `2px solid ${U.cherry}` : `1px solid ${U.cBorder}` }} />
+          ))}
         </div>
       </div>
 
@@ -983,9 +975,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     }
                     setDragIdx(null); setDragOverIdx(null);
                   }}
-                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", overflow: "hidden", position: "relative" }}>
+                  style={{ width: passBoxW, height: passBoxH, background: selectedIds.size > 0 ? "rgba(224,48,80,0.06)" : "rgba(255,255,255,0.08)", border: `2px dashed ${selectedIds.size > 0 ? "rgba(224,48,80,0.5)" : mat.accent}`, borderRadius: Math.round(10 * bScale), display: "flex", alignItems: "center", justifyContent: "center", transition: passDir ? "none" : "all 0.2s ease", overflow: "visible", position: "relative", animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
                   <div style={{ width: Math.ceil((72 * 3 + 3 * 2) * bScale), height: Math.ceil(98 * bScale), position: "relative" }}>
-                    <div style={{ display: "flex", gap: 3, transform: `scale(${bScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0, animation: passDir ? `${passDir === "right" ? "passSlideRight" : passDir === "left" ? "passSlideLeft" : "passSlideUp"} 0.5s ease-in forwards` : "none" }}>
+                    <div style={{ display: "flex", gap: 3, transform: `scale(${bScale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
                       {[0, 1, 2].map(i => {
                         const tile = selectedTiles[i];
                         if (tile) return (
@@ -994,6 +986,12 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                             onDragStart={(e) => { e.dataTransfer.setData("text/plain", tile.instanceId); e.dataTransfer.setData("source", "passbox"); }}
                           >
                             <TileCard tile={tile} selected={false} onTap={() => toggleTile(tile)} cherry={U.cherry} size="md" disabled={false} />
+                          </div>
+                        );
+                        // Blind pass: fill remaining slots with tile backs
+                        if (isBlind && selectedIds.size > 0) return (
+                          <div key={`pass-blind-${i}`} style={{ opacity: 0.7 }}>
+                            <MahjiTile faceDown size="md" />
                           </div>
                         );
                         return <EmptyPassSlot key={`pass-empty-${i}`} />;
@@ -1021,7 +1019,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
 
         {/* Bottom — You (East · Dealer) */}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", padding: "0 14px 8px", position: "relative" }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(109,191,168,0.35)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "rgba(58,46,36,0.55)", padding: "2px 8px", borderRadius: 6 }}>👤 You (East · Dealer)</span>
           {showROL && <div style={{ position: "absolute", right: 14, bottom: 8 }}><ROLIndicator stepIdx={stepIdx} phase={phase} showStopPrompt={showStopPrompt} stoppedEarly={stoppedEarly} cherry={U.cherry} textFaded={mat.text} /></div>}
         </div>
       </div>
