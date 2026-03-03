@@ -533,14 +533,14 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
         {targetHand && (
           <div style={{
             background: isDark ? "rgba(180,154,216,0.06)" : "rgba(107,63,160,0.04)",
-            border: `0.5px solid ${U.cBorder}`, borderRadius: 14, padding: "14px 16px",
+            border: `0.5px solid ${U.cBorder}`, borderRadius: 12, padding: "10px 14px",
             textAlign: "center",
           }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: U.textLight, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>
               {SECTION_LABELS[targetHand.section]} · {targetHand.points} pts · {targetHand.exposure === "C" ? "Concealed" : "Exposed"}
             </div>
             <div style={{ marginBottom: targetHand.description ? 4 : 0 }}>
-              <ColoredPattern hand={targetHand} isDark={isDark} fontSize={22} />
+              <ColoredPattern hand={targetHand} isDark={isDark} fontSize={14} />
             </div>
             {targetHand.description && (
               <div style={{ fontSize: 11, color: U.textMid, fontStyle: "italic" }}>{targetHand.description}</div>
