@@ -4,6 +4,9 @@ import { BirdIcon, I } from '../components/ui/Icons';
 import { PT, SH, Tag, Card, Cnt, BamFloat } from '../components/Layout';
 import { MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker, WIND_CFG } from '../components/TileComponents';
 import ReadTheCard from './learn/ReadTheCard';
+import WhatIsMahji from './learn/WhatIsMahji';
+import WhatIsAmericanMahjong from './learn/WhatIsAmericanMahjong';
+import SettingTheTable from './learn/SettingTheTable';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -29,7 +32,7 @@ const BamOverlay = ({ onClose, context }) => {
   );
 };
 
-function MeetTheTiles({ onBack, format }) {
+function MeetTheTiles({ onBack, onNavigate, format }) {
   const [zoom, setZoom] = useState(null);
   const [dragonNote, setDragonNote] = useState(false);
   const [localFormat, setLocalFormat] = useState(format);
@@ -59,14 +62,18 @@ function MeetTheTiles({ onBack, format }) {
     <Section title="Flowers" color="#8B7355" note="8 unique decorative tiles that appear in specific hands. One copy each."><div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap" }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniFlower n={n} big/>, "Flower " + n, "A unique flower tile. One copy in the set.")}><MiniFlower n={n}/></div>)}</div><div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniFlower n={n} big/>, "Flower " + n, "A unique flower tile. One copy in the set.")}><MiniFlower n={n}/></div>)}</div></Section>
     <Section title="Jokers" color="#B8A9C9" note="8 wild tiles that can substitute for other tiles, with restrictions. One copy each."><div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap" }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, "Joker " + n, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div><div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, "Joker " + n, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div></Section>
     <div style={{ height:1, background:"linear-gradient(90deg,transparent," + C.lavBorder + ",transparent)", margin:"6px 0 16px" }}/>
+    {/* Next lesson button */}
+    <div onClick={() => onNavigate("Reading the NMJL Card")} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px 24px", borderRadius:14, background:C.cherry, color:"#fff", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontSize:13, fontWeight:600, marginBottom:20, transition:"all 0.25s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(224,48,80,0.25)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>Learn the Game Card<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
     </>)}</Cnt></>);
 }
 
 const learnData = [
   { s: "Getting Started", items: [
-    { t: "What is American Mahjong", d: "The tiles, the card, and the goal", lvl: "First Timer" },
+    { t: "What is Mahji?", d: "Your place to master American Mahjong", lvl: "First Timer" },
+    { t: "What is American Mahjong?", d: "A strategic tile game for four players", lvl: "First Timer" },
     { t: "Meet the Tiles", d: "Dots, Bams, Craks, Honors, Flowers & Jokers", lvl: "First Timer" },
     { t: "Reading the NMJL Card", d: "Decoding patterns, symbols & hand values", lvl: "First Timer" },
+    { t: "Setting the Table", d: "Building the wall and getting ready to play", lvl: "First Timer" },
   ]},
   { s: "Setup & Flow", items: [
     { t: "Setting Up & Dealing", d: "Building the wall, breaking, and dealing tiles", lvl: "Novice" },
@@ -93,8 +100,11 @@ function LearnPage({ showChat, setShowChat }) {
   const [lesson, setLesson] = useState(null);
   const [level, setLevel] = useState("All");
   const [format, setFormat] = useState("Text");
-  if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} format={format}/>;
-  if (lesson === "Reading the NMJL Card") return <ReadTheCard onBack={() => setLesson(null)} />;
+  if (lesson === "What is Mahji?") return <WhatIsMahji onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "What is American Mahjong?") return <WhatIsAmericanMahjong onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} onNavigate={setLesson} format={format}/>;
+  if (lesson === "Reading the NMJL Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Setting the Table") return <SettingTheTable onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "History") return (<>
     <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}>
       <div onClick={() => setLesson(null)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
@@ -125,7 +135,7 @@ function LearnPage({ showChat, setShowChat }) {
             {f === "Video" ? "📹" : "📖"} {f}</div>))}
         </div>}
       </div>
-      {sec.items.map((it) => { num++; const clickable = it.t === "Meet the Tiles" || it.t === "Reading the NMJL Card"; return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
+      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Reading the NMJL Card", "Setting the Table"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
     {/* History bonus button */}
     <div onClick={() => setLesson("History")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: C.paleBlue || "#D9ECF5", border:`1px solid rgba(142,199,226,0.3)`, borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
