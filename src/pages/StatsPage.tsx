@@ -3,7 +3,7 @@
 // File: src/pages/StatsPage.tsx
 //
 // Player statistics dashboard: game overview, speed, points,
-// favorite NMJL sections, player style, and activity calendar.
+// winning lines by section, player style, and activity calendar.
 // All data is currently mock — structured for easy swap to real.
 // ═══════════════════════════════════════════════════════════════
 
@@ -11,7 +11,7 @@ import { useState, useMemo } from 'react';
 import { getThemeColors, FONT_SERIF, FONT_SANS } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { PT, Cnt } from '../components/Layout';
-import { SECTION_ORDER, SECTION_LABELS, getAvailableYears, getCurrentYear } from '../data/nmjl';
+import { SECTION_LABELS, getAvailableYears, getCurrentYear } from '../data/nmjl';
 import type { CardSection } from '../data/nmjl';
 
 // ─── TYPES ──────────────────────────────────────────────────
@@ -20,13 +20,6 @@ type TimePeriod = 'all_time' | 'last_week' | 'last_month' | 'last_year';
 
 interface GameOverviewStats {
   gamesPlayed: number;
-  wins: number;
-  losses: number;
-  wallGames: number;
-}
-
-interface GameHistoryEntry {
-  label: string;
   wins: number;
   losses: number;
   wallGames: number;
@@ -44,19 +37,26 @@ interface PointsStats {
   deducted: number;
   avgPerGame: number;
   deadHands: number;
-  jokersReceived: number;
-  jokersSwapped: number;
+}
+
+interface HandLineWin {
+  pattern: string;       // e.g. "FF 2222 2222 2222"
+  points: number;
+  timesWon: number;
 }
 
 interface SectionWinData {
   section: CardSection;
   wins: number;
+  lines: HandLineWin[];
 }
 
 interface PlayerStyle {
   archetype: string;
   tagline: string;
-  traits: { category: string; title: string; desc: string; isElite?: boolean }[];
+  engagement: string;
+  favoredSection: string;
+  exposures: string;
 }
 
 interface CalendarDay {
@@ -66,7 +66,6 @@ interface CalendarDay {
 
 interface StatsData {
   overview: GameOverviewStats;
-  history: GameHistoryEntry[];
   speed: SpeedStats;
   points: PointsStats;
   sectionWins: SectionWinData[];
@@ -77,7 +76,6 @@ interface StatsData {
 }
 
 // ─── MOCK DATA ──────────────────────────────────────────────
-// Replace with real user data when analytics engine is ready
 
 function generateCalendar(): CalendarDay[] {
   const days: CalendarDay[] = [];
@@ -86,12 +84,10 @@ function generateCalendar(): CalendarDay[] {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const iso = d.toISOString().slice(0, 10);
-    // Weighted random: 40% 0, 25% 1, 20% 2, 10% 3, 5% 4+
     const r = Math.random();
     const games = r < 0.4 ? 0 : r < 0.65 ? 1 : r < 0.85 ? 2 : r < 0.95 ? 3 : 4 + Math.floor(Math.random() * 3);
     days.push({ date: iso, gamesPlayed: games });
   }
-  // Ensure recent streak
   for (let i = days.length - 7; i < days.length; i++) {
     if (days[i]) days[i].gamesPlayed = Math.max(1, days[i].gamesPlayed);
   }
@@ -102,38 +98,45 @@ const CALENDAR_CACHE = generateCalendar();
 
 const MOCK_ALL_2025: StatsData = {
   overview: { gamesPlayed: 47, wins: 14, losses: 28, wallGames: 5 },
-  history: [
-    { label: "Sep", wins: 2, losses: 4, wallGames: 1 },
-    { label: "Oct", wins: 3, losses: 5, wallGames: 0 },
-    { label: "Nov", wins: 2, losses: 6, wallGames: 1 },
-    { label: "Dec", wins: 1, losses: 3, wallGames: 1 },
-    { label: "Jan", wins: 3, losses: 4, wallGames: 0 },
-    { label: "Feb", wins: 3, losses: 6, wallGames: 2 },
-  ],
   speed: { avgGameDurationMin: 32, avgCharlestonThinkSec: 4.2, avgGameplayThinkSec: 8.1 },
-  points: { overall: 1840, earned: 2450, deducted: 610, avgPerGame: 39.1, deadHands: 3, jokersReceived: 62, jokersSwapped: 18 },
+  points: { overall: 1840, earned: 2450, deducted: 610, avgPerGame: 39.1, deadHands: 3 },
   sectionWins: [
-    { section: 'consecutive_run', wins: 4 },
-    { section: '2468', wins: 3 },
-    { section: 'any_like_numbers', wins: 2 },
-    { section: 'winds_dragons', wins: 2 },
-    { section: 'year', wins: 1 },
-    { section: 'singles_pairs', wins: 1 },
-    { section: 'quints', wins: 1 },
-    { section: 'addition', wins: 0 },
-    { section: '13579', wins: 0 },
-    { section: '369', wins: 0 },
+    { section: 'consecutive_run', wins: 4, lines: [
+      { pattern: "FF 1111 2222 3333", points: 25, timesWon: 2 },
+      { pattern: "FF 5555 6666 7777", points: 25, timesWon: 1 },
+      { pattern: "11 222 3333 4444 55", points: 30, timesWon: 1 },
+    ]},
+    { section: '2468', wins: 3, lines: [
+      { pattern: "FF 2222 4444 66 88", points: 25, timesWon: 2 },
+      { pattern: "2222 44 6666 8888", points: 30, timesWon: 1 },
+    ]},
+    { section: 'any_like_numbers', wins: 2, lines: [
+      { pattern: "FF 3333 D 3333 D 33", points: 25, timesWon: 1 },
+      { pattern: "FFFF 1111 1111 11", points: 30, timesWon: 1 },
+    ]},
+    { section: 'winds_dragons', wins: 2, lines: [
+      { pattern: "NN EE WW SS DD DD", points: 25, timesWon: 1 },
+      { pattern: "NNN SSS EEE WWW DD", points: 30, timesWon: 1 },
+    ]},
+    { section: 'year', wins: 1, lines: [
+      { pattern: "FF 2025 2025 2025", points: 25, timesWon: 1 },
+    ]},
+    { section: 'singles_pairs', wins: 1, lines: [
+      { pattern: "NN EW SS 11 22 33 44", points: 50, timesWon: 1 },
+    ]},
+    { section: 'quints', wins: 1, lines: [
+      { pattern: "FFFFF 33333 6666", points: 35, timesWon: 1 },
+    ]},
+    { section: 'addition', wins: 0, lines: [] },
+    { section: '13579', wins: 0, lines: [] },
+    { section: '369', wins: 0, lines: [] },
   ],
   style: {
     archetype: "The Architect",
     tagline: "Methodical and precise. You build your hand like a blueprint, favoring structure and long-range planning.",
-    traits: [
-      { category: "Engagement", title: "The Devotee", desc: "Plays almost daily" },
-      { category: "Strongest", title: "Run Master", desc: "Dominates Consecutive Runs" },
-      { category: "Jokers", title: "The Minimalist", desc: "Holds jokers conservatively" },
-      { category: "Exposing", title: "Late Revealer", desc: "Exposes after turn 8 on average" },
-      { category: "Line Style", title: "Shadow Player", desc: "Favors concealed hands", isElite: true },
-    ],
+    engagement: "Plays almost daily, averaging 1.6 games per session. Consistently active with a strong week-over-week rhythm.",
+    favoredSection: "Gravitates toward Consecutive Runs and 2468 hands. Prefers structured, number-based patterns over honor tiles.",
+    exposures: "Tends to expose late in the game, typically after turn 8. Keeps the hand concealed as long as possible for flexibility.",
   },
   calendar: CALENDAR_CACHE,
   currentStreak: 7,
@@ -142,25 +145,25 @@ const MOCK_ALL_2025: StatsData = {
 
 const MOCK_MONTH_2025: StatsData = {
   overview: { gamesPlayed: 12, wins: 4, losses: 7, wallGames: 1 },
-  history: [
-    { label: "W1", wins: 1, losses: 2, wallGames: 0 },
-    { label: "W2", wins: 1, losses: 1, wallGames: 1 },
-    { label: "W3", wins: 0, losses: 3, wallGames: 0 },
-    { label: "W4", wins: 2, losses: 1, wallGames: 0 },
-  ],
   speed: { avgGameDurationMin: 28, avgCharlestonThinkSec: 3.8, avgGameplayThinkSec: 7.4 },
-  points: { overall: 490, earned: 650, deducted: 160, avgPerGame: 40.8, deadHands: 1, jokersReceived: 16, jokersSwapped: 5 },
+  points: { overall: 490, earned: 650, deducted: 160, avgPerGame: 40.8, deadHands: 1 },
   sectionWins: [
-    { section: '2468', wins: 2 },
-    { section: 'consecutive_run', wins: 1 },
-    { section: 'winds_dragons', wins: 1 },
-    { section: 'any_like_numbers', wins: 0 },
-    { section: 'year', wins: 0 },
-    { section: 'singles_pairs', wins: 0 },
-    { section: 'quints', wins: 0 },
-    { section: 'addition', wins: 0 },
-    { section: '13579', wins: 0 },
-    { section: '369', wins: 0 },
+    { section: '2468', wins: 2, lines: [
+      { pattern: "FF 2222 4444 66 88", points: 25, timesWon: 2 },
+    ]},
+    { section: 'consecutive_run', wins: 1, lines: [
+      { pattern: "FF 1111 2222 3333", points: 25, timesWon: 1 },
+    ]},
+    { section: 'winds_dragons', wins: 1, lines: [
+      { pattern: "NN EE WW SS DD DD", points: 25, timesWon: 1 },
+    ]},
+    { section: 'any_like_numbers', wins: 0, lines: [] },
+    { section: 'year', wins: 0, lines: [] },
+    { section: 'singles_pairs', wins: 0, lines: [] },
+    { section: 'quints', wins: 0, lines: [] },
+    { section: 'addition', wins: 0, lines: [] },
+    { section: '13579', wins: 0, lines: [] },
+    { section: '369', wins: 0, lines: [] },
   ],
   style: MOCK_ALL_2025.style,
   calendar: CALENDAR_CACHE,
@@ -170,38 +173,50 @@ const MOCK_MONTH_2025: StatsData = {
 
 const MOCK_ALL_2024: StatsData = {
   overview: { gamesPlayed: 83, wins: 28, losses: 47, wallGames: 8 },
-  history: [
-    { label: "Jul", wins: 3, losses: 5, wallGames: 1 },
-    { label: "Aug", wins: 4, losses: 7, wallGames: 2 },
-    { label: "Sep", wins: 5, losses: 8, wallGames: 1 },
-    { label: "Oct", wins: 6, losses: 9, wallGames: 1 },
-    { label: "Nov", wins: 5, losses: 10, wallGames: 2 },
-    { label: "Dec", wins: 5, losses: 8, wallGames: 1 },
-  ],
   speed: { avgGameDurationMin: 36, avgCharlestonThinkSec: 5.1, avgGameplayThinkSec: 9.3 },
-  points: { overall: 3280, earned: 4100, deducted: 820, avgPerGame: 39.5, deadHands: 6, jokersReceived: 108, jokersSwapped: 34 },
+  points: { overall: 3280, earned: 4100, deducted: 820, avgPerGame: 39.5, deadHands: 6 },
   sectionWins: [
-    { section: 'any_like_numbers', wins: 6 },
-    { section: '2468', wins: 5 },
-    { section: 'year', wins: 4 },
-    { section: 'consecutive_run', wins: 4 },
-    { section: '13579', wins: 3 },
-    { section: 'winds_dragons', wins: 2 },
-    { section: 'addition', wins: 2 },
-    { section: 'quints', wins: 1 },
-    { section: '369', wins: 1 },
-    { section: 'singles_pairs', wins: 0 },
+    { section: 'any_like_numbers', wins: 6, lines: [
+      { pattern: "FF 3333 D 3333 D 33", points: 25, timesWon: 3 },
+      { pattern: "FFFF 1111 1111 11", points: 30, timesWon: 2 },
+      { pattern: "FF 5555 55 5555", points: 25, timesWon: 1 },
+    ]},
+    { section: '2468', wins: 5, lines: [
+      { pattern: "FF 2222 4444 66 88", points: 25, timesWon: 3 },
+      { pattern: "2222 44 6666 8888", points: 30, timesWon: 2 },
+    ]},
+    { section: 'year', wins: 4, lines: [
+      { pattern: "FF 2024 2024 2024", points: 25, timesWon: 3 },
+      { pattern: "20 222 4444 20 24", points: 30, timesWon: 1 },
+    ]},
+    { section: 'consecutive_run', wins: 4, lines: [
+      { pattern: "FF 1111 2222 3333", points: 25, timesWon: 2 },
+      { pattern: "11 222 3333 4444 55", points: 30, timesWon: 2 },
+    ]},
+    { section: '13579', wins: 3, lines: [
+      { pattern: "FF 1111 33 5555 77", points: 25, timesWon: 2 },
+      { pattern: "111 333 5555 999", points: 30, timesWon: 1 },
+    ]},
+    { section: 'winds_dragons', wins: 2, lines: [
+      { pattern: "NNN SSS EEE WWW DD", points: 30, timesWon: 2 },
+    ]},
+    { section: 'addition', wins: 2, lines: [
+      { pattern: "FF 1111 + 2222 = 3333", points: 25, timesWon: 2 },
+    ]},
+    { section: 'quints', wins: 1, lines: [
+      { pattern: "FFFFF 33333 6666", points: 35, timesWon: 1 },
+    ]},
+    { section: '369', wins: 1, lines: [
+      { pattern: "FF 3333 6666 9999", points: 25, timesWon: 1 },
+    ]},
+    { section: 'singles_pairs', wins: 0, lines: [] },
   ],
   style: {
     archetype: "The Opportunist",
     tagline: "Agile and instinctive. You read the flow of the game and pivot faster than most players realize.",
-    traits: [
-      { category: "Engagement", title: "Regular", desc: "Plays 3-4 times per week" },
-      { category: "Strongest", title: "Pattern Spotter", desc: "Excels at Any Like Numbers" },
-      { category: "Jokers", title: "The Trader", desc: "Actively swaps jokers for flexibility" },
-      { category: "Exposing", title: "Early Exposer", desc: "Exposes by turn 5 on average" },
-      { category: "Line Style", title: "Power Player", desc: "Favors hands with pungs and kongs" },
-    ],
+    engagement: "Plays 3-4 times per week with bursts of activity around weekends. A steady, committed player.",
+    favoredSection: "Draws toward Any Like Numbers and 2468 patterns. Shows versatility across multiple sections.",
+    exposures: "Exposes early, typically by turn 5. Commits to a hand direction quickly and builds around it.",
   },
   calendar: CALENDAR_CACHE,
   currentStreak: 7,
@@ -223,6 +238,7 @@ export default function StatsPage() {
 
   const [period, setPeriod] = useState<TimePeriod>('all_time');
   const [cardYear, setCardYear] = useState(getCurrentYear());
+  const [expandedSection, setExpandedSection] = useState<CardSection | null>(null);
 
   const stats = useMemo(() => getFilteredStats(period, cardYear), [period, cardYear]);
 
@@ -256,7 +272,7 @@ export default function StatsPage() {
   const lavender = isDark ? "#D4C8E8" : "#7E64A4";
   const gold = isDark ? "#F0C060" : "#B08D3A";
 
-  // ── SECTION 1: Filters ──────────────────────────────────
+  // ── Filters ─────────────────────────────────────────────
 
   const PERIODS: { id: TimePeriod; label: string }[] = [
     { id: 'all_time', label: 'All Time' },
@@ -265,109 +281,22 @@ export default function StatsPage() {
     { id: 'last_year', label: 'Year' },
   ];
 
-  const FilterBar = (
-    <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", flexWrap: "wrap" as const }}>
-      {/* Time Period */}
-      <div style={{ display: "flex", gap: 4, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
-        {PERIODS.map(p => {
-          const isActive = period === p.id;
-          return (
-            <div key={p.id} onClick={() => setPeriod(p.id)} style={{
-              padding: "5px 12px", borderRadius: 18, cursor: "pointer",
-              fontSize: 10, fontWeight: isActive ? 600 : 400, fontFamily: FONT_SANS,
-              background: isActive ? (isDark ? "rgba(168,216,238,0.12)" : "#E03050") : "transparent",
-              color: isActive ? (isDark ? "#A8D8EE" : "#fff") : t.textMid,
-              transition: "all 0.2s",
-            }}>
-              {p.label}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Card Year */}
-      <div style={{ display: "flex", gap: 4, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
-        {availableYears.map(yr => {
-          const isActive = cardYear === yr;
-          return (
-            <div key={yr} onClick={() => setCardYear(yr)} style={{
-              padding: "5px 12px", borderRadius: 18, cursor: "pointer",
-              fontSize: 10, fontWeight: isActive ? 600 : 400, fontFamily: FONT_SANS,
-              background: isActive ? (isDark ? "rgba(133,212,188,0.12)" : lavender) : "transparent",
-              color: isActive ? (isDark ? "#85D4BC" : "#fff") : t.textMid,
-              transition: "all 0.2s",
-            }}>
-              {yr}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  // ── SECTION 2: Game Overview ────────────────────────────
+  // ── Win rate donut ──────────────────────────────────────
 
   const ov = stats.overview;
-  const overviewCards: { label: string; value: number; color: string }[] = [
-    { label: "Games Played", value: ov.gamesPlayed, color: t.statNumColor },
-    { label: "Wins", value: ov.wins, color: seafoam },
-    { label: "Losses", value: ov.losses, color: cherry },
-    { label: "Wall Games", value: ov.wallGames, color: cerulean },
-  ];
+  const winPct = ov.gamesPlayed > 0 ? Math.round((ov.wins / ov.gamesPlayed) * 100) : 0;
+  const lossPct = ov.gamesPlayed > 0 ? Math.round((ov.losses / ov.gamesPlayed) * 100) : 0;
+  const wallPct = ov.gamesPlayed > 0 ? 100 - winPct - lossPct : 0;
 
-  // SVG stacked bar chart
-  const chartH = 120;
-  const chartW = 300;
-  const barW = 28;
-  const hist = stats.history;
-  const maxTotal = Math.max(...hist.map(h => h.wins + h.losses + h.wallGames), 1);
-  const barGap = hist.length > 1 ? (chartW - hist.length * barW) / (hist.length - 1) : 0;
+  // SVG donut chart
+  const donutR = 40;
+  const donutStroke = 10;
+  const donutCirc = 2 * Math.PI * donutR;
+  const winArc = (winPct / 100) * donutCirc;
+  const lossArc = (lossPct / 100) * donutCirc;
+  const wallArc = (wallPct / 100) * donutCirc;
 
-  const StackedChart = (
-    <svg viewBox={`0 0 ${chartW} ${chartH + 18}`} style={{ width: "100%", height: "auto", display: "block", marginTop: 12 }}>
-      {/* Grid lines */}
-      {[0.25, 0.5, 0.75, 1].map(pct => (
-        <line key={pct} x1={0} x2={chartW} y1={chartH - pct * chartH} y2={chartH - pct * chartH} stroke={isDark ? "rgba(255,255,255,0.06)" : "rgba(126,100,164,0.08)"} strokeWidth={0.5} />
-      ))}
-      {/* Bars */}
-      {hist.map((entry, i) => {
-        const total = entry.wins + entry.losses + entry.wallGames;
-        const x = i * (barW + barGap);
-        const winH = (entry.wins / maxTotal) * chartH;
-        const lossH = (entry.losses / maxTotal) * chartH;
-        const wallH = (entry.wallGames / maxTotal) * chartH;
-        const r = 3;
-        return (
-          <g key={i}>
-            {/* Wall (top) */}
-            {entry.wallGames > 0 && <rect x={x} y={chartH - winH - lossH - wallH} width={barW} height={wallH} rx={total === entry.wallGames ? r : 0} fill={cerulean} opacity={0.7} />}
-            {/* Loss (middle) */}
-            {entry.losses > 0 && <rect x={x} y={chartH - winH - lossH} width={barW} height={lossH} fill={cherry} opacity={0.65} />}
-            {/* Win (bottom) */}
-            {entry.wins > 0 && <rect x={x} y={chartH - winH} width={barW} height={winH} rx={r} fill={seafoam} />}
-            {/* Top cap radius */}
-            {total > 0 && <rect x={x} y={chartH - winH - lossH - wallH} width={barW} height={Math.min(r * 2, (total / maxTotal) * chartH)} rx={r} fill={entry.wallGames > 0 ? cerulean : entry.losses > 0 ? cherry : seafoam} opacity={entry.wallGames > 0 ? 0.7 : entry.losses > 0 ? 0.65 : 1} />}
-            {/* Label */}
-            <text x={x + barW / 2} y={chartH + 12} textAnchor="middle" style={{ fontSize: 8, fontFamily: FONT_SANS, fill: t.textDim }}>{entry.label}</text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-
-  // Legend
-  const Legend = (
-    <div style={{ display: "flex", gap: 14, marginTop: 8, justifyContent: "center" }}>
-      {[{ c: seafoam, l: "Wins" }, { c: cherry, l: "Losses" }, { c: cerulean, l: "Wall" }].map(item => (
-        <div key={item.l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: item.c, opacity: item.l === "Losses" ? 0.65 : item.l === "Wall" ? 0.7 : 1 }} />
-          <span style={{ fontFamily: FONT_SANS, fontSize: 8, color: t.textDim }}>{item.l}</span>
-        </div>
-      ))}
-    </div>
-  );
-
-  // ── SECTION 5: Favorite Sections ────────────────────────
+  // ── Winning Lines ───────────────────────────────────────
 
   const sortedSections = [...stats.sectionWins].sort((a, b) => b.wins - a.wins);
   const maxWins = Math.max(...sortedSections.map(s => s.wins), 1);
@@ -381,14 +310,13 @@ export default function StatsPage() {
     isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)",
   ];
 
-  // ── SECTION 7: Calendar ─────────────────────────────────
+  // ── Calendar ────────────────────────────────────────────
 
   const cal = stats.calendar;
-  // Build 12-week grid (columns = weeks, rows = day of week 0-6)
   const weeks: CalendarDay[][] = [];
   let currentWeek: CalendarDay[] = [];
-  cal.forEach((day, i) => {
-    const dow = new Date(day.date).getDay(); // 0=Sun
+  cal.forEach((day) => {
+    const dow = new Date(day.date).getDay();
     if (dow === 0 && currentWeek.length > 0) {
       weeks.push(currentWeek);
       currentWeek = [];
@@ -397,8 +325,7 @@ export default function StatsPage() {
   });
   if (currentWeek.length) weeks.push(currentWeek);
 
-  const calMaxGames = Math.max(...cal.map(d => d.gamesPlayed), 1);
-  const calColor = isDark ? [24, 190, 155] : [74, 158, 136]; // seafoam RGB
+  const calColor = isDark ? [24, 190, 155] : [74, 158, 136];
 
   function calOpacity(games: number): number {
     if (games === 0) return 0;
@@ -408,7 +335,6 @@ export default function StatsPage() {
     return 1;
   }
 
-  // Month labels for calendar
   const monthLabels: { text: string; col: number }[] = [];
   let lastMonth = -1;
   weeks.forEach((week, wi) => {
@@ -429,12 +355,50 @@ export default function StatsPage() {
       <PT>Stats</PT>
       <Cnt>
         {/* ═══ FILTERS ═══ */}
-        {FilterBar}
+        <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", flexWrap: "wrap" as const }}>
+          <div style={{ display: "flex", gap: 4, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
+            {PERIODS.map(p => {
+              const isActive = period === p.id;
+              return (
+                <div key={p.id} onClick={() => setPeriod(p.id)} style={{
+                  padding: "5px 12px", borderRadius: 18, cursor: "pointer",
+                  fontSize: 10, fontWeight: isActive ? 600 : 400, fontFamily: FONT_SANS,
+                  background: isActive ? (isDark ? "rgba(168,216,238,0.12)" : "#E03050") : "transparent",
+                  color: isActive ? (isDark ? "#A8D8EE" : "#fff") : t.textMid,
+                  transition: "all 0.2s",
+                }}>
+                  {p.label}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: 4, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
+            {availableYears.map(yr => {
+              const isActive = cardYear === yr;
+              return (
+                <div key={yr} onClick={() => setCardYear(yr)} style={{
+                  padding: "5px 12px", borderRadius: 18, cursor: "pointer",
+                  fontSize: 10, fontWeight: isActive ? 600 : 400, fontFamily: FONT_SANS,
+                  background: isActive ? (isDark ? "rgba(133,212,188,0.12)" : lavender) : "transparent",
+                  color: isActive ? (isDark ? "#85D4BC" : "#fff") : t.textMid,
+                  transition: "all 0.2s",
+                }}>
+                  {yr}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* ═══ GAME OVERVIEW ═══ */}
         {sectionLabel("Game Overview")}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-          {overviewCards.map(card => (
+          {[
+            { label: "Games Played", value: ov.gamesPlayed, color: t.statNumColor },
+            { label: "Wins", value: ov.wins, color: seafoam },
+            { label: "Losses", value: ov.losses, color: cherry },
+            { label: "Wall Games", value: ov.wallGames, color: cerulean },
+          ].map(card => (
             <div key={card.label} style={glassCard({ padding: "14px 14px", textAlign: "center" as const })}>
               {gloss}
               <div style={{ fontFamily: FONT_SANS, fontSize: 8, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 4 }}>
@@ -447,125 +411,170 @@ export default function StatsPage() {
           ))}
         </div>
 
-        {/* Chart */}
-        <div style={glassCard({ marginBottom: 20, padding: "16px 16px 10px" })}>
+        {/* Win Rate Donut */}
+        <div style={glassCard({ marginBottom: 20, padding: "16px 16px", display: "flex" as const, alignItems: "center" as const, gap: 20 })}>
           {gloss}
-          {StackedChart}
-          {Legend}
+          <svg viewBox="0 0 100 100" style={{ width: 90, height: 90, flexShrink: 0 }}>
+            {/* Track */}
+            <circle cx={50} cy={50} r={donutR} fill="none" stroke={trackBg} strokeWidth={donutStroke} />
+            {/* Win arc */}
+            <circle cx={50} cy={50} r={donutR} fill="none" stroke={seafoam}
+              strokeWidth={donutStroke} strokeLinecap="round"
+              strokeDasharray={`${winArc} ${donutCirc}`}
+              strokeDashoffset={0}
+              transform="rotate(-90 50 50)"
+              style={{ transition: "stroke-dasharray 0.8s ease" }} />
+            {/* Loss arc */}
+            <circle cx={50} cy={50} r={donutR} fill="none" stroke={cherry} opacity={0.65}
+              strokeWidth={donutStroke}
+              strokeDasharray={`${lossArc} ${donutCirc}`}
+              strokeDashoffset={-winArc}
+              transform="rotate(-90 50 50)"
+              style={{ transition: "stroke-dasharray 0.8s ease" }} />
+            {/* Wall arc */}
+            {wallPct > 0 && <circle cx={50} cy={50} r={donutR} fill="none" stroke={cerulean} opacity={0.7}
+              strokeWidth={donutStroke}
+              strokeDasharray={`${wallArc} ${donutCirc}`}
+              strokeDashoffset={-(winArc + lossArc)}
+              transform="rotate(-90 50 50)"
+              style={{ transition: "stroke-dasharray 0.8s ease" }} />}
+            {/* Center text */}
+            <text x={50} y={47} textAnchor="middle" style={{ fontFamily: FONT_SERIF, fontSize: 18, fontWeight: 700, fill: t.statNumColor }}>{winPct}%</text>
+            <text x={50} y={59} textAnchor="middle" style={{ fontFamily: FONT_SANS, fontSize: 6, fill: t.textDim, letterSpacing: 0.5 }}>WIN RATE</text>
+          </svg>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+            {[{ c: seafoam, l: "Wins", v: `${winPct}%` }, { c: cherry, l: "Losses", v: `${lossPct}%`, o: 0.65 }, { c: cerulean, l: "Wall", v: `${wallPct}%`, o: 0.7 }].map(item => (
+              <div key={item.l} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: item.c, opacity: item.o || 1 }} />
+                <span style={{ fontFamily: FONT_SANS, fontSize: 10, color: t.textMain, fontWeight: 500 }}>{item.l}</span>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600, color: item.c, opacity: item.o || 1, marginLeft: 2 }}>{item.v}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ═══ SPEED ═══ */}
-        {sectionLabel("Speed")}
-        <div style={glassCard({ marginBottom: 20, padding: "16px 18px" })}>
-          {gloss}
-          {[
-            { label: "Average Game Duration", value: `${stats.speed.avgGameDurationMin} min` },
-            { label: "Avg Think Time — Charleston", value: `${stats.speed.avgCharlestonThinkSec}s` },
-            { label: "Avg Think Time — Gameplay", value: `${stats.speed.avgGameplayThinkSec}s` },
-          ].map((row, i) => (
-            <div key={row.label} style={{
-              display: "flex", justifyContent: "space-between" as const, alignItems: "center" as const,
-              padding: "10px 0",
-              borderBottom: i < 2 ? `0.5px solid ${divider}` : "none",
-            }}>
-              <span style={{ fontFamily: FONT_SANS, fontSize: 11, fontWeight: 500, color: t.textMain }}>{row.label}</span>
-              <span style={{ fontFamily: FONT_SERIF, fontSize: 20, fontWeight: 700, color: t.statNumColor }}>{row.value}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ═══ POINTS ═══ */}
-        {sectionLabel("Points")}
-        <div style={glassCard({ marginBottom: 20, padding: "20px 18px" })}>
-          {gloss}
-
-          {/* Overall hero */}
-          <div style={{ textAlign: "center" as const, marginBottom: 16 }}>
-            <div style={{ fontFamily: FONT_SANS, fontSize: 8, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 4 }}>Overall Points</div>
-            <div style={{ fontFamily: FONT_SERIF, fontSize: 42, fontWeight: 700, color: t.statNumColor, lineHeight: 1 }}>
-              {stats.points.overall.toLocaleString()}
-            </div>
-          </div>
-
-          {/* Earned vs Deducted ratio bar */}
-          <div style={{ height: 4, borderRadius: 2, overflow: "hidden", display: "flex", marginBottom: 16 }}>
-            <div style={{ height: "100%", width: `${(stats.points.earned / (stats.points.earned + stats.points.deducted)) * 100}%`, background: seafoam, borderRadius: "2px 0 0 2px" }} />
-            <div style={{ height: "100%", flex: 1, background: cherry, opacity: 0.6, borderRadius: "0 2px 2px 0" }} />
-          </div>
-
-          {/* Sub-stat grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+        {/* ═══ SPEED & POINTS (horizontal scroll) ═══ */}
+        {sectionLabel("Speed & Points")}
+        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+          {/* Speed card */}
+          <div style={glassCard({ padding: "14px 16px", flex: "1 1 0", minWidth: 0 })}>
+            {gloss}
+            <div style={{ fontFamily: FONT_SANS, fontSize: 8, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 10 }}>Speed</div>
             {[
-              { label: "Earned", value: `+${stats.points.earned.toLocaleString()}`, color: seafoam },
-              { label: "Deducted", value: `-${stats.points.deducted.toLocaleString()}`, color: cherry },
-              { label: "Avg / Game", value: stats.points.avgPerGame.toFixed(1), color: t.statNumColor },
-              { label: "Dead Hands", value: String(stats.points.deadHands), color: t.textMain },
-            ].map(item => (
-              <div key={item.label} style={{ textAlign: "center" as const }}>
-                <div style={{ fontFamily: FONT_SANS, fontSize: 7, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 3 }}>{item.label}</div>
-                <div style={{ fontFamily: FONT_SERIF, fontSize: 18, fontWeight: 700, color: item.color, lineHeight: 1 }}>{item.value}</div>
+              { label: "Avg Game", value: `${stats.speed.avgGameDurationMin} min` },
+              { label: "Charleston", value: `${stats.speed.avgCharlestonThinkSec}s` },
+              { label: "Gameplay", value: `${stats.speed.avgGameplayThinkSec}s` },
+            ].map((row, i) => (
+              <div key={row.label} style={{
+                display: "flex", justifyContent: "space-between" as const, alignItems: "center" as const,
+                padding: "7px 0",
+                borderBottom: i < 2 ? `0.5px solid ${divider}` : "none",
+              }}>
+                <span style={{ fontFamily: FONT_SANS, fontSize: 10, color: t.textMain }}>{row.label}</span>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: 16, fontWeight: 700, color: t.statNumColor }}>{row.value}</span>
               </div>
             ))}
           </div>
 
-          {/* Joker row */}
-          <div style={{ borderTop: `0.5px solid ${divider}`, paddingTop: 14, display: "flex", justifyContent: "center" as const, gap: 24 }}>
-            <div style={{ textAlign: "center" as const }}>
-              <div style={{ fontFamily: FONT_SANS, fontSize: 7, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 3 }}>Jokers Received</div>
-              <div style={{ fontFamily: FONT_SERIF, fontSize: 20, fontWeight: 700, color: lavender, lineHeight: 1 }}>{stats.points.jokersReceived}</div>
-              <div style={{ fontFamily: FONT_SANS, fontSize: 8, color: t.textDim, marginTop: 2 }}>per game: {(stats.points.jokersReceived / Math.max(stats.overview.gamesPlayed, 1)).toFixed(1)}</div>
-            </div>
-            <div style={{ width: 1, background: divider }} />
-            <div style={{ textAlign: "center" as const }}>
-              <div style={{ fontFamily: FONT_SANS, fontSize: 7, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 3 }}>Jokers Swapped</div>
-              <div style={{ fontFamily: FONT_SERIF, fontSize: 20, fontWeight: 700, color: lavender, lineHeight: 1 }}>{stats.points.jokersSwapped}</div>
-              <div style={{ fontFamily: FONT_SANS, fontSize: 8, color: t.textDim, marginTop: 2 }}>per game: {(stats.points.jokersSwapped / Math.max(stats.overview.gamesPlayed, 1)).toFixed(1)}</div>
-            </div>
+          {/* Points card */}
+          <div style={glassCard({ padding: "14px 16px", flex: "1 1 0", minWidth: 0 })}>
+            {gloss}
+            <div style={{ fontFamily: FONT_SANS, fontSize: 8, fontWeight: 600, color: t.textDim, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 10 }}>Points</div>
+            {[
+              { label: "Overall", value: stats.points.overall.toLocaleString(), color: t.statNumColor },
+              { label: "Earned", value: `+${stats.points.earned.toLocaleString()}`, color: seafoam },
+              { label: "Deducted", value: `-${stats.points.deducted.toLocaleString()}`, color: cherry },
+              { label: "Avg / Game", value: stats.points.avgPerGame.toFixed(1), color: t.statNumColor },
+              { label: "Dead Hands", value: String(stats.points.deadHands), color: t.textMain },
+            ].map((row, i) => (
+              <div key={row.label} style={{
+                display: "flex", justifyContent: "space-between" as const, alignItems: "center" as const,
+                padding: "5px 0",
+                borderBottom: i < 4 ? `0.5px solid ${divider}` : "none",
+              }}>
+                <span style={{ fontFamily: FONT_SANS, fontSize: 10, color: t.textMain }}>{row.label}</span>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 700, color: row.color }}>{row.value}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* ═══ FAVORITE SECTIONS ═══ */}
+        {/* ═══ WINNING LINES ═══ */}
         {sectionLabel(`Winning Lines — ${cardYear} Card`)}
-        <div style={glassCard({ marginBottom: 20, padding: "18px 18px 14px" })}>
+        <div style={glassCard({ marginBottom: 20, padding: "14px 16px 10px" })}>
           {gloss}
 
-          {sortedSections.map((sec, i) => (
-            <div key={sec.section} style={{
-              display: "flex", alignItems: "center" as const, gap: 10,
-              padding: "8px 0",
-              borderBottom: i < sortedSections.length - 1 ? `0.5px solid ${divider}` : "none",
-            }}>
-              {/* Rank */}
-              <div style={{ fontFamily: FONT_SANS, fontSize: 9, fontWeight: 700, color: i < 3 ? BAR_COLORS[i] : t.textDim, width: 14, textAlign: "right" as const, flexShrink: 0 }}>
-                {i + 1}
-              </div>
-              {/* Label + bar */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FONT_SANS, fontSize: 10, fontWeight: 500, color: t.textMain, marginBottom: 4 }}>
-                  {SECTION_LABELS[sec.section]}
+          {sortedSections.map((sec, i) => {
+            const isExpanded = expandedSection === sec.section;
+            const hasLines = sec.lines.length > 0;
+            const barColor = BAR_COLORS[Math.min(i, BAR_COLORS.length - 1)];
+            return (
+              <div key={sec.section}>
+                <div
+                  onClick={() => hasLines && setExpandedSection(isExpanded ? null : sec.section)}
+                  style={{
+                    display: "flex", alignItems: "center" as const, gap: 8,
+                    padding: "8px 0",
+                    borderBottom: (!isExpanded && i < sortedSections.length - 1) ? `0.5px solid ${divider}` : "none",
+                    cursor: hasLines ? "pointer" : "default",
+                  }}
+                >
+                  <div style={{ fontFamily: FONT_SANS, fontSize: 9, fontWeight: 700, color: i < 3 ? barColor : t.textDim, width: 14, textAlign: "right" as const, flexShrink: 0 }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: FONT_SANS, fontSize: 10, fontWeight: 500, color: t.textMain, marginBottom: 3 }}>
+                      {SECTION_LABELS[sec.section]}
+                    </div>
+                    <div style={{ height: 4, borderRadius: 2, background: trackBg, overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%", borderRadius: 2,
+                        width: sec.wins > 0 ? `${Math.max(4, (sec.wins / maxWins) * 100)}%` : "0%",
+                        background: barColor,
+                        transition: "width 0.8s ease",
+                      }} />
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 600, color: i < 3 ? barColor : t.textDim, minWidth: 18, textAlign: "right" as const, flexShrink: 0 }}>
+                    {sec.wins}
+                  </div>
+                  {hasLines && (
+                    <div style={{ fontSize: 10, color: t.textDim, flexShrink: 0, transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+                      &#x25BC;
+                    </div>
+                  )}
                 </div>
-                <div style={{ height: 5, borderRadius: 3, background: trackBg, overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%", borderRadius: 3,
-                    width: sec.wins > 0 ? `${Math.max(4, (sec.wins / maxWins) * 100)}%` : "0%",
-                    background: BAR_COLORS[Math.min(i, BAR_COLORS.length - 1)],
-                    transition: "width 0.8s ease",
-                  }} />
-                </div>
-              </div>
-              {/* Count */}
-              <div style={{ fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 600, color: i < 3 ? BAR_COLORS[i] : t.textDim, minWidth: 22, textAlign: "right" as const, flexShrink: 0 }}>
-                {sec.wins}
-              </div>
-            </div>
-          ))}
 
-          {/* Placeholder link */}
-          <div style={{ textAlign: "center" as const, marginTop: 12 }}>
-            <span style={{ fontFamily: FONT_SANS, fontSize: 9, color: t.textDim, cursor: "pointer", fontStyle: "italic" }}>
-              View section details (coming soon)
-            </span>
-          </div>
+                {/* Expanded lines */}
+                {isExpanded && (
+                  <div style={{
+                    padding: "4px 0 8px 24px",
+                    borderBottom: i < sortedSections.length - 1 ? `0.5px solid ${divider}` : "none",
+                  }}>
+                    {sec.lines.map((line, li) => (
+                      <div key={li} style={{
+                        display: "flex", justifyContent: "space-between" as const, alignItems: "center" as const,
+                        padding: "5px 0",
+                        borderBottom: li < sec.lines.length - 1 ? `0.5px solid ${isDark ? "rgba(255,255,255,0.02)" : "rgba(126,100,164,0.03)"}` : "none",
+                      }}>
+                        <div>
+                          <div style={{ fontFamily: FONT_SANS, fontSize: 11, fontWeight: 600, color: t.textMain, letterSpacing: 0.5 }}>
+                            {line.pattern}
+                          </div>
+                          <div style={{ fontFamily: FONT_SANS, fontSize: 8, color: t.textDim, marginTop: 1 }}>
+                            {line.points} pts
+                          </div>
+                        </div>
+                        <div style={{ fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600, color: barColor, flexShrink: 0 }}>
+                          {line.timesWon}x
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* ═══ PLAYER STYLE ═══ */}
@@ -588,36 +597,15 @@ export default function StatsPage() {
             {stats.style.tagline}
           </div>
 
-          {/* Trait rows */}
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-            {stats.style.traits.map(trait => (
-              <div key={trait.category} style={{ display: "flex", alignItems: "flex-start" as const, gap: 10 }}>
-                <div style={{
-                  fontFamily: FONT_SANS, fontSize: 7, fontWeight: 600, color: t.textDim,
-                  letterSpacing: 0.8, textTransform: "uppercase" as const,
-                  minWidth: 72, flexShrink: 0, paddingTop: 2,
-                }}>
-                  {trait.category}
-                </div>
-                <div>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: 12, fontWeight: 600, color: t.textMain }}>
-                    {trait.title}
-                  </span>
-                  {trait.isElite && (
-                    <span style={{
-                      fontFamily: FONT_SANS, fontSize: 7, fontWeight: 700,
-                      color: gold, letterSpacing: 0.5, textTransform: "uppercase" as const,
-                      marginLeft: 6, padding: "2px 6px", borderRadius: 8,
-                      background: isDark ? "rgba(240,192,96,0.1)" : "rgba(176,141,58,0.08)",
-                      border: `1px solid ${isDark ? "rgba(240,192,96,0.2)" : "rgba(176,141,58,0.15)"}`,
-                    }}>
-                      Elite
-                    </span>
-                  )}
-                  <div style={{ fontFamily: FONT_SANS, fontSize: 10, color: t.textMid, marginTop: 1 }}>
-                    {trait.desc}
-                  </div>
-                </div>
+          {/* Attributes — no titles, just descriptive text */}
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+            {[stats.style.engagement, stats.style.favoredSection, stats.style.exposures].map((text, i) => (
+              <div key={i} style={{
+                fontFamily: FONT_SANS, fontSize: 11, color: t.textMain, lineHeight: 1.6,
+                paddingBottom: i < 2 ? 14 : 0,
+                borderBottom: i < 2 ? `0.5px solid ${divider}` : "none",
+              }}>
+                {text}
               </div>
             ))}
           </div>
@@ -625,13 +613,12 @@ export default function StatsPage() {
 
         {/* ═══ ACTIVITY & STREAK ═══ */}
         {sectionLabel("Activity")}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, marginBottom: 30, alignItems: "start" as const }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, marginBottom: 50, alignItems: "start" as const }}>
           {/* Heat map calendar */}
           <div style={glassCard({ padding: "14px 14px 10px" })}>
             {gloss}
-            {/* Month labels */}
             <div style={{ display: "grid", gridTemplateColumns: `18px repeat(${weeks.length}, 10px)`, gap: 2, marginBottom: 4 }}>
-              <div /> {/* spacer for day labels column */}
+              <div />
               {weeks.map((_, wi) => {
                 const ml = monthLabels.find(m => m.col === wi);
                 return (
@@ -641,17 +628,14 @@ export default function StatsPage() {
                 );
               })}
             </div>
-            {/* Grid rows (7 days) */}
             {[0, 1, 2, 3, 4, 5, 6].map(dow => (
               <div key={dow} style={{ display: "grid", gridTemplateColumns: `18px repeat(${weeks.length}, 10px)`, gap: 2 }}>
-                {/* Day label */}
                 <div style={{ fontFamily: FONT_SANS, fontSize: 7, color: t.textDim, lineHeight: "10px", textAlign: "right" as const, paddingRight: 3 }}>
                   {dow === 1 ? "M" : dow === 3 ? "W" : dow === 5 ? "F" : ""}
                 </div>
-                {/* Cells */}
                 {weeks.map((week, wi) => {
                   const day = week.find(d => new Date(d.date).getDay() === dow);
-                  const games = day ? day.gamesPlayed : -1; // -1 = no data
+                  const games = day ? day.gamesPlayed : -1;
                   const opacity = games < 0 ? 0 : calOpacity(games);
                   return (
                     <div key={wi} style={{
@@ -685,11 +669,6 @@ export default function StatsPage() {
             </div>
           </div>
         </div>
-
-        {/* ═══ FUTURE: POST-GAME FEEDBACK ═══ */}
-        {/* Placeholder for post-game feedback engine that will analyze
-            game replay and suggest improvements. Stats and tendencies
-            from that engine will surface here once built. */}
 
       </Cnt>
     </>
