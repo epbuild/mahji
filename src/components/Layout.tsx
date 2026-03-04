@@ -58,22 +58,24 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
           <TileIconBold t={t} />
           {!isHome && <span style={{ fontFamily: FONT_SERIF, fontSize: 12, fontWeight: 500, color: mahjiColor, letterSpacing: 3, opacity: 0.8 }}>MAHJI</span>}
         </div>
-        {!isHome && <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-          {items.map(it => {
-            const isActive = page === it.id;
-            const isHov = hovered === it.id;
-            let color = isDark ? t.navDimColor : C.navPurple;
-            if (isActive || isHov) color = isDark ? t.navHoverColor : C.violet;
-            return (
-              <div key={it.id} className={`desktop-nav-item ${isActive ? 'active' : ''}`}
-                onClick={() => onNav(it.id)} onMouseEnter={() => setHovered(it.id)} onMouseLeave={() => setHovered(null)}
-                style={{ color, fontWeight: isActive ? 600 : isHov ? 500 : 400 }}>
-                {it.label}
-                {isActive && <div className="desktop-nav-underline" style={{ background: isDark ? t.navHoverColor : C.violet }} />}
-              </div>
-            );
-          })}
-        </div>}
+        {isHome ? null : (
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+            {items.map(it => {
+              const isActive = page === it.id;
+              const isHov = hovered === it.id;
+              let color = isDark ? t.navDimColor : C.navPurple;
+              if (isActive || isHov) color = isDark ? t.navHoverColor : C.violet;
+              return (
+                <div key={it.id} className={`desktop-nav-item ${isActive ? 'active' : ''}`}
+                  onClick={() => onNav(it.id)} onMouseEnter={() => setHovered(it.id)} onMouseLeave={() => setHovered(null)}
+                  style={{ color, fontWeight: isActive ? 600 : isHov ? 500 : 400 }}>
+                  {it.label}
+                  {isActive && <div className="desktop-nav-underline" style={{ background: isDark ? t.navHoverColor : C.violet }} />}
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <ModeToggle />
           <ProfileCircle size={30} onClick={onProfile} />

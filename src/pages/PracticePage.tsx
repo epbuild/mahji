@@ -32,7 +32,7 @@ const BamOverlay = ({ onClose, context }) => {
 };
 
 const drillsData = [
-  { t: "Learn the Hands", d: "Match tiles to NMJL card patterns", lvls: ["Novice"] },
+  { t: "Form a Winning Line", d: "Match tiles to NMJL card patterns", lvls: ["Novice"] },
   { t: "How to Deal", d: "Roll dice, break the wall, deal correctly", lvls: ["Novice"] },
   { t: "Practicing the Charleston", d: "Master R-O-L→L-O-R and blind passes", lvls: ["Novice","Intermediate","Advanced"] },
   { t: "Reading Exposures", d: "Identify all possible hands from exposed melds", lvls: ["Intermediate"] },
@@ -80,7 +80,7 @@ function PracticePage({ showChat, setShowChat }) {
     {filtered.map((d,i) => { num++; return <Card key={i} title={d.t} desc={d.d} num={num} tags={d.lvls.map(lv=>({t:lt[lv]||"b",l:lv}))}
       onClick={
         d.t === "Practicing the Charleston" ? () => setActiveDrill("charleston") :
-        d.t === "Learn the Hands" ? () => setActiveDrill("learn-hands") :
+        d.t === "Form a Winning Line" ? () => setActiveDrill("learn-hands") :
         d.t === "Reading Exposures" ? () => setActiveDrill("read-exposures") :
         undefined
       }
