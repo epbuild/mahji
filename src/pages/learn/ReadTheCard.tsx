@@ -192,7 +192,7 @@ const CardLineExample = ({ notation, tileGroups, points, exposure, parenthetical
 /* ─────────────────────────────────────────────────
    MAIN COMPONENT
    ───────────────────────────────────────────────── */
-export default function ReadTheCard({ onBack }: { onBack: () => void }) {
+export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (lesson: string) => void }) {
   const [expandJoker, setExpandJoker] = useState(false);
   const [expandXC, setExpandXC] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -717,6 +717,26 @@ export default function ReadTheCard({ onBack }: { onBack: () => void }) {
               a pro. It just takes a few games.
             </div>
           </div>
+
+          {/* Next lesson button */}
+          {onNavigate && (
+            <div
+              onClick={() => onNavigate("Setting the Table")}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '14px 24px', borderRadius: 14,
+                background: C.cherry, color: '#fff', cursor: 'pointer',
+                fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600,
+                marginBottom: 20,
+                transition: 'all 0.25s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(224,48,80,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+            >
+              Ready? Set the Table and Deal!
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          )}
 
         </div>
       </Cnt>
