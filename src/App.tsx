@@ -87,7 +87,7 @@ function AppInner() {
       {showSplash && <SplashScreen onDone={handleSplashDone} />}
 
       <div className="app-container" style={{ opacity: splashDone ? 1 : 0, transition: "opacity 0.4s ease" }}>
-        {page !== "profile" && (
+        {page !== "profile" && page !== "home" && (
           <DesktopHeader page={page} onNav={onNav} onHome={onHome} onProfile={onProfile} />
         )}
         {page !== "profile" && (

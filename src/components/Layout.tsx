@@ -47,7 +47,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
   const isHome = page === "home" || page === "profile";
   const items = [
     { id: "learn", label: "Learn" }, { id: "practice", label: "Practice" },
-    { id: "play", label: "Play" }, { id: "stats", label: "Stats" }, { id: "bam", label: "Ask" },
+    { id: "play", label: "Play" }, { id: "stats", label: "Stats" },
   ];
   const mahjiColor = isDark ? "#FFFFFF" : C.cherry;
 
