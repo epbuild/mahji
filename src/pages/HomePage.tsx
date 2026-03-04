@@ -192,7 +192,7 @@ function HomePage({ onNav, signedIn }) {
             <div className="home-entrance-item">
               <FeatureCard title="Stats" desc="Your Mahjong IQ & insights" icon={<StatsIcon />} t={t} onClick={() => onNav("stats")} />
             </div>
-            <div className="home-entrance-item">
+            <div className="home-entrance-item home-bam-card">
               <FeatureCard title="Ask Bam Bird" desc="Your AI Mahj mentor" isBird t={t} onClick={() => onNav("bam")} />
             </div>
           </div>
