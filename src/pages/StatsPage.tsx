@@ -709,9 +709,14 @@ export default function StatsPage() {
       <PT>Stats</PT>
       <Cnt>
         {/* ═══ FILTERS ═══ */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", justifyContent: "space-between" as const }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ ...filterLabel("Time Frame"), marginBottom: 0 }}>Time Frame</div>
+        <div style={{ marginBottom: 20 }}>
+          {/* Labels row */}
+          <div style={{ display: "flex", justifyContent: "space-between" as const, marginBottom: 4 }}>
+            <div style={filterLabel("Time Frame")}>Time Frame</div>
+            <div style={filterLabel("NMJL Card")}>NMJL Card</div>
+          </div>
+          {/* Pills row */}
+          <div style={{ display: "flex", justifyContent: "space-between" as const, alignItems: "center" }}>
             <div style={{ display: "flex", gap: 3, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
               {PERIODS.map(p => {
                 const isActive = period === p.id;
@@ -728,9 +733,6 @@ export default function StatsPage() {
                 );
               })}
             </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ ...filterLabel("NMJL Card"), marginBottom: 0 }}>NMJL Card</div>
             <div style={{ display: "flex", gap: 3, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
               {availableYears.map(yr => {
                 const isActive = cardYear === yr;
@@ -860,19 +862,19 @@ export default function StatsPage() {
           {gloss}
 
           {/* Toggle button */}
-          <div style={{ display: "flex", justifyContent: "flex-end" as const, marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end" as const, marginBottom: 10, position: "relative" as const, zIndex: 1 }}>
             <div
               onClick={() => setWinLinesView(winLinesView === 'ranked' ? 'card' : 'ranked')}
               style={{
                 fontFamily: FONT_SANS, fontSize: 9, fontWeight: 600,
                 color: winLinesView === 'ranked'
                   ? (isDark ? cerulean : lavender)
-                  : (isDark ? "#1A1028" : "#fff"),
+                  : "#fff",
                 cursor: "pointer", padding: "5px 12px",
                 borderRadius: 12,
                 background: winLinesView === 'ranked'
                   ? (isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)")
-                  : (isDark ? cerulean : lavender),
+                  : (isDark ? cerulean : "#E03050"),
                 border: `1px solid ${winLinesView === 'ranked'
                   ? (isDark ? "rgba(168,216,238,0.15)" : "rgba(126,100,164,0.12)")
                   : "transparent"}`,
@@ -884,7 +886,7 @@ export default function StatsPage() {
           </div>
 
           {winLinesView === 'ranked' ? (
-            <>
+            <div style={{ position: "relative" as const, zIndex: 1 }}>
               {sortedSections.map((sec, i) => {
                 const isExpanded = expandedSection === sec.section;
                 const hasLines = sec.lines.length > 0;
@@ -955,10 +957,11 @@ export default function StatsPage() {
                   </div>
                 );
               })}
-            </>
+            </div>
           ) : (
             /* ── Card View ── */
             nmjlCard ? (
+              <div style={{ position: "relative" as const, zIndex: 1 }}>
               <CardViewLayout
                 nmjlCard={nmjlCard}
                 cardSections={cardSections}
@@ -969,8 +972,9 @@ export default function StatsPage() {
                 seafoam={seafoam}
                 isDesktop={isDesktop}
               />
+              </div>
             ) : (
-              <div style={{ fontFamily: FONT_SANS, fontSize: 11, color: t.textDim, textAlign: "center" as const, padding: 20 }}>
+              <div style={{ fontFamily: FONT_SANS, fontSize: 11, color: t.textDim, textAlign: "center" as const, padding: 20, position: "relative" as const, zIndex: 1 }}>
                 Loading card data...
               </div>
             )
@@ -986,17 +990,19 @@ export default function StatsPage() {
             fontFamily: FONT_SERIF, fontSize: 24, fontWeight: 700,
             color: isDark ? cerulean : "#E03050",
             letterSpacing: 1, marginBottom: 4,
+            position: "relative" as const, zIndex: 1,
           }}>
             {computedStyle.archetype}
           </div>
           <div style={{
             fontFamily: FONT_SANS, fontSize: 11, color: t.textMid,
             lineHeight: 1.6, marginBottom: 18, maxWidth: 340, fontStyle: "italic",
+            position: "relative" as const, zIndex: 1,
           }}>
             {computedStyle.tagline}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 14, position: "relative" as const, zIndex: 1 }}>
             {[
               { title: "Engagement", text: computedStyle.engagement },
               { title: "Gravitation", text: computedStyle.favoredSection },
