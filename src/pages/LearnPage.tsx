@@ -8,6 +8,7 @@ import WhatIsMahji from './learn/WhatIsMahji';
 import WhatIsAmericanMahjong from './learn/WhatIsAmericanMahjong';
 import SettingTheTable from './learn/SettingTheTable';
 import Glossary from './learn/Glossary';
+import HowToDeal from './learn/HowToDeal';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -77,7 +78,7 @@ const learnData = [
     { t: "Setting the Table", d: "Building the wall and getting ready to play", lvl: "First Timer" },
   ]},
   { s: "Setup & Flow", items: [
-    { t: "Setting Up & Dealing", d: "Building the wall, breaking, and dealing tiles", lvl: "Novice" },
+    { t: "How to Deal", d: "Breaking the wall, dealing tiles, and getting started", lvl: "First Timer" },
     { t: "Gameplay: Turns, Calls & Exposures", d: "Draw, discard, calling tiles, and Mahjong", lvl: "Novice" },
   ]},
   { s: "Strategy", items: [
@@ -106,6 +107,7 @@ function LearnPage({ showChat, setShowChat }) {
   if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} onNavigate={setLesson} format={format}/>;
   if (lesson === "Reading the NMJL Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Setting the Table") return <SettingTheTable onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "How to Deal") return <HowToDeal onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Game Glossary") return <Glossary onBack={() => setLesson(null)} />;
   if (lesson === "History") return (<>
     <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}>
@@ -137,7 +139,7 @@ function LearnPage({ showChat, setShowChat }) {
             {f === "Video" ? "📹" : "📖"} {f}</div>))}
         </div>}
       </div>
-      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Reading the NMJL Card", "Setting the Table"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
+      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Reading the NMJL Card", "Setting the Table", "How to Deal"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
     {/* Game Glossary button */}
     <div onClick={() => setLesson("Game Glossary")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: C.paleBlue || "#D9ECF5", border:`1px solid rgba(142,199,226,0.3)`, borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
