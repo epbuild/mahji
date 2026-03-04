@@ -58,7 +58,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
           <TileIconBold t={t} />
           {!isHome && <span style={{ fontFamily: FONT_SERIF, fontSize: 12, fontWeight: 500, color: mahjiColor, letterSpacing: 3, opacity: 0.8 }}>MAHJI</span>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        {!isHome && <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {items.map(it => {
             const isActive = page === it.id;
             const isHov = hovered === it.id;
@@ -73,7 +73,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
               </div>
             );
           })}
-        </div>
+        </div>}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <ModeToggle />
           <ProfileCircle size={30} onClick={onProfile} />
