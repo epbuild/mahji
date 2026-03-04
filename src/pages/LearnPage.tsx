@@ -7,6 +7,7 @@ import ReadTheCard from './learn/ReadTheCard';
 import WhatIsMahji from './learn/WhatIsMahji';
 import WhatIsAmericanMahjong from './learn/WhatIsAmericanMahjong';
 import SettingTheTable from './learn/SettingTheTable';
+import Glossary from './learn/Glossary';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -105,6 +106,7 @@ function LearnPage({ showChat, setShowChat }) {
   if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} onNavigate={setLesson} format={format}/>;
   if (lesson === "Reading the NMJL Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Setting the Table") return <SettingTheTable onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Game Glossary") return <Glossary onBack={() => setLesson(null)} />;
   if (lesson === "History") return (<>
     <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}>
       <div onClick={() => setLesson(null)} style={{ fontSize:12, color:C.lavDeep, cursor:"pointer", fontWeight:500, display:"flex", alignItems:"center", gap:3 }}>
@@ -137,12 +139,14 @@ function LearnPage({ showChat, setShowChat }) {
       </div>
       {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Reading the NMJL Card", "Setting the Table"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
-    {/* History bonus button */}
-    <div onClick={() => setLesson("History")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: C.paleBlue || "#D9ECF5", border:`1px solid rgba(142,199,226,0.3)`, borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
-      <div style={{ width:32, height:32, borderRadius:"50%", background:C.cerulean, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:14 }}>📜</div>
+    {/* Game Glossary button */}
+    <div onClick={() => setLesson("Game Glossary")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: C.paleBlue || "#D9ECF5", border:`1px solid rgba(142,199,226,0.3)`, borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
+      <div style={{ width:32, height:32, borderRadius:"50%", background:C.cerulean, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
       <div>
-        <div style={{ fontSize:12, fontWeight:600, color:C.cerulean, letterSpacing:0.5 }}>Bonus!</div>
-        <div style={{ fontSize:12, color:C.mid, marginTop:1 }}>Learn the History of American Mahjong</div>
+        <div style={{ fontSize:13, fontWeight:600, color:C.dark }}>Game Glossary</div>
+        <div style={{ fontSize:11, color:C.mid, marginTop:1 }}>Key terms and definitions</div>
       </div>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.cerulean} strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft:"auto", flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
     </div>
