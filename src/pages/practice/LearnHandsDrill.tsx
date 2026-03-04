@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// MAHJI — Learn the Hands Practice Drill
+// MAHJI — Form a Winning Line Practice Drill
 // File: src/pages/practice/LearnHandsDrill.tsx
 //
 // Novice drill: pick a card year, app generates a random hand,
@@ -464,7 +464,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 28, padding: "0 24px" }}>
           <h1 style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 26, color: U.cherry, letterSpacing: 3, textTransform: "uppercase", textAlign: "center", margin: 0 }}>
-            Learn the Hands
+            Form a Winning Line
           </h1>
           <p style={{ fontSize: 13, color: U.textMid, textAlign: "center", maxWidth: 320, lineHeight: 1.6, margin: 0 }}>
             Pick a card year, and we'll show you a hand. Your job? Build it tile by tile.
