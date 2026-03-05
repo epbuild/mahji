@@ -106,7 +106,7 @@ function MeetTheTiles({ onBack, onNavigate, format }) {
     <Section title="Jokers" color={isDark ? "#D4C8E8" : "#B8A9C9"} note="8 wild tiles that can substitute for other tiles, with restrictions. One copy each."><div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap" }}>{[1,2,3,4].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, "Joker " + n, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div><div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>{[5,6,7,8].map(n => <div key={n} onClick={zt(<MiniJoker n={n} big/>, "Joker " + n, "A wild tile — can substitute for suited or honor tiles in groups of 3 or more.")}><MiniJoker n={n}/></div>)}</div></Section>
     <div style={{ height:1, background:"linear-gradient(90deg,transparent," + t.lavBorder + ",transparent)", margin:"6px 0 16px" }}/>
     {/* Next lesson button */}
-    <div onClick={() => onNavigate("Reading the NMJL Card")} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px 24px", borderRadius:14, background:C.cherry, color:"#fff", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontSize:13, fontWeight:600, marginBottom:20, transition:"all 0.25s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(224,48,80,0.25)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>Learn the Game Card<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div onClick={() => onNavigate("Read the Game Card")} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px 24px", borderRadius:14, background:C.cherry, color:"#fff", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontSize:13, fontWeight:600, marginBottom:20, transition:"all 0.25s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(224,48,80,0.25)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>Learn the Game Card<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
     </>)}</Cnt></>);
 }
 
@@ -115,7 +115,7 @@ const learnData = [
     { t: "What is Mahji?", d: "Your place to master American Mahjong", lvl: "First Timer" },
     { t: "What is American Mahjong?", d: "A strategic tile game for four players", lvl: "First Timer" },
     { t: "Meet the Tiles", d: "Dots, Bams, Craks, Honors, Flowers & Jokers", lvl: "First Timer" },
-    { t: "Reading the NMJL Card", d: "Decoding patterns, symbols & hand values", lvl: "First Timer" },
+    { t: "Read the Game Card", d: "Decoding patterns, symbols & hand values", lvl: "First Timer" },
   ]},
   { s: "Setup & Flow", items: [
     { t: "Setting the Table", d: "Building the wall and getting ready to play", lvl: "First Timer" },
@@ -148,7 +148,7 @@ function LearnPage({ showChat, setShowChat }) {
   if (lesson === "What is Mahji?") return <WhatIsMahji onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "What is American Mahjong?") return <WhatIsAmericanMahjong onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} onNavigate={setLesson} format={format}/>;
-  if (lesson === "Reading the NMJL Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Read the Game Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Setting the Table") return <SettingTheTable onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "How to Deal") return <HowToDeal onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Game Glossary") return <Glossary onBack={() => setLesson(null)} />;
@@ -182,7 +182,7 @@ function LearnPage({ showChat, setShowChat }) {
             {f === "Video" ? "📹" : "📖"} {f}</div>))}
         </div>}
       </div>
-      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Reading the NMJL Card", "Setting the Table", "How to Deal"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
+      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Read the Game Card", "Setting the Table", "How to Deal"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
     {/* Game Glossary button */}
     <div onClick={() => setLesson("Game Glossary")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: isDark ? "rgba(142,199,226,0.06)" : (C.paleBlue || "#D9ECF5"), border: isDark ? "1px solid rgba(142,199,226,0.12)" : "1px solid rgba(142,199,226,0.3)", borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
