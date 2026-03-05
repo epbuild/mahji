@@ -70,6 +70,13 @@ src/
 - **No emojis** in UI unless user explicitly requests them
 - **Mobile-first:** All layouts designed for phone viewport (375px)
 
+### Responsive Content & Scaling (CRITICAL)
+- **All content must fit within the viewport width (375px) without horizontal scrolling.** Tile rows, text blocks, diagrams, and any horizontal layouts must scale down or wrap to fit.
+- **Tile rows:** When displaying tiles in a row (e.g., tile examples, hand displays), calculate the available width and scale tiles down using `transform: scale()` so the entire row fits in one line without overflow. Never let tile rows scroll off-screen horizontally.
+- **Text blocks:** Body text, descriptions, and card content must use the full available width within their container margins. Do not artificially constrain text width — let it flow naturally to the container edges. If text is wrapping onto extra lines while whitespace remains on the right, the container or text element has incorrect padding/margin/max-width.
+- **`flexWrap: 'wrap'`** is allowed for tile display rows and tag rows (but NOT for pass box slots in Charleston drill).
+- **Stats cards & descriptions:** Ensure card descriptions and stat text use the full card width. Avoid unnecessary `maxWidth` constraints that leave empty space on the right.
+
 ### Mat Colors (Charleston Drill)
 Four game mat backgrounds with contrast-optimized seat labels:
 - **Coffee:** Dark brown gradient, seafoam labels (`seatBg`, `readyColor: "#6DBFA8"`)
@@ -172,6 +179,8 @@ Three buttons in order:
 - Charleston drill uses `uiThemes` object mapping `light`/`dark` to bg, chrome, text, cherry, lavDeep, seafoam colors
 - Always use theme variables (`U.cherry`, `U.text`, `U.textMid`, `U.bg`, etc.) rather than hardcoded colors for theme-aware UI elements
 - Mat colors (`MATS` array) are separate from the app theme - they style the game board area only
+- **Dark mode text contrast (CRITICAL):** In dark mode, all body text must be white or near-white (`rgba(255,255,255,0.9)` for primary, `rgba(255,255,255,0.55)` for secondary). Never use dark purple text (e.g., `C.dark`, `C.mid` from the light palette) in dark mode — it will be invisible against the dark background. For emphasis/bold text that uses `C.dark` in light mode, switch to `C.cerulean` (or `t.cerulean`) in dark mode instead of dark purple. Always verify text contrast in both themes.
+- **Rule of thumb:** If you use `color: C.dark` or `color: C.mid` anywhere, it MUST be swapped to `t.textMain` / `t.textMid` (theme-aware) or explicitly checked for dark mode. Hardcoded dark colors are only safe inside components that have their own dark background (e.g., mat areas).
 
 ### Git Workflow
 1. Work on `claude/cranky-clarke` worktree
