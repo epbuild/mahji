@@ -10,6 +10,7 @@ import WhatIsAmericanMahjong from './learn/WhatIsAmericanMahjong';
 import SettingTheTable from './learn/SettingTheTable';
 import Glossary from './learn/Glossary';
 import HowToDeal from './learn/HowToDeal';
+import TableRulesAndTerms from './learn/TableRulesAndTerms';
 
 const BamOverlay = ({ onClose, context }) => {
   const [msgs, setMsgs] = useState([{ from: "bam", text: `Hey! I can see you're in ${context}. Ask me anything!` }]);
@@ -128,11 +129,9 @@ const learnData = [
     { t: "Reading Opponents & Defense", d: "Exposure analysis, hand reading & dogging", lvl: "Advanced" },
     { t: "Scoring & Payment Systems", d: "NMJL scoring, self-picks, jokerless bonuses", lvl: "Advanced" },
   ]},
-  { s: "Etiquette", items: [
-    { t: "Player Alignment", d: "Seating, wind positions, and rotation", lvl: "First Timer" },
-    { t: "Pace of Play", d: "Keeping the game moving without rushing", lvl: "Novice" },
-    { t: "Tile Handling", d: "Proper picking, racking, and discarding", lvl: "First Timer" },
-    { t: "Courtesy at the Table", d: "Sportsmanship, calling etiquette, and table talk", lvl: "Novice" },
+  { s: "Table Talk", items: [
+    { t: "Etiquette", d: "Table rules, courtesy, and proper tile handling", lvl: "First Timer" },
+    { t: "Game Glossary", d: "Key terms and definitions", lvl: "First Timer" },
   ]},
 ];
 
@@ -151,6 +150,7 @@ function LearnPage({ showChat, setShowChat }) {
   if (lesson === "Read the Game Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Setting the Table") return <SettingTheTable onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "How to Deal") return <HowToDeal onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Etiquette") return <TableRulesAndTerms onBack={() => setLesson(null)} />;
   if (lesson === "Game Glossary") return <Glossary onBack={() => setLesson(null)} />;
   if (lesson === "History") return (<>
     <div style={{ padding:"6px 22px 0", display:"flex", alignItems:"center" }}>
@@ -182,19 +182,8 @@ function LearnPage({ showChat, setShowChat }) {
             {f === "Video" ? "📹" : "📖"} {f}</div>))}
         </div>}
       </div>
-      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Read the Game Card", "Setting the Table", "How to Deal"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
+      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Read the Game Card", "Setting the Table", "How to Deal", "Etiquette", "Game Glossary"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
-    {/* Game Glossary button */}
-    <div onClick={() => setLesson("Game Glossary")} style={{ marginTop:20, marginBottom:10, padding:"14px 18px", background: isDark ? "rgba(142,199,226,0.06)" : (C.paleBlue || "#D9ECF5"), border: isDark ? "1px solid rgba(142,199,226,0.12)" : "1px solid rgba(142,199,226,0.3)", borderRadius:14, display:"flex", alignItems:"center", gap:12, cursor:"pointer", transition:"all 0.3s" }} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 14px rgba(142,199,226,0.2)";}} onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
-      <div style={{ width:32, height:32, borderRadius:"50%", background:t.cerulean, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      </div>
-      <div>
-        <div style={{ fontSize:13, fontWeight:600, color: isDark ? t.cerulean : C.dark }}>Game Glossary</div>
-        <div style={{ fontSize:11, color:t.mid, marginTop:1 }}>Key terms and definitions</div>
-      </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.cerulean} strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft:"auto", flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
     {showChat && <BamOverlay onClose={() => setShowChat(false)} context="Learn"/>}
     {!showChat && <BamFloat onClick={() => setShowChat(true)}/>}
   </Cnt></>);

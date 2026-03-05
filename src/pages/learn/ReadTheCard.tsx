@@ -502,12 +502,12 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
               3. ANATOMY OF A LINE (collapsible)
               ═══════════════════════════════════════════════ */}
           <CollapsibleSection title="Anatomy of a Line">
-          <p style={{ fontSize: 13, color: t.mid, lineHeight: 1.65, marginBottom: 14, fontStyle: 'italic' }}>
+          <p style={{ fontSize: 13, color: t.mid, lineHeight: 1.65, marginBottom: 14 }}>
             The card uses a simple shorthand. Each line is made up of a unique set of{' '}
-            <span style={{ fontWeight: 700, fontStyle: 'normal', color: isDark ? t.cerulean : C.dark }}>symbols</span>,{' '}
-            <span style={{ fontWeight: 700, fontStyle: 'normal', color: isDark ? t.cerulean : C.dark }}>groupings</span>,{' '}
-            <span style={{ fontWeight: 700, fontStyle: 'normal', color: isDark ? t.cerulean : C.dark }}>colors</span>, and{' '}
-            <span style={{ fontWeight: 700, fontStyle: 'normal', color: isDark ? t.cerulean : C.dark }}>parenthetical instructions</span>
+            <span style={{ fontWeight: 700, color: isDark ? t.cerulean : C.dark }}>symbols</span>,{' '}
+            <span style={{ fontWeight: 700, color: isDark ? t.cerulean : C.dark }}>groupings</span>,{' '}
+            <span style={{ fontWeight: 700, color: isDark ? t.cerulean : C.dark }}>colors</span>, and{' '}
+            <span style={{ fontWeight: 700, color: isDark ? t.cerulean : C.dark }}>parenthetical instructions</span>
           </p>
 
           {/* Example card line */}
