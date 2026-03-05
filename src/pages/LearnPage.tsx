@@ -116,9 +116,9 @@ const learnData = [
     { t: "What is American Mahjong?", d: "A strategic tile game for four players", lvl: "First Timer" },
     { t: "Meet the Tiles", d: "Dots, Bams, Craks, Honors, Flowers & Jokers", lvl: "First Timer" },
     { t: "Reading the NMJL Card", d: "Decoding patterns, symbols & hand values", lvl: "First Timer" },
-    { t: "Setting the Table", d: "Building the wall and getting ready to play", lvl: "First Timer" },
   ]},
   { s: "Setup & Flow", items: [
+    { t: "Setting the Table", d: "Building the wall and getting ready to play", lvl: "First Timer" },
     { t: "How to Deal", d: "Breaking the wall, dealing tiles, and getting started", lvl: "First Timer" },
     { t: "Gameplay: Turns, Calls & Exposures", d: "Draw, discard, calling tiles, and Mahjong", lvl: "Novice" },
   ]},
