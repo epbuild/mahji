@@ -51,17 +51,29 @@ const Rack = ({ x, y, w, h }: { x: number; y: number; w: number; h: number }) =>
   <rect x={x} y={y} width={w} height={h} rx={2} fill={RACK} stroke={RACK_STROKE} strokeWidth={0.6} opacity={0.85} />
 );
 
-/* ─── Helper: Player label ─── */
-const PLabel = ({ x, y, text, highlight = false, fontSize = 10 }: {
-  x: number; y: number; text: string; highlight?: boolean; fontSize?: number;
-}) => (
-  <text x={x} y={y} textAnchor="middle" dominantBaseline="middle"
-    fill={highlight ? C.cherry : LABEL_COLOR} fontSize={fontSize}
-    fontFamily="'Outfit', sans-serif" fontWeight={highlight ? 700 : 500}
-    opacity={highlight ? 1 : 0.8}>
-    {text}
-  </text>
-);
+/* ─── Helper: Seat badge (Charleston-style colored pill) ─── */
+const SEAT_BG = 'rgba(109,191,168,0.6)';      // Seafoam (matches Coffee mat)
+const SEAT_HIGHLIGHT = 'rgba(224,48,80,0.75)'; // Cherry for East/dealer
+
+const SeatBadge = ({ x, y, text, highlight = false }: {
+  x: number; y: number; text: string; highlight?: boolean;
+}) => {
+  const charW = 4.5;
+  const padX = 7;
+  const h = 14;
+  const w = text.length * charW + padX * 2;
+  return (
+    <g>
+      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={4}
+        fill={highlight ? SEAT_HIGHLIGHT : SEAT_BG} />
+      <text x={x} y={y + 0.5} textAnchor="middle" dominantBaseline="middle"
+        fill="#fff" fontSize={8}
+        fontFamily="'Outfit', sans-serif" fontWeight={700}>
+        {text}
+      </text>
+    </g>
+  );
+};
 
 /* ─── Helper: Curved arrow ─── */
 const Arrow = ({ d, color = ARROW_COLOR }: { d: string; color?: string }) => (
@@ -80,7 +92,7 @@ const ArrowDefs = () => (
   </defs>
 );
 
-/* ─── Base table with mat, racks, labels ─── */
+/* ─── Base table with mat, racks, seat badges ─── */
 const TableBase = ({ children, south = "South", north = "North", east = "East (Dealer)", west = "West", highlightEast = false }: {
   children?: React.ReactNode;
   south?: string; north?: string; east?: string; west?: string;
@@ -91,16 +103,15 @@ const TableBase = ({ children, south = "South", north = "North", east = "East (D
     {/* Mat */}
     <rect x={10} y={10} width={300} height={300} rx={8} fill={MAT} stroke={MAT_EDGE} strokeWidth={1.5} />
     {/* Racks — on the outer edges */}
-    <Rack x={60} y={280} w={200} h={12} /> {/* East/You (bottom) */}
-    <Rack x={60} y={28} w={200} h={12} />  {/* West (top) */}
+    <Rack x={60} y={274} w={200} h={12} /> {/* East/You (bottom) */}
+    <Rack x={60} y={34} w={200} h={12} />  {/* West (top) */}
     <Rack x={16} y={60} w={12} h={200} />  {/* South (left) */}
     <Rack x={292} y={60} w={12} h={200} /> {/* North (right) */}
-    {/* Player labels — East=bottom, West=top, North=right, South=left */}
-    <PLabel x={160} y={304} text={east} highlight={highlightEast} fontSize={east.length > 6 ? 7.5 : 9} />
-    <PLabel x={160} y={20} text={west} fontSize={9} />
-    <PLabel x={310} y={160} text={north} fontSize={9} />
-    <PLabel x={14} y={160} text={south} fontSize={9} />
-    {/* Player position text rotated for side labels */}
+    {/* Seat badges — inside the mat, Charleston-style */}
+    <SeatBadge x={160} y={297} text={east} highlight={highlightEast} />
+    <SeatBadge x={160} y={22} text={west} />
+    <SeatBadge x={48} y={160} text={south} />
+    <SeatBadge x={272} y={160} text={north} />
     {children}
   </svg>
 );
@@ -155,18 +166,18 @@ export function DiagramShuffledTiles() {
    DIAGRAM 3: Walls built (19×2 in front of each rack)
    ═══════════════════════════════════════════════════════ */
 export function DiagramWallsBuilt() {
-  // South wall (bottom) — horizontal, 19 tiles
+  // South wall (bottom) — horizontal, 19 tiles (tight against bottom rack y=274)
   const sw = 6.2; // tile width for wall
   const sh = 8;
   const southX = 160 - (19 * sw) / 2;
-  const southY = 255;
-  // North wall (top) — horizontal, 19 tiles
-  const northY = 55;
-  // East wall (right) — vertical, 19 tiles
-  const eastX = 265;
+  const southY = 262;
+  // North wall (top) — horizontal, 19 tiles (tight against top rack y=34+12=46)
+  const northY = 48;
+  // East wall (right) — vertical, 19 tiles (tight against right rack x=292)
+  const eastX = 280;
   const eastY = 160 - (19 * sw) / 2;
-  // West wall (left) — vertical, 19 tiles
-  const westX = 45;
+  // West wall (left) — vertical, 19 tiles (tight against left rack x=16+12=28)
+  const westX = 30;
   const westY = 160 - (19 * sw) / 2;
 
   const HWall = ({ x, y }: { x: number; y: number }) => {
@@ -196,7 +207,7 @@ export function DiagramWallsBuilt() {
       <VWall x={eastX} y={eastY} />
       <VWall x={westX} y={westY} />
       {/* "19 tiles" annotation */}
-      <text x={160} y={245} textAnchor="middle" fill={LABEL_COLOR} fontSize={6.5} fontFamily="'Outfit', sans-serif" opacity={0.6}>
+      <text x={160} y={252} textAnchor="middle" fill={LABEL_COLOR} fontSize={6.5} fontFamily="'Outfit', sans-serif" opacity={0.6}>
         19 tiles wide × 2 high
       </text>
     </TableBase>
@@ -267,13 +278,13 @@ export function DiagramWallBreak() {
 
   return (
     <TableBase highlightEast east="East (Dealer)">
-      {/* Other walls (simplified) */}
-      {/* West wall (top) */}
-      <rect x={42} y={55} width={236} height={9} rx={1} fill={TILE_BACK} opacity={0.3} />
-      {/* South wall (left) */}
-      <rect x={45} y={42} width={9} height={236} rx={1} fill={TILE_BACK} opacity={0.3} />
-      {/* North wall (right) */}
-      <rect x={268} y={42} width={9} height={236} rx={1} fill={TILE_BACK} opacity={0.3} />
+      {/* Other walls (simplified — tight against racks) */}
+      {/* West wall (top, against rack y=34+12=46) */}
+      <rect x={42} y={48} width={236} height={9} rx={1} fill={TILE_BACK} opacity={0.3} />
+      {/* South wall (left, against rack x=16+12=28) */}
+      <rect x={30} y={42} width={9} height={236} rx={1} fill={TILE_BACK} opacity={0.3} />
+      {/* North wall (right, against rack x=292) */}
+      <rect x={281} y={42} width={9} height={236} rx={1} fill={TILE_BACK} opacity={0.3} />
 
       {/* East wall (bottom) — detailed */}
       <g>{tiles}</g>
@@ -365,16 +376,16 @@ export function DiagramDealing({ step, desc }: { step: string; desc: string }) {
       {/* Mat */}
       <rect x={10} y={10} width={300} height={300} rx={8} fill={MAT} stroke={MAT_EDGE} strokeWidth={1.5} />
       {/* Racks */}
-      <Rack x={60} y={280} w={200} h={12} />
-      <Rack x={60} y={28} w={200} h={12} />
+      <Rack x={60} y={274} w={200} h={12} />
+      <Rack x={60} y={34} w={200} h={12} />
       <Rack x={16} y={60} w={12} h={200} />
       <Rack x={292} y={60} w={12} h={200} />
-      {/* Simplified walls */}
-      <rect x={60} y={60} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} />   {/* West/top */}
-      <rect x={42} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} />  {/* South/left */}
-      <rect x={268} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* North/right */}
+      {/* Simplified walls (tight against racks) */}
+      <rect x={60} y={48} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} />   {/* West/top */}
+      <rect x={30} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} />  {/* South/left */}
+      <rect x={284} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* North/right */}
       {/* East wall (bottom) — broken, being dealt from */}
-      <rect x={60} y={268} width={90} height={6} rx={1} fill={TILE_BACK} opacity={0.4} />
+      <rect x={60} y={262} width={90} height={6} rx={1} fill={TILE_BACK} opacity={0.4} />
 
       {/* Dealt stacks */}
       {renderStacks(stackPositions.east.x, stackPositions.east.y, counts.e, active === 'e', true)}
@@ -382,11 +393,11 @@ export function DiagramDealing({ step, desc }: { step: string; desc: string }) {
       {renderStacks(stackPositions.west.x, stackPositions.west.y, counts.w, active === 'w', true)}
       {renderStacks(stackPositions.south.x, stackPositions.south.y, counts.s, active === 's', false)}
 
-      {/* Labels — East=bottom, West=top, North=right, South=left */}
-      <PLabel x={160} y={304} text="East (Dealer)" highlight fontSize={7.5} />
-      <PLabel x={160} y={20} text="West" fontSize={9} />
-      <PLabel x={310} y={160} text="North" fontSize={9} />
-      <PLabel x={14} y={160} text="South" fontSize={9} />
+      {/* Seat badges — Charleston-style */}
+      <SeatBadge x={160} y={297} text="East (Dealer)" highlight />
+      <SeatBadge x={160} y={22} text="West" />
+      <SeatBadge x={48} y={160} text="South" />
+      <SeatBadge x={272} y={160} text="North" />
 
       {/* Step indicator */}
       <rect x={115} y={145} width={90} height={22} rx={6} fill="rgba(0,0,0,0.3)" />
@@ -406,33 +417,33 @@ export function DiagramWallContinuation() {
     <svg viewBox="0 0 320 320" style={{ width: '100%', maxWidth: 320, display: 'block', margin: '0 auto' }}>
       <ArrowDefs />
       <rect x={10} y={10} width={300} height={300} rx={8} fill={MAT} stroke={MAT_EDGE} strokeWidth={1.5} />
-      <Rack x={60} y={280} w={200} h={12} />
-      <Rack x={60} y={28} w={200} h={12} />
+      <Rack x={60} y={274} w={200} h={12} />
+      <Rack x={60} y={34} w={200} h={12} />
       <Rack x={16} y={60} w={12} h={200} />
       <Rack x={292} y={60} w={12} h={200} />
 
-      {/* East wall (bottom) — depleted */}
-      <rect x={60} y={264} width={60} height={6} rx={1} fill={TILE_BACK} opacity={0.15} />
-      <text x={90} y={258} textAnchor="middle" fill={C.cerulean} fontSize={5.5}
+      {/* East wall (bottom) — depleted (tight against rack y=274) */}
+      <rect x={60} y={260} width={60} height={6} rx={1} fill={TILE_BACK} opacity={0.15} />
+      <text x={90} y={254} textAnchor="middle" fill={C.cerulean} fontSize={5.5}
         fontFamily="'Outfit', sans-serif" opacity={0.6}>empty</text>
 
-      {/* South wall (left) — being broken now */}
-      <rect x={42} y={60} width={7} height={120} rx={1} fill={TILE_BACK} opacity={0.5} />
-      <rect x={42} y={185} width={7} height={75} rx={1} fill={TILE_BACK} opacity={0.2} />
+      {/* South wall (left) — being broken now (tight against rack x=28) */}
+      <rect x={30} y={60} width={7} height={120} rx={1} fill={TILE_BACK} opacity={0.5} />
+      <rect x={30} y={185} width={7} height={75} rx={1} fill={TILE_BACK} opacity={0.2} />
 
       {/* Arrow from east (bottom) wall curving to south (left) wall */}
-      <path d="M 65 262 Q 50 240 46 195" fill="none" stroke={C.cherry}
+      <path d="M 65 258 Q 45 235 34 195" fill="none" stroke={C.cherry}
         strokeWidth={1.5} strokeLinecap="round" markerEnd="url(#arrowhead)" opacity={0.7} />
 
-      {/* Other walls simplified */}
-      <rect x={60} y={60} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* West/top */}
-      <rect x={268} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* North/right */}
+      {/* Other walls simplified (tight against racks) */}
+      <rect x={60} y={48} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* West/top */}
+      <rect x={284} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* North/right */}
 
-      {/* Labels — East=bottom, West=top, North=right, South=left */}
-      <PLabel x={160} y={304} text="East (Dealer)" highlight fontSize={7.5} />
-      <PLabel x={160} y={20} text="West" fontSize={9} />
-      <PLabel x={310} y={160} text="North" fontSize={9} />
-      <PLabel x={14} y={160} text="South" fontSize={9} />
+      {/* Seat badges — Charleston-style */}
+      <SeatBadge x={160} y={297} text="East (Dealer)" highlight />
+      <SeatBadge x={160} y={22} text="West" />
+      <SeatBadge x={48} y={160} text="South" />
+      <SeatBadge x={272} y={160} text="North" />
 
       <text x={160} y={145} textAnchor="middle" fill={LABEL_COLOR} fontSize={6.5}
         fontFamily="'Outfit', sans-serif" opacity={0.6}>
