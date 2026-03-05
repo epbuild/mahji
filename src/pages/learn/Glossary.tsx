@@ -1,4 +1,5 @@
-import { C } from '../../constants/colors';
+import { C, getThemeColors } from '../../constants/colors';
+import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
 
 const SECTIONS = [
@@ -70,11 +71,13 @@ const SECTIONS = [
 ];
 
 export default function Glossary({ onBack }: { onBack: () => void }) {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   return (
     <>
       <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
-        <div onClick={onBack} style={{ fontSize: 12, color: C.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <div onClick={onBack} style={{ fontSize: 12, color: t.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
           Learn
         </div>
       </div>
@@ -95,17 +98,17 @@ export default function Glossary({ onBack }: { onBack: () => void }) {
               <div key={entry.term} style={{
                 paddingBottom: ti < section.terms.length - 1 ? 12 : 0,
                 marginBottom: ti < section.terms.length - 1 ? 12 : 0,
-                borderBottom: ti < section.terms.length - 1 ? `1px solid ${C.lavBorder}` : 'none',
+                borderBottom: ti < section.terms.length - 1 ? `1px solid ${t.lavBorder}` : 'none',
               }}>
                 <span style={{
                   fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 700,
-                  color: C.dark,
+                  color: isDark ? t.cerulean : C.dark,
                 }}>
                   {entry.term}:
                 </span>
                 <span style={{
                   fontFamily: "'Outfit', sans-serif", fontSize: 12.5,
-                  color: C.mid, lineHeight: 1.6, marginLeft: 6,
+                  color: t.mid, lineHeight: 1.6, marginLeft: 6,
                 }}>
                   {entry.def}
                 </span>
@@ -116,7 +119,7 @@ export default function Glossary({ onBack }: { onBack: () => void }) {
             {si < SECTIONS.length - 1 && (
               <div style={{
                 height: 1,
-                background: `linear-gradient(90deg, transparent, ${C.lavBorder}, transparent)`,
+                background: `linear-gradient(90deg, transparent, ${t.lavBorder}, transparent)`,
                 marginTop: 16,
               }} />
             )}
