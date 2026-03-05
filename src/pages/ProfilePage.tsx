@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { C, getThemeColors, FONT_SERIF, FONT_SANS } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
-import { I, BirdIcon, Logo, SunIcon, MoonIcon } from '../components/ui/Icons';
+import { I, BirdIcon, SunIcon, MoonIcon } from '../components/ui/Icons';
 import { Cnt, SH, PT } from '../components/Layout';
 
 /* ── US STATES ── */
@@ -194,7 +194,7 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
   const { isDark, toggle: toggleTheme } = useTheme();
   const t = getThemeColors(isDark);
 
-  type SubPage = null | 'edit' | 'email_password' | 'two_factor' | 'location' | 'invite' | 'billing' | 'data_privacy';
+  type SubPage = null | 'edit' | 'email_password' | 'two_factor' | 'invite' | 'billing' | 'data_privacy';
   const [sub, setSub] = useState<SubPage>(null);
 
   // Avatar state
@@ -234,15 +234,50 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
   const [saved, setSaved] = useState(false);
   const flashSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 1800); };
 
+  // Draft state for Edit Profile (only applied on Save)
+  const [draftDisplayName, setDraftDisplayName] = useState(displayName);
+  const [draftScreenName, setDraftScreenName] = useState(screenName);
+  const [draftAvatarType, setDraftAvatarType] = useState(avatarType);
+  const [draftSelectedSymbol, setDraftSelectedSymbol] = useState(selectedSymbol);
+  const [draftSymbolBgColor, setDraftSymbolBgColor] = useState(symbolBgColor);
+  const [draftPhotoUrl, setDraftPhotoUrl] = useState(photoUrl);
+  const [draftStateVal, setDraftStateVal] = useState(stateVal);
+  const [draftCity, setDraftCity] = useState(city);
+
+  const enterEditMode = () => {
+    setDraftDisplayName(displayName);
+    setDraftScreenName(screenName);
+    setDraftAvatarType(avatarType);
+    setDraftSelectedSymbol(selectedSymbol);
+    setDraftSymbolBgColor(symbolBgColor);
+    setDraftPhotoUrl(photoUrl);
+    setDraftStateVal(stateVal);
+    setDraftCity(city);
+    setSub('edit');
+  };
+
+  const handleSaveProfile = () => {
+    setDisplayName(draftDisplayName);
+    setScreenName(draftScreenName);
+    setAvatarType(draftAvatarType);
+    setSelectedSymbol(draftSelectedSymbol);
+    setSymbolBgColor(draftSymbolBgColor);
+    setPhotoUrl(draftPhotoUrl);
+    setStateVal(draftStateVal);
+    setCity(draftCity);
+    flashSaved();
+  };
+
+  // Email change flow
+  const [emailChangeStep, setEmailChangeStep] = useState<null | 'confirm' | 'sent'>(null);
+
   /* ── SHARED COMPONENTS ── */
-  const Back = ({ to, label }: { to?: string; label?: string }) => (
-    <div style={{ padding: "8px 22px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <div onClick={() => to ? setSub(null) : onBack()} style={{ fontSize: 12, color: t.lavDeep, cursor: "pointer", fontWeight: 500, display: "flex", alignItems: "center", gap: 3 }}>
+  const BackLink = ({ label, onClick }: { label: string; onClick: () => void }) => (
+    <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
+      <div onClick={onClick} style={{ fontSize: 12, color: t.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-        {label || "Back"}
+        {label}
       </div>
-      <Logo onClick={onHome}/>
-      <div style={{ width: 40 }}/>
     </div>
   );
 
@@ -321,20 +356,24 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
   );
 
   /* ── AVATAR RENDERING ── */
-  const AvatarCircle = ({ size = 74 }: { size?: number }) => {
-    const showPhoto = avatarType === 'photo' && photoUrl;
+  const AvatarCircle = ({ size = 74, useDraft = false }: { size?: number; useDraft?: boolean }) => {
+    const aType = useDraft ? draftAvatarType : avatarType;
+    const aSym = useDraft ? draftSelectedSymbol : selectedSymbol;
+    const aBg = useDraft ? draftSymbolBgColor : symbolBgColor;
+    const aPhoto = useDraft ? draftPhotoUrl : photoUrl;
+    const showPhoto = aType === 'photo' && aPhoto;
     return (
       <div style={{
         width: size, height: size, borderRadius: "50%",
-        background: showPhoto ? 'transparent' : symbolBgColor,
+        background: showPhoto ? 'transparent' : aBg,
         border: `2px solid ${isDark ? 'rgba(255,255,255,0.15)' : C.lavender}`,
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden", position: "relative", flexShrink: 0
       }}>
         {showPhoto ? (
-          <img src={photoUrl!} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+          <img src={aPhoto!} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
         ) : (
-          AVATAR_SYMBOLS[selectedSymbol]?.render(size * 0.48)
+          AVATAR_SYMBOLS[aSym]?.render(size * 0.48)
         )}
       </div>
     );
@@ -345,8 +384,8 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setPhotoUrl(ev.target?.result as string);
-      setAvatarType('photo');
+      setDraftPhotoUrl(ev.target?.result as string);
+      setDraftAvatarType('photo');
     };
     reader.readAsDataURL(file);
   };
@@ -359,7 +398,7 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   /* ── AUTH SCREEN (not signed in) ── */
   if (!signedIn) return (<>
-    <Back label="Back"/>
+    <BackLink label="Back" onClick={onBack}/>
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", paddingBottom: 90 }}>
       <div style={{ width: 80, height: 80, borderRadius: "50%", background: isDark ? 'rgba(155,136,187,0.08)' : C.lavSoft, border: `2px solid ${isDark ? 'rgba(192,178,212,0.15)' : C.lavender}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
         <BirdIcon size={40} color={C.cherry} sw={1.4}/>
@@ -402,13 +441,13 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   /* ── EDIT PROFILE ── */
   if (sub === 'edit') return (<>
-    <Back to="profile" label="Profile"/>
+    <BackLink label="Profile" onClick={() => setSub(null)}/>
     <PT>Edit Profile</PT>
     <Cnt>
       {/* Avatar preview */}
       <div style={{ textAlign: "center", marginBottom: 16, position: "relative", display: "inline-flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
         <div style={{ position: "relative", display: "inline-block" }}>
-          <AvatarCircle size={80}/>
+          <AvatarCircle size={80} useDraft/>
           <div onClick={() => fileRef.current?.click()} style={{
             position: "absolute", bottom: 0, right: 0,
             width: 26, height: 26, borderRadius: "50%",
@@ -427,10 +466,10 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
       <SH>Choose a Symbol</SH>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 16 }}>
         {AVATAR_SYMBOLS.map((sym, i) => (
-          <div key={sym.id} onClick={() => { setSelectedSymbol(i); setAvatarType('symbol'); }} style={{
+          <div key={sym.id} onClick={() => { setDraftSelectedSymbol(i); setDraftAvatarType('symbol'); }} style={{
             width: "100%", aspectRatio: "1", borderRadius: 14,
-            background: selectedSymbol === i && avatarType === 'symbol' ? symbolBgColor : t.btnBg,
-            border: selectedSymbol === i && avatarType === 'symbol' ? `2px solid ${C.cherry}` : `1px solid ${t.btnBorder}`,
+            background: draftSelectedSymbol === i && draftAvatarType === 'symbol' ? draftSymbolBgColor : t.btnBg,
+            border: draftSelectedSymbol === i && draftAvatarType === 'symbol' ? `2px solid ${C.cherry}` : `1px solid ${t.btnBorder}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", transition: "all 0.25s", overflow: "hidden"
           }}>
@@ -443,10 +482,10 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
       <SH>Background Color</SH>
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {BG_COLORS.map(c => (
-          <div key={c} onClick={() => setSymbolBgColor(c)} style={{
+          <div key={c} onClick={() => setDraftSymbolBgColor(c)} style={{
             width: 30, height: 30, borderRadius: "50%", background: c, cursor: "pointer",
-            border: symbolBgColor === c ? "2px solid #fff" : `2px solid transparent`,
-            boxShadow: symbolBgColor === c ? "0 0 0 2px " + C.cherry : "0 1px 3px rgba(0,0,0,0.15)",
+            border: draftSymbolBgColor === c ? "2px solid #fff" : `2px solid transparent`,
+            boxShadow: draftSymbolBgColor === c ? "0 0 0 2px " + C.cherry : "0 1px 3px rgba(0,0,0,0.15)",
             transition: "all 0.2s"
           }}/>
         ))}
@@ -454,22 +493,61 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
       {/* Profile fields */}
       <SH>Profile Info</SH>
-      <InputField label="Display Name" value={displayName} onChange={setDisplayName}/>
-      <InputField label="Screen Name" value={'@' + screenName} onChange={v => setScreenName(v.replace(/^@/, ''))}/>
+      <InputField label="Display Name" value={draftDisplayName} onChange={setDraftDisplayName}/>
+      <InputField label="Screen Name" value={'@' + draftScreenName} onChange={v => setDraftScreenName(v.replace(/^@/, ''))}/>
       <InputField label="Player ID" value={playerIdState} readOnly italic/>
 
-      <PrimaryButton label={saved ? "Saved!" : "Save Changes"} onClick={flashSaved}/>
+      {/* Location */}
+      <SH>Location</SH>
+      <InputField label="Country" value="United States" readOnly/>
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 10, color: t.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4, fontWeight: 600, fontFamily: FONT_SANS }}>State</div>
+        <select value={draftStateVal} onChange={e => setDraftStateVal(e.target.value)} style={{
+          width: '100%', boxSizing: 'border-box' as const, padding: "11px 14px",
+          background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 12,
+          fontSize: 14, color: t.textMain, fontFamily: FONT_SANS,
+          appearance: 'none', WebkitAppearance: 'none' as any, outline: 'none',
+        }}>
+          {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+      <InputField label="City" value={draftCity} onChange={setDraftCity}/>
+
+      <PrimaryButton label={saved ? "Saved!" : "Save Changes"} onClick={handleSaveProfile}/>
     </Cnt>
   </>);
 
   /* ── EMAIL & PASSWORD ── */
   if (sub === 'email_password') return (<>
-    <Back to="profile" label="Profile"/>
+    <BackLink label="Profile" onClick={() => { setSub(null); setEmailChangeStep(null); }}/>
     <PT>Email & Password</PT>
     <Cnt>
       <SH>Email</SH>
       <InputField label="Current Email" value={email} readOnly/>
-      <SecondaryButton label="Change Email" icon={<MailIcon size={14} color={t.lavDeep}/>}/>
+
+      {emailChangeStep === null && (
+        <SecondaryButton label="Change Email" icon={<MailIcon size={14} color={t.lavDeep}/>} onClick={() => setEmailChangeStep('confirm')}/>
+      )}
+      {emailChangeStep === 'confirm' && (
+        <div style={{ background: isDark ? 'rgba(142,199,226,0.06)' : 'rgba(142,199,226,0.08)', border: `1px solid ${isDark ? 'rgba(142,199,226,0.15)' : 'rgba(142,199,226,0.2)'}`, borderRadius: 14, padding: "16px", marginBottom: 12 }}>
+          <p style={{ fontSize: 13, color: t.textMain, lineHeight: 1.6, fontFamily: FONT_SANS, margin: "0 0 12px" }}>
+            To change your email, we'll send a verification link to <span style={{ fontWeight: 600 }}>{email}</span> to confirm it's you.
+          </p>
+          <PrimaryButton label="Send Verification Link" onClick={() => setEmailChangeStep('sent')}/>
+          <div onClick={() => setEmailChangeStep(null)} style={{ textAlign: "center", fontSize: 12, color: t.textDim, cursor: "pointer", fontFamily: FONT_SANS }}>Cancel</div>
+        </div>
+      )}
+      {emailChangeStep === 'sent' && (
+        <div style={{ background: isDark ? 'rgba(109,191,168,0.08)' : 'rgba(109,191,168,0.1)', border: `1px solid ${isDark ? 'rgba(109,191,168,0.15)' : 'rgba(109,191,168,0.2)'}`, borderRadius: 14, padding: "16px", marginBottom: 12, textAlign: "center" }}>
+          <div style={{ fontSize: 20, marginBottom: 6 }}>
+            <MailIcon size={24} color={t.seafoam}/>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: t.textMain, fontFamily: FONT_SANS, marginBottom: 4 }}>Check your inbox</div>
+          <p style={{ fontSize: 12, color: t.textMid, lineHeight: 1.5, fontFamily: FONT_SANS, margin: 0 }}>
+            We sent a verification link to {email}. Click the link in the email to confirm your change.
+          </p>
+        </div>
+      )}
 
       <div style={{ height: 8 }}/>
       <SH>Password</SH>
@@ -480,7 +558,7 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   /* ── TWO-FACTOR AUTH ── */
   if (sub === 'two_factor') return (<>
-    <Back to="profile" label="Profile"/>
+    <BackLink label="Profile" onClick={() => setSub(null)}/>
     <PT>Two-Factor Auth</PT>
     <Cnt>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -501,31 +579,9 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
     </Cnt>
   </>);
 
-  /* ── LOCATION ── */
-  if (sub === 'location') return (<>
-    <Back to="profile" label="Profile"/>
-    <PT>Location</PT>
-    <Cnt>
-      <InputField label="Country" value="United States" readOnly/>
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 10, color: t.textDim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4, fontWeight: 600, fontFamily: FONT_SANS }}>State</div>
-        <select value={stateVal} onChange={e => setStateVal(e.target.value)} style={{
-          width: '100%', boxSizing: 'border-box' as const, padding: "11px 14px",
-          background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 12,
-          fontSize: 14, color: t.textMain, fontFamily: FONT_SANS,
-          appearance: 'none', WebkitAppearance: 'none' as any, outline: 'none',
-        }}>
-          {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-      <InputField label="City" value={city} onChange={setCity}/>
-      <PrimaryButton label={saved ? "Saved!" : "Save Location"} onClick={flashSaved}/>
-    </Cnt>
-  </>);
-
   /* ── INVITE FRIENDS ── */
   if (sub === 'invite') return (<>
-    <Back to="profile" label="Profile"/>
+    <BackLink label="Profile" onClick={() => setSub(null)}/>
     <PT>Invite Friends</PT>
     <Cnt>
       {/* Value proposition */}
@@ -569,7 +625,7 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   /* ── BILLING & PLAN ── */
   if (sub === 'billing') return (<>
-    <Back to="profile" label="Profile"/>
+    <BackLink label="Profile" onClick={() => setSub(null)}/>
     <PT>Billing & Plan</PT>
     <Cnt>
       {/* Current plan */}
@@ -595,7 +651,7 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   /* ── DATA & PRIVACY ── */
   if (sub === 'data_privacy') return (<>
-    <Back to="profile" label="Profile"/>
+    <BackLink label="Profile" onClick={() => setSub(null)}/>
     <PT>Data & Privacy</PT>
     <Cnt>
       <Row icon={<EyeIcon size={18} color="currentColor"/>} label="Profile Visibility" subText={profilePublic ? "Public" : "Private"} right={<Toggle on={profilePublic} onToggle={() => setProfilePublic(!profilePublic)}/>}/>
@@ -606,14 +662,14 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   /* ── MAIN PROFILE HUB ── */
   return (<>
-    <Back label="Back"/>
+    <BackLink label="Back" onClick={onBack}/>
     <PT>Profile</PT>
     <Cnt>
       {/* Avatar + Name header */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         <div style={{ display: "inline-block", position: "relative", marginBottom: 8 }}>
           <AvatarCircle size={74}/>
-          <div onClick={() => setSub('edit')} style={{
+          <div onClick={enterEditMode} style={{
             position: "absolute", bottom: 0, right: -2,
             width: 24, height: 24, borderRadius: "50%",
             background: C.cherry, display: "flex", alignItems: "center", justifyContent: "center",
@@ -626,21 +682,23 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
         <div style={{ fontFamily: FONT_SERIF, fontSize: 20, fontWeight: 600, color: t.textMain, marginBottom: 2 }}>{displayName}</div>
         <div style={{ fontSize: 12, color: t.textDim, fontFamily: FONT_SANS }}>@{screenName}</div>
         <div style={{ fontSize: 10, color: t.textDim, fontStyle: "italic", fontFamily: FONT_SANS, marginTop: 2 }}>{playerIdState}</div>
-        <div onClick={() => setSub('edit')} style={{
+        {(city || stateVal) && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 5 }}>
+            <MapPinIcon size={10} color={t.textDim}/>
+            <span style={{ fontSize: 11, color: t.textDim, fontFamily: FONT_SANS }}>{city}{city && stateVal ? ', ' : ''}{stateVal}</span>
+          </div>
+        )}
+        <div onClick={enterEditMode} style={{
           display: "inline-block", marginTop: 10, padding: "6px 20px", borderRadius: 20,
           border: `1px solid ${t.lavDeep}`, fontSize: 12, fontWeight: 500,
           color: t.lavDeep, cursor: "pointer", fontFamily: FONT_SANS, transition: "all 0.25s"
         }}>Edit Profile</div>
       </div>
 
-      {/* Account */}
-      <SH>Account</SH>
+      {/* Account & Security */}
+      <SH>Account & Security</SH>
       <Row icon={<MailIcon size={18} color="currentColor"/>} label="Email & Password" subText={email} onClick={() => setSub('email_password')}/>
       <Row icon={<ShieldIcon size={18} color="currentColor"/>} label="Two-Factor Auth" subText={twoFactorEnabled ? "Enabled" : "Not enabled"} onClick={() => setSub('two_factor')}/>
-
-      {/* Location */}
-      <SH>Location</SH>
-      <Row icon={<MapPinIcon size={18} color="currentColor"/>} label="Location" subText={`${city}, ${stateVal}`} onClick={() => setSub('location')}/>
 
       {/* Social */}
       <SH>Social</SH>
