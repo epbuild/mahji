@@ -996,7 +996,7 @@ export default function StatsPage() {
           </div>
           <div style={{
             fontFamily: FONT_SANS, fontSize: 11, color: t.textMid,
-            lineHeight: 1.6, marginBottom: 18, maxWidth: 340, fontStyle: "italic",
+            lineHeight: 1.6, marginBottom: 18, fontStyle: "italic",
             position: "relative" as const, zIndex: 1,
           }}>
             {computedStyle.tagline}

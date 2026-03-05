@@ -1,4 +1,5 @@
-import { C } from '../../constants/colors';
+import { C, getThemeColors } from '../../constants/colors';
+import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
 import {
   DiagramShuffledTiles,
@@ -18,67 +19,77 @@ const FONT_SERIF = "'Bodoni Moda', serif";
 /* ─── Step component ─── */
 const Step = ({ num, title, children, diagram }: {
   num: number; title?: string; children: React.ReactNode; diagram?: React.ReactNode;
-}) => (
-  <div style={{ marginBottom: 28 }}>
-    {/* Step number badge + optional title */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-      <div style={{
-        width: 24, height: 24, borderRadius: '50%', background: C.cherry,
-        color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex',
-        alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        boxShadow: '0 2px 6px rgba(224,48,80,0.2)',
-      }}>
-        {num}
-      </div>
-      {title && (
+}) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div style={{ marginBottom: 28 }}>
+      {/* Step number badge + optional title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <div style={{
-          fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 600,
-          color: C.dark, letterSpacing: 0.3,
+          width: 24, height: 24, borderRadius: '50%', background: C.cherry,
+          color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          boxShadow: '0 2px 6px rgba(224,48,80,0.2)',
         }}>
-          {title}
+          {num}
+        </div>
+        {title && (
+          <div style={{
+            fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 600,
+            color: isDark ? t.cerulean : C.dark, letterSpacing: 0.3,
+          }}>
+            {title}
+          </div>
+        )}
+      </div>
+      {/* Body text */}
+      <div style={{
+        fontFamily: FONT_SANS, fontSize: 12.5, color: t.mid,
+        lineHeight: 1.65, marginBottom: diagram ? 12 : 0,
+      }}>
+        {children}
+      </div>
+      {/* Diagram */}
+      {diagram && (
+        <div style={{
+          borderRadius: 12, overflow: 'hidden',
+          border: `1px solid ${t.lavBorder}`, marginTop: 8,
+        }}>
+          {diagram}
         </div>
       )}
     </div>
-    {/* Body text */}
-    <div style={{
-      fontFamily: FONT_SANS, fontSize: 12.5, color: C.mid,
-      lineHeight: 1.65, marginBottom: diagram ? 12 : 0,
-    }}>
-      {children}
-    </div>
-    {/* Diagram */}
-    {diagram && (
-      <div style={{
-        borderRadius: 12, overflow: 'hidden',
-        border: `1px solid ${C.lavBorder}`, marginTop: 8,
-      }}>
-        {diagram}
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 /* ─── Section divider ─── */
-const Divider = () => (
-  <div style={{
-    height: 1,
-    background: `linear-gradient(90deg, transparent, ${C.lavBorder}, transparent)`,
-    margin: '4px 0 24px',
-  }} />
-);
+const Divider = () => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div style={{
+      height: 1,
+      background: `linear-gradient(90deg, transparent, ${t.lavBorder}, transparent)`,
+      margin: '4px 0 24px',
+    }} />
+  );
+};
 
 export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; onNavigate: (lesson: string) => void }) {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   return (
     <>
       <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
-        <div onClick={onBack} style={{ fontSize: 12, color: C.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <div onClick={onBack} style={{ fontSize: 12, color: t.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
           Learn
         </div>
       </div>
       <PT>How to Deal</PT>
       <Cnt>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 20, lineHeight: 1.65 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 20, lineHeight: 1.65 }}>
           Dealing in American Mahjong follows a specific ritual. It may seem like a lot at first, but after a few games it becomes second nature. Follow these steps and you'll be dealing like a pro.
         </p>
 
@@ -130,14 +141,14 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
           The Deal
         </div>
 
-        <p className="body-text" style={{ color: C.mid, marginBottom: 16, lineHeight: 1.65, fontSize: 12.5 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65, fontSize: 12.5 }}>
           East deals from the pushed-out wall in a specific order. Each "deal" is 2 stacks (4 tiles total). The deal goes around the table three times.
         </p>
 
         {/* ─── Round 1 ─── */}
         <div style={{
           fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600,
-          color: C.lavDeep, letterSpacing: 0.3, marginBottom: 12,
+          color: t.lavDeep, letterSpacing: 0.3, marginBottom: 12,
         }}>
           Round 1
         </div>
@@ -163,7 +174,7 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
         {/* ─── Round 2 ─── */}
         <div style={{
           fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600,
-          color: C.lavDeep, letterSpacing: 0.3, marginBottom: 12,
+          color: t.lavDeep, letterSpacing: 0.3, marginBottom: 12,
         }}>
           Round 2
         </div>
@@ -190,7 +201,7 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
         {/* ─── Round 3 ─── */}
         <div style={{
           fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600,
-          color: C.lavDeep, letterSpacing: 0.3, marginBottom: 12,
+          color: t.lavDeep, letterSpacing: 0.3, marginBottom: 12,
         }}>
           Round 3
         </div>
@@ -239,7 +250,7 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
 
         {/* ─── Encouragement block ─── */}
         <div style={{
-          background: C.lavCard, border: `1px solid ${C.lavBorder}`,
+          background: t.lavCard, border: `1px solid ${t.lavBorder}`,
           borderRadius: 14, padding: '18px 20px', marginBottom: 24, marginTop: 8,
         }}>
           <div style={{
@@ -249,7 +260,7 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
             You've got this!
           </div>
           <div style={{
-            fontFamily: FONT_SANS, fontSize: 12, color: C.mid, lineHeight: 1.6,
+            fontFamily: FONT_SANS, fontSize: 12, color: t.mid, lineHeight: 1.6,
           }}>
             It looks like a lot of steps, but dealing becomes automatic after just a few games. The key is remembering the order: East, North, West, South — three rounds of 2 stacks each, then the final top-layer tiles.
           </div>

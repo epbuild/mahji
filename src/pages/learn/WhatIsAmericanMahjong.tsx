@@ -1,24 +1,27 @@
-import { C } from '../../constants/colors';
+import { C, getThemeColors } from '../../constants/colors';
+import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
 
 export default function WhatIsAmericanMahjong({ onBack, onNavigate }: { onBack: () => void; onNavigate: (lesson: string) => void }) {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   return (
     <>
       <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
-        <div onClick={onBack} style={{ fontSize: 12, color: C.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <div onClick={onBack} style={{ fontSize: 12, color: t.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
           Learn
         </div>
       </div>
       <PT>What is American Mahjong?</PT>
       <Cnt>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 16, lineHeight: 1.65 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
           American mahjong is a strategic, tile-based game where four players compete to be the first to complete a specific 14-tile hand — matching their tiles to one of the winning combinations listed on the official Game Card, published each year by organizations like the National Mah Jongg League.
         </p>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 16, lineHeight: 1.65 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
           Every hand is a puzzle, every game is different, and the card changes annually, which means even seasoned players are always discovering something new. While the game is traditionally played with four players, it can be adapted for three or even two (in a format called Siamese).
         </p>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 24, lineHeight: 1.65 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 24, lineHeight: 1.65 }}>
           Every great game starts with knowing your pieces. Before anything else, let's introduce you to the tiles, the foundation of everything that comes next.
         </p>
 

@@ -1,24 +1,27 @@
-import { C } from '../../constants/colors';
+import { C, getThemeColors } from '../../constants/colors';
+import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
 
 export default function WhatIsMahji({ onBack, onNavigate }: { onBack: () => void; onNavigate: (lesson: string) => void }) {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   return (
     <>
       <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
-        <div onClick={onBack} style={{ fontSize: 12, color: C.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <div onClick={onBack} style={{ fontSize: 12, color: t.lavDeep, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.lavDeep} strokeWidth="1.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
           Learn
         </div>
       </div>
       <PT>What is Mahji?</PT>
       <Cnt>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 16, lineHeight: 1.65 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
           Mahji is your place to master American Mahjong — anytime, anywhere. Whether you're learning the game for the first time or finally leveling up after years of casual play, Mahji is designed to meet you exactly where you are.
         </p>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 16, lineHeight: 1.65 }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
           Practice your strategy and sharpen your instincts without needing to wait for your next game night. And play a real round whenever the mood strikes, even if you've only got a few minutes to spare.
         </p>
-        <p className="body-text" style={{ color: C.mid, marginBottom: 24, lineHeight: 1.65, fontStyle: 'italic' }}>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 24, lineHeight: 1.65, fontStyle: 'italic' }}>
           Mahj at your own pace — no rushing, no fuss. The game comes to you.
         </p>
 

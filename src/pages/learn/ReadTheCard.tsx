@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { C } from '../../constants/colors';
+import { useState, useEffect, useRef } from 'react';
+import { C, getThemeColors } from '../../constants/colors';
+import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
 import {
   MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker,
@@ -9,30 +10,55 @@ import {
    REUSABLE BUILDING BLOCKS
    ───────────────────────────────────────────────── */
 
-// Horizontal scrollable tile strip — tiles NEVER wrap to a second line
+// Auto-scaling tile strip — scales tiles down to fit viewport width (no horizontal scroll)
 const TileStrip = ({ children, label, delay = 0 }: {
   children: React.ReactNode; label?: string; delay?: number;
-}) => (
-  <div style={{ marginBottom: 12, animation: `entranceFade 0.5s ease ${delay}s both` }}>
-    {label && (
-      <div style={{
-        fontSize: 10, fontWeight: 600, color: C.light, textTransform: 'uppercase',
-        letterSpacing: 1.5, marginBottom: 6,
-      }}>{label}</div>
-    )}
-    <div style={{
-      overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-      paddingBottom: 4, /* room for scrollbar on mobile */
-    }}>
-      <div style={{
-        display: 'inline-flex', gap: 3, alignItems: 'center',
-        whiteSpace: 'nowrap',
-      }}>
-        {children}
+}) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  const stripRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const measure = () => {
+      if (stripRef.current && innerRef.current) {
+        const containerW = stripRef.current.offsetWidth;
+        const contentW = innerRef.current.scrollWidth;
+        if (contentW > containerW && containerW > 0) {
+          setScale(Math.max(0.5, containerW / contentW));
+        } else {
+          setScale(1);
+        }
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [children]);
+
+  return (
+    <div style={{ marginBottom: 12, animation: `entranceFade 0.5s ease ${delay}s both` }}>
+      {label && (
+        <div style={{
+          fontSize: 10, fontWeight: 600, color: t.light, textTransform: 'uppercase',
+          letterSpacing: 1.5, marginBottom: 6,
+        }}>{label}</div>
+      )}
+      <div ref={stripRef} style={{ overflow: 'hidden' }}>
+        <div ref={innerRef} style={{
+          display: 'inline-flex', gap: 3, alignItems: 'center',
+          whiteSpace: 'nowrap',
+          transform: scale < 1 ? `scale(${scale})` : undefined,
+          transformOrigin: 'left top',
+          marginBottom: scale < 1 ? `${-(1 - scale) * 60}px` : undefined,
+        }}>
+          {children}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Tile = ({ children, delay = 0, glow = false }: {
   children: React.ReactNode; delay?: number; glow?: boolean;
@@ -46,19 +72,24 @@ const Tile = ({ children, delay = 0, glow = false }: {
 
 const Callout = ({ emoji, title, children, color = '#4A96B8' }: {
   emoji: string; title: string; children: React.ReactNode; color?: string;
-}) => (
-  <div style={{
-    background: `linear-gradient(135deg, ${C.paleBlueLt}, ${C.paleBlue})`,
-    borderRadius: 14, padding: '14px 16px', border: '1px solid rgba(173,212,236,0.3)',
-    marginBottom: 16,
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-      <span style={{ fontSize: 14 }}>{emoji}</span>
-      <span style={{ fontSize: 12.5, fontWeight: 600, color }}>{title}</span>
+}) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div style={{
+      background: isDark ? 'rgba(142,199,226,0.06)' : `linear-gradient(135deg, ${C.paleBlueLt}, ${C.paleBlue})`,
+      borderRadius: 14, padding: '14px 16px',
+      border: isDark ? '1px solid rgba(142,199,226,0.12)' : '1px solid rgba(173,212,236,0.3)',
+      marginBottom: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <span style={{ fontSize: 14 }}>{emoji}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color }}>{title}</span>
+      </div>
+      <div style={{ fontSize: 11.5, color: t.mid, lineHeight: 1.6 }}>{children}</div>
     </div>
-    <div style={{ fontSize: 11.5, color: C.mid, lineHeight: 1.6 }}>{children}</div>
-  </div>
-);
+  );
+};
 
 const StepNum = ({ n }: { n: number }) => (
   <div style={{
@@ -69,47 +100,68 @@ const StepNum = ({ n }: { n: number }) => (
   }}>{n}</div>
 );
 
-const Divider = () => (
-  <div style={{
-    height: 1,
-    background: `linear-gradient(90deg, transparent, ${C.lavBorder}, transparent)`,
-    margin: '20px 0',
-  }} />
-);
-
-const SectionTitle = ({ children, sub }: { children: React.ReactNode; sub?: string }) => (
-  <div style={{ marginBottom: sub ? 8 : 12 }}>
+const Divider = () => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
     <div style={{
-      fontFamily: "'Bodoni Moda',serif", fontSize: 18, fontWeight: 600,
-      color: C.cherry, letterSpacing: 0.5,
-    }}>{children}</div>
-    {sub && <div style={{ fontSize: 12, color: C.light, marginTop: 2, fontStyle: 'italic' }}>{sub}</div>}
-  </div>
-);
+      height: 1,
+      background: `linear-gradient(90deg, transparent, ${t.lavBorder}, transparent)`,
+      margin: '20px 0',
+    }} />
+  );
+};
 
-const P = ({ children }: { children: React.ReactNode }) => (
-  <p style={{ fontSize: 13, color: C.mid, lineHeight: 1.65, marginBottom: 14 }}>{children}</p>
-);
-const B = ({ children }: { children: React.ReactNode }) => (
-  <strong style={{ color: C.dark, fontWeight: 600 }}>{children}</strong>
-);
+const SectionTitle = ({ children, sub }: { children: React.ReactNode; sub?: string }) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <div style={{ marginBottom: sub ? 8 : 12 }}>
+      <div style={{
+        fontFamily: "'Bodoni Moda',serif", fontSize: 18, fontWeight: 600,
+        color: C.cherry, letterSpacing: 0.5,
+      }}>{children}</div>
+      {sub && <div style={{ fontSize: 12, color: t.light, marginTop: 2, fontStyle: 'italic' }}>{sub}</div>}
+    </div>
+  );
+};
+
+const P = ({ children }: { children: React.ReactNode }) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <p style={{ fontSize: 13, color: t.mid, lineHeight: 1.65, marginBottom: 14 }}>{children}</p>
+  );
+};
+
+const B = ({ children }: { children: React.ReactNode }) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
+    <strong style={{ color: isDark ? t.cerulean : C.dark, fontWeight: 600 }}>{children}</strong>
+  );
+};
 
 const GroupExample = ({ label, tiles, note }: {
   label: string; tiles: React.ReactNode; note: string;
-}) => (
-  <div style={{
-    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
-    padding: '8px 12px', background: 'rgba(243,239,250,0.5)',
-    borderRadius: 10, border: `0.5px solid ${C.lavBorder}`,
-  }}>
+}) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
+  return (
     <div style={{
-      fontFamily: "'Bodoni Moda',serif", fontSize: 11, fontWeight: 600,
-      color: C.cherry, minWidth: 44, textAlign: 'right',
-    }}>{label}</div>
-    <div style={{ display: 'flex', gap: 2, alignItems: 'center', flexShrink: 0 }}>{tiles}</div>
-    <div style={{ fontSize: 10.5, color: C.light, flex: 1 }}>{note}</div>
-  </div>
-);
+      display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
+      padding: '8px 12px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(243,239,250,0.5)',
+      borderRadius: 10, border: `0.5px solid ${t.lavBorder}`,
+    }}>
+      <div style={{
+        fontFamily: "'Bodoni Moda',serif", fontSize: 11, fontWeight: 600,
+        color: C.cherry, minWidth: 44, textAlign: 'right',
+      }}>{label}</div>
+      <div style={{ display: 'flex', gap: 2, alignItems: 'center', flexShrink: 0 }}>{tiles}</div>
+      <div style={{ fontSize: 10.5, color: t.light, flex: 1 }}>{note}</div>
+    </div>
+  );
+};
 
 // A "card-notation" colored text group — mimics how it looks printed on the card
 const CardText = ({ text, color }: { text: string; color: 'red' | 'green' | 'blue' }) => {
@@ -131,6 +183,8 @@ const CardLineExample = ({ notation, tileGroups, points, exposure, parenthetical
   parenthetical?: string;
   delay?: number;
 }) => {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   const colorMap = {
     red: { bg: 'rgba(194,65,59,0.06)', border: 'rgba(194,65,59,0.18)' },
     green: { bg: 'rgba(46,139,87,0.06)', border: 'rgba(46,139,87,0.18)' },
@@ -138,9 +192,10 @@ const CardLineExample = ({ notation, tileGroups, points, exposure, parenthetical
   };
   return (
     <div style={{
-      background: '#FDFCFE', borderRadius: 14, padding: '14px 16px',
-      border: `1px solid ${C.lavBorder}`, marginBottom: 16,
-      boxShadow: '0 2px 12px rgba(126,100,164,0.04)',
+      background: isDark ? 'rgba(255,255,255,0.025)' : '#FDFCFE',
+      borderRadius: 14, padding: '14px 16px',
+      border: `1px solid ${t.lavBorder}`, marginBottom: 16,
+      boxShadow: isDark ? 'none' : '0 2px 12px rgba(126,100,164,0.04)',
       animation: `entranceFade 0.5s ease ${delay}s both`,
     }}>
       {/* Card notation line */}
@@ -165,7 +220,7 @@ const CardLineExample = ({ notation, tileGroups, points, exposure, parenthetical
       </div>
       {parenthetical && (
         <div style={{
-          fontSize: 10, color: C.light, fontStyle: 'italic', marginBottom: 10,
+          fontSize: 10, color: t.light, fontStyle: 'italic', marginBottom: 10,
         }}>({parenthetical})</div>
       )}
       {/* Tile rendering — single scrollable row */}
@@ -178,8 +233,8 @@ const CardLineExample = ({ notation, tileGroups, points, exposure, parenthetical
               border: `1px dashed ${colorMap[g.color].border}`,
               borderRadius: 8, padding: '4px 5px', flexShrink: 0,
             }}>
-              {g.tiles.map((t, ti) => (
-                <div key={ti} style={{ transform: 'scale(0.8)', flexShrink: 0 }}>{t}</div>
+              {g.tiles.map((tl, ti) => (
+                <div key={ti} style={{ transform: 'scale(0.8)', flexShrink: 0 }}>{tl}</div>
               ))}
             </div>
           ))}
@@ -193,6 +248,8 @@ const CardLineExample = ({ notation, tileGroups, points, exposure, parenthetical
    MAIN COMPONENT
    ───────────────────────────────────────────────── */
 export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (lesson: string) => void }) {
+  const { isDark } = useTheme();
+  const t = getThemeColors(isDark);
   const [expandJoker, setExpandJoker] = useState(false);
   const [expandXC, setExpandXC] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -204,11 +261,11 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
       {/* Back nav */}
       <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
         <div onClick={onBack} style={{
-          fontSize: 12, color: C.lavDeep, cursor: 'pointer', fontWeight: 500,
+          fontSize: 12, color: t.lavDeep, cursor: 'pointer', fontWeight: 500,
           display: 'flex', alignItems: 'center', gap: 3,
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke={C.lavDeep} strokeWidth="1.5" strokeLinecap="round">
+            stroke={t.lavDeep} strokeWidth="1.5" strokeLinecap="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
           Learn
@@ -256,7 +313,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
               <Tile delay={0.8} glow><MiniDragon type="red"/></Tile>
             </TileStrip>
             <div style={{
-              fontSize: 10, color: C.light, fontStyle: 'italic',
+              fontSize: 10, color: t.light, fontStyle: 'italic',
               animation: 'entranceFade 0.4s ease 0.9s both',
             }}>13 tiles on your rack + 1 to win = 14</div>
           </div>
@@ -296,7 +353,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
 
           <div style={{
             display: 'flex', gap: 12, marginTop: -8, marginBottom: 16, fontSize: 10.5,
-            color: C.light, flexWrap: 'wrap',
+            color: t.light, flexWrap: 'wrap',
           }}>
             <span>FF = pair of Flowers</span>
             <span>222 = pung</span>
@@ -307,7 +364,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
           {/* ── GROUP TYPES ── */}
           <div style={{
             fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600,
-            color: C.dark, marginBottom: 10, letterSpacing: 0.5,
+            color: isDark ? t.cerulean : C.dark, marginBottom: 10, letterSpacing: 0.5,
           }}>Group Sizes</div>
 
           <GroupExample
@@ -355,7 +412,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
             ].map((item, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8,
-                padding: '8px 12px', background: i % 2 === 0 ? 'rgba(243,239,250,0.5)' : 'transparent',
+                padding: '8px 12px', background: i % 2 === 0 ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(243,239,250,0.5)') : 'transparent',
                 borderRadius: 10,
               }}>
                 <div style={{ transform: 'scale(0.9)', flexShrink: 0 }}>{item.tile}</div>
@@ -364,9 +421,9 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
                     <span style={{
                       fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 700, color: C.cherry,
                     }}>{item.sym}</span>
-                    <span style={{ fontSize: 11.5, fontWeight: 500, color: C.dark }}>= {item.desc}</span>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: t.dark }}>= {item.desc}</span>
                   </div>
-                  <div style={{ fontSize: 10.5, color: C.light, marginTop: 1 }}>{item.note}</div>
+                  <div style={{ fontSize: 10.5, color: t.light, marginTop: 1 }}>{item.note}</div>
                 </div>
               </div>
             ))}
@@ -376,13 +433,13 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
             Each dragon "belongs" to a suit:<br/><br/>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <MiniDragon type="red" /><span style={{ fontSize: 11 }}>→ Craks</span>
+                <MiniDragon type="red" /><span style={{ fontSize: 11, color: t.mid }}>→ Craks</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <MiniDragon type="green" /><span style={{ fontSize: 11 }}>→ Bams</span>
+                <MiniDragon type="green" /><span style={{ fontSize: 11, color: t.mid }}>→ Bams</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <MiniDragon type="white" /><span style={{ fontSize: 11 }}>→ Dots</span>
+                <MiniDragon type="white" /><span style={{ fontSize: 11, color: t.mid }}>→ Dots</span>
               </div>
             </div>
             <br/>
@@ -448,7 +505,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
 
           {/* Example 2: 1-suit hand */}
           <div style={{
-            fontSize: 10, fontWeight: 600, color: C.light, textTransform: 'uppercase',
+            fontSize: 10, fontWeight: 600, color: t.light, textTransform: 'uppercase',
             letterSpacing: 1.5, marginBottom: 6, marginTop: 4,
           }}>What about a 1-suit hand?</div>
 
@@ -512,7 +569,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
                   fontFamily: "'Bodoni Moda',serif", fontSize: 11.5, fontWeight: 600,
                   color: C.cherry, flexShrink: 0, whiteSpace: 'nowrap',
                 }}>{p.text}</span>
-                <span style={{ fontSize: 11, color: C.mid }}>→ {p.meaning}</span>
+                <span style={{ fontSize: 11, color: t.mid }}>→ {p.meaning}</span>
               </div>
             ))}
           </div>
@@ -537,9 +594,10 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
           <div
             onClick={() => setExpandXC(!expandXC)}
             style={{
-              background: 'rgba(243,239,250,0.5)', borderRadius: expandXC ? 14 : 10,
+              background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(243,239,250,0.5)',
+              borderRadius: expandXC ? 14 : 10,
               padding: expandXC ? '14px 16px' : '10px 16px',
-              border: `1px solid ${C.lavBorder}`, cursor: 'pointer',
+              border: `1px solid ${t.lavBorder}`, cursor: 'pointer',
               transition: 'all 0.3s ease', marginBottom: 16,
             }}
           >
@@ -550,25 +608,25 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
                   background: 'rgba(109,191,168,0.12)', border: '1px solid rgba(109,191,168,0.25)',
                   fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 700, color: '#4A9E88',
                 }}>X</div>
-                <span style={{ fontSize: 12, color: C.dark, fontWeight: 500 }}>
+                <span style={{ fontSize: 12, color: t.dark, fontWeight: 500 }}>
                   Exposed — you may call tiles & show groups
                 </span>
               </div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                stroke={C.mid} strokeWidth="2" strokeLinecap="round"
+                stroke={t.mid} strokeWidth="2" strokeLinecap="round"
                 style={{ transition: 'transform 0.3s', transform: expandXC ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </div>
             {expandXC && (
-              <div style={{ marginTop: 12, fontSize: 11.5, color: C.mid, lineHeight: 1.6 }}>
+              <div style={{ marginTop: 12, fontSize: 11.5, color: t.mid, lineHeight: 1.6 }}>
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <div style={{
                       padding: '2px 8px', borderRadius: 5, background: 'rgba(109,191,168,0.12)',
                       fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 700, color: '#4A9E88',
                     }}>X</div>
-                    <span style={{ fontWeight: 600, color: C.dark }}>= Exposed</span>
+                    <span style={{ fontWeight: 600, color: isDark ? t.cerulean : C.dark }}>= Exposed</span>
                   </div>
                   You <B>can</B> call discarded tiles and place groups face-up on your rack.
                   Most hands are X — it's the more flexible option.
@@ -579,7 +637,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
                       padding: '2px 8px', borderRadius: 5, background: 'rgba(224,48,80,0.08)',
                       fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 700, color: C.cherry,
                     }}>C</div>
-                    <span style={{ fontWeight: 600, color: C.dark }}>= Concealed</span>
+                    <span style={{ fontWeight: 600, color: isDark ? t.cerulean : C.dark }}>= Concealed</span>
                   </div>
                   You <B>cannot</B> call tiles from other players' discards (except for
                   Mahjong). Your entire hand stays hidden. Concealed hands are harder but
@@ -603,25 +661,26 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
           <div
             onClick={() => setExpandJoker(!expandJoker)}
             style={{
-              background: 'rgba(243,239,250,0.5)', borderRadius: expandJoker ? 14 : 10,
+              background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(243,239,250,0.5)',
+              borderRadius: expandJoker ? 14 : 10,
               padding: expandJoker ? '14px 16px' : '10px 16px',
-              border: `1px solid ${C.lavBorder}`, cursor: 'pointer',
+              border: `1px solid ${t.lavBorder}`, cursor: 'pointer',
               transition: 'all 0.3s ease', marginBottom: 16,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ transform: 'scale(0.85)', flexShrink: 0 }}><MiniJoker n={1} /></div>
-                <span style={{ fontSize: 12, color: C.dark, fontWeight: 500 }}>Joker quick-reference</span>
+                <span style={{ fontSize: 12, color: t.dark, fontWeight: 500 }}>Joker quick-reference</span>
               </div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                stroke={C.mid} strokeWidth="2" strokeLinecap="round"
+                stroke={t.mid} strokeWidth="2" strokeLinecap="round"
                 style={{ transition: 'transform 0.3s', transform: expandJoker ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </div>
             {expandJoker && (
-              <div style={{ marginTop: 12, fontSize: 11.5, color: C.mid, lineHeight: 1.7 }}>
+              <div style={{ marginTop: 12, fontSize: 11.5, color: t.mid, lineHeight: 1.7 }}>
                 <div style={{ marginBottom: 4 }}>✅ <B>Groups of 3+</B> — pungs, kongs, quints</div>
                 <div style={{ marginBottom: 4 }}>❌ <B>Singles & pairs</B> — never</div>
                 <div style={{ marginBottom: 4 }}>❌ <B>Singles & Pairs section</B> — no jokers at all</div>
@@ -658,7 +717,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
             ].map((sec, i) => (
               <div key={i} style={{
                 display: 'flex', gap: 10, marginBottom: 6, padding: '6px 10px',
-                background: i % 2 === 0 ? 'rgba(243,239,250,0.4)' : 'transparent',
+                background: i % 2 === 0 ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(243,239,250,0.4)') : 'transparent',
                 borderRadius: 8,
               }}>
                 <div style={{
@@ -666,8 +725,8 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
                   color: C.cherry, minWidth: 100, flexShrink: 0,
                 }}>{sec.name}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11.5, color: C.dark, fontWeight: 500 }}>{sec.desc}</div>
-                  <div style={{ fontSize: 10, color: C.light, fontStyle: 'italic' }}>{sec.ex}</div>
+                  <div style={{ fontSize: 11.5, color: t.dark, fontWeight: 500 }}>{sec.desc}</div>
+                  <div style={{ fontSize: 10, color: t.light, fontStyle: 'italic' }}>{sec.ex}</div>
                 </div>
               </div>
             ))}
@@ -693,8 +752,8 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
               <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
                 <StepNum n={i + 1} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 600, color: C.dark, marginBottom: 4 }}>{step.title}</div>
-                  <div style={{ fontSize: 11.5, color: C.mid, lineHeight: 1.5 }}>{step.desc}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: isDark ? t.cerulean : C.dark, marginBottom: 4 }}>{step.title}</div>
+                  <div style={{ fontSize: 11.5, color: t.mid, lineHeight: 1.5 }}>{step.desc}</div>
                 </div>
               </div>
             ))}
@@ -702,16 +761,16 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
 
           {/* ── FINAL ENCOURAGEMENT ── */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(109,191,168,0.08), rgba(142,199,226,0.08))',
+            background: isDark ? 'rgba(109,191,168,0.06)' : 'linear-gradient(135deg, rgba(109,191,168,0.08), rgba(142,199,226,0.08))',
             borderRadius: 14, padding: '16px 18px',
-            border: '1px solid rgba(109,191,168,0.15)',
+            border: isDark ? '1px solid rgba(109,191,168,0.1)' : '1px solid rgba(109,191,168,0.15)',
             textAlign: 'center', marginBottom: 20,
           }}>
             <div style={{
               fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600,
-              color: C.dark, marginBottom: 6,
+              color: isDark ? t.cerulean : C.dark, marginBottom: 6,
             }}>You've got this 🀄</div>
-            <div style={{ fontSize: 12, color: C.mid, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: t.mid, lineHeight: 1.5 }}>
               The card looks intimidating at first, but once you understand the
               pattern — colors, groups, parentheses — you'll be reading lines like
               a pro. It just takes a few games.
