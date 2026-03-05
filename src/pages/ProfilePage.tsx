@@ -679,8 +679,8 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
             <CameraIcon size={11} color="#fff"/>
           </div>
         </div>
-        <div style={{ fontFamily: FONT_SERIF, fontSize: 20, fontWeight: 600, color: t.textMain, marginBottom: 2 }}>{displayName}</div>
-        <div style={{ fontSize: 12, color: t.textDim, fontFamily: FONT_SANS }}>@{screenName}</div>
+        <div style={{ fontFamily: FONT_SERIF, fontSize: 16, fontWeight: 500, color: t.textMain, marginBottom: 2 }}>{displayName}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: isDark ? t.cerulean : C.lavDeep, fontFamily: FONT_SANS }}>@{screenName}</div>
         <div style={{ fontSize: 10, color: t.textDim, fontStyle: "italic", fontFamily: FONT_SANS, marginTop: 2 }}>{playerIdState}</div>
         {(city || stateVal) && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 5 }}>

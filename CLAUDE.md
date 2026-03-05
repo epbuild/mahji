@@ -151,6 +151,21 @@ Three buttons in order:
 - Keep "Ready" text as plain colored text (no background badge)
 - Ensure responsive tile scaling via `transform: scale()` with measured natural width
 
+### Game Board Seat Orientation (CRITICAL)
+Whenever a game board/mat is displayed — in Learn, Practice, or Play sections — the seat positions MUST follow this layout:
+- **Bottom:** You — East (Dealer)
+- **Right:** North
+- **Top:** West
+- **Left:** South
+
+This matches standard American Mahjong counterclockwise seating. The Charleston practice drill (`CharlestonDrill.tsx`) has the correct implementation — use it as the reference for all other game boards. Seat labels should be styled with colored tags matching the mat theme (same as Charleston).
+
+### Header Logo Rule
+- **Homepage only:** Show just the Mahji tile icon (no "MAHJI" text)
+- **All other pages** (Learn, Practice, Play, Stats, Profile, etc.): Show the Mahji tile icon + "MAHJI" text
+
+This is controlled by the `isHome` check in `DesktopHeader` and the `isHome` prop passed to `MobileHeader` in `App.tsx`. Only `page === "home"` should be treated as home.
+
 ### Sorting Conventions
 - **Sort by Rank:** Winds (N->E->W->S) -> Dragons (R->G->W) -> Bamboo -> Dots -> Characters -> Flowers -> Jokers
 - **Sort by Suit:** Group by suit, then by value within suit

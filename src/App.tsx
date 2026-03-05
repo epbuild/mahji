@@ -88,7 +88,7 @@ function AppInner() {
 
       <div className="app-container" style={{ opacity: splashDone ? 1 : 0, transition: "opacity 0.4s ease" }}>
         <DesktopHeader page={page} onNav={onNav} onHome={onHome} onProfile={onProfile} />
-        <MobileHeader onHome={onHome} onProfile={onProfile} isHome={page === "home" || page === "profile"} page={page} />
+        <MobileHeader onHome={onHome} onProfile={onProfile} isHome={page === "home"} page={page} />
 
         {page === "home" && <HomePage onNav={onNav} signedIn={signedIn} />}
         {page === "learn" && <LearnPage key={navKey} showChat={showChat} setShowChat={setShowChat} />}

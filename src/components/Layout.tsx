@@ -44,7 +44,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
   const [hovered, setHovered] = useState(null);
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
-  const isHome = page === "home" || page === "profile";
+  const isHome = page === "home";
   const items = [
     { id: "learn", label: "Learn" }, { id: "practice", label: "Practice" },
     { id: "play", label: "Play" }, { id: "stats", label: "Stats" },

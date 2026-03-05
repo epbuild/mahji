@@ -21,7 +21,7 @@ function PlayPage() {
           ))}
         </div>
         {isV && <div style={{ fontSize: 8, color: mb.text, letterSpacing: .5, marginTop: 2 }}>{label}</div>}
-        {!isV && dir==="bottom" && <div style={{ fontSize: 8, color: mb.you, letterSpacing: .5, marginTop: 3 }}>You — South</div>}
+        {!isV && dir==="bottom" && <div style={{ fontSize: 8, color: mb.you, letterSpacing: .5, marginTop: 3 }}>You (East · Dealer)</div>}
       </div>
     );
   };
@@ -53,12 +53,12 @@ function PlayPage() {
       </button>
     </div>
     <div style={{ background: mb.bg, borderRadius: 16, padding: 18, marginBottom: 10, position: "relative", minHeight: 300, border: "1px solid rgba(60,48,35,0.15)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.1)", transition: "all 0.5s ease" }}>
-      <Rack dir="top" label="North"/>
-      <Rack dir="left" label="West"/>
-      <Rack dir="right" label="East"/>
+      <Rack dir="top" label="West"/>
+      <Rack dir="left" label="South"/>
+      <Rack dir="right" label="North"/>
       <div style={{ width: 150, height: 90, margin: "40px auto 20px", background: mb.area, border: `1px solid ${mb.areaB}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: 10, color: mb.areaT, letterSpacing: 1, fontStyle: "italic" }}>Discard area</span></div>
-      <Rack dir="bottom" label="You — South"/>
+      <Rack dir="bottom" label="You"/>
     </div>
     <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
       {["Sort by Rank","Sort by Suit"].map(t => <div key={t} style={{ fontSize: 9.5, color: C.mid, padding: "5px 10px", background: C.white, borderRadius: 8, border: `1px solid ${C.lavBorder}`, cursor: "pointer" }}>{t}</div>)}

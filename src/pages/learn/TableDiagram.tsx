@@ -91,15 +91,15 @@ const TableBase = ({ children, south = "South", north = "North", east = "East (D
     {/* Mat */}
     <rect x={10} y={10} width={300} height={300} rx={8} fill={MAT} stroke={MAT_EDGE} strokeWidth={1.5} />
     {/* Racks — on the outer edges */}
-    <Rack x={60} y={280} w={200} h={12} /> {/* South (bottom, "you") */}
-    <Rack x={60} y={28} w={200} h={12} />  {/* North (top) */}
-    <Rack x={16} y={60} w={12} h={200} />  {/* West (left) */}
-    <Rack x={292} y={60} w={12} h={200} /> {/* East (right) */}
-    {/* Player labels */}
-    <PLabel x={160} y={304} text={south} fontSize={9} />
-    <PLabel x={160} y={20} text={north} fontSize={9} />
-    <PLabel x={310} y={160} text={east} highlight={highlightEast} fontSize={east.length > 6 ? 7.5 : 9} />
-    <PLabel x={14} y={160} text={west} fontSize={9} />
+    <Rack x={60} y={280} w={200} h={12} /> {/* East/You (bottom) */}
+    <Rack x={60} y={28} w={200} h={12} />  {/* West (top) */}
+    <Rack x={16} y={60} w={12} h={200} />  {/* South (left) */}
+    <Rack x={292} y={60} w={12} h={200} /> {/* North (right) */}
+    {/* Player labels — East=bottom, West=top, North=right, South=left */}
+    <PLabel x={160} y={304} text={east} highlight={highlightEast} fontSize={east.length > 6 ? 7.5 : 9} />
+    <PLabel x={160} y={20} text={west} fontSize={9} />
+    <PLabel x={310} y={160} text={north} fontSize={9} />
+    <PLabel x={14} y={160} text={south} fontSize={9} />
     {/* Player position text rotated for side labels */}
     {children}
   </svg>
@@ -236,28 +236,28 @@ export function DiagramDiceRoll() {
 export function DiagramWallBreak() {
   const sw = 6.2;
   const sh = 8;
-  const wallX = 265;
-  const wallY = 160 - (19 * sw) / 2;
+  const wallX = 160 - (19 * sw) / 2;
+  const wallY = 258;
 
   const tiles: JSX.Element[] = [];
   for (let i = 0; i < 19; i++) {
-    const kept = i >= 14; // last 5 tiles (from right = bottom of vertical) are kept
-    const pushed = i >= 5 && i < 14; // pushed out toward center
-    const offsetX = pushed ? -18 : 0;
+    const kept = i >= 14; // last 5 tiles from right (East counts from right)
+    const pushed = i < 14; // pushed toward center (up)
+    const offsetY = pushed ? -18 : 0;
     // Bottom layer
-    tiles.push(<rect key={`b${i}`} x={wallX + 0.3 + offsetX} y={wallY + i * sw + 0.3}
-      width={sh} height={sw - 0.5} rx={0.5} fill={TILE_BACK} stroke={TILE_STROKE}
+    tiles.push(<rect key={`b${i}`} x={wallX + i * sw + 0.3} y={wallY + 0.3 + offsetY}
+      width={sw - 0.5} height={sh} rx={0.5} fill={TILE_BACK} stroke={TILE_STROKE}
       strokeWidth={0.25} opacity={kept ? 0.4 : 0.85} />);
     // Top layer
-    tiles.push(<rect key={`t${i}`} x={wallX - 1 + offsetX} y={wallY + i * sw}
-      width={sh} height={sw - 0.5} rx={0.5} fill={kept ? DIM_TILE : TILE_BACK}
+    tiles.push(<rect key={`t${i}`} x={wallX + i * sw} y={wallY - 1 + offsetY}
+      width={sw - 0.5} height={sh} rx={0.5} fill={kept ? DIM_TILE : TILE_BACK}
       stroke={kept ? 'rgba(122,24,48,0.3)' : TILE_STROKE} strokeWidth={0.25} />);
   }
 
-  // Count labels (1-5 on the kept tiles)
+  // Count labels (1-5 on the kept tiles, counting from right end)
   for (let i = 0; i < 5; i++) {
     tiles.push(
-      <text key={`c${i}`} x={wallX + 3} y={wallY + (14 + i) * sw + sw / 2}
+      <text key={`c${i}`} x={wallX + (18 - i) * sw + (sw - 0.5) / 2} y={wallY + sh / 2}
         textAnchor="middle" dominantBaseline="middle"
         fill={C.cerulean} fontSize={4.5} fontFamily="'Outfit', sans-serif" fontWeight={600}>
         {i + 1}
@@ -268,28 +268,26 @@ export function DiagramWallBreak() {
   return (
     <TableBase highlightEast east="East (Dealer)">
       {/* Other walls (simplified) */}
-      {/* South wall */}
-      <rect x={42} y={256} width={236} height={9} rx={1} fill={TILE_BACK} opacity={0.3} />
-      {/* North wall */}
+      {/* West wall (top) */}
       <rect x={42} y={55} width={236} height={9} rx={1} fill={TILE_BACK} opacity={0.3} />
-      {/* West wall */}
+      {/* South wall (left) */}
       <rect x={45} y={42} width={9} height={236} rx={1} fill={TILE_BACK} opacity={0.3} />
+      {/* North wall (right) */}
+      <rect x={268} y={42} width={9} height={236} rx={1} fill={TILE_BACK} opacity={0.3} />
 
-      {/* East wall — detailed */}
+      {/* East wall (bottom) — detailed */}
       <g>{tiles}</g>
 
-      {/* Arrow showing break point */}
-      <path d={`M ${wallX - 20} ${wallY + 13.5 * sw} L ${wallX - 8} ${wallY + 13.5 * sw}`}
+      {/* Break point indicator */}
+      <line x1={wallX + 14 * sw - 0.5} y1={wallY - 20} x2={wallX + 14 * sw - 0.5} y2={wallY + sh + 2}
         stroke={C.cherry} strokeWidth={1} strokeDasharray="2,1" opacity={0.6} />
-
-      {/* Label */}
-      <text x={wallX - 30} y={wallY + 13.5 * sw - 4} textAnchor="middle"
+      <text x={wallX + 14 * sw - 0.5} y={wallY - 24} textAnchor="middle"
         fill={C.cherry} fontSize={5.5} fontFamily="'Outfit', sans-serif" fontWeight={600}>
         break
       </text>
 
       {/* Annotation */}
-      <text x={160} y={140} textAnchor="middle" fill={LABEL_COLOR} fontSize={6.5}
+      <text x={160} y={155} textAnchor="middle" fill={LABEL_COLOR} fontSize={6.5}
         fontFamily="'Outfit', sans-serif" opacity={0.6}>
         Count 5, push remaining toward center
       </text>
@@ -305,10 +303,10 @@ export function DiagramDealing({ step, desc }: { step: string; desc: string }) {
   // Simplified dealing diagram — shows stacks near each player
   // step indicates which deal round we're showing
   const stackPositions = {
-    east: { x: 250, y: 155 },
-    north: { x: 155, y: 50 },
-    west: { x: 48, y: 155 },
-    south: { x: 155, y: 260 },
+    east: { x: 155, y: 260 },   // bottom
+    north: { x: 250, y: 155 },  // right
+    west: { x: 155, y: 50 },    // top
+    south: { x: 48, y: 155 },   // left
   };
 
   // How many stacks each player has based on the step
@@ -372,23 +370,23 @@ export function DiagramDealing({ step, desc }: { step: string; desc: string }) {
       <Rack x={16} y={60} w={12} h={200} />
       <Rack x={292} y={60} w={12} h={200} />
       {/* Simplified walls */}
-      <rect x={60} y={250} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} />
-      <rect x={60} y={60} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} />
-      <rect x={42} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} />
-      {/* East wall — broken, being dealt from */}
-      <rect x={268} y={60} width={6} height={90} rx={1} fill={TILE_BACK} opacity={0.4} />
+      <rect x={60} y={60} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} />   {/* West/top */}
+      <rect x={42} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} />  {/* South/left */}
+      <rect x={268} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* North/right */}
+      {/* East wall (bottom) — broken, being dealt from */}
+      <rect x={60} y={268} width={90} height={6} rx={1} fill={TILE_BACK} opacity={0.4} />
 
       {/* Dealt stacks */}
-      {renderStacks(stackPositions.east.x, stackPositions.east.y, counts.e, active === 'e', false)}
-      {renderStacks(stackPositions.north.x, stackPositions.north.y, counts.n, active === 'n', true)}
-      {renderStacks(stackPositions.west.x, stackPositions.west.y, counts.w, active === 'w', false)}
-      {renderStacks(stackPositions.south.x, stackPositions.south.y, counts.s, active === 's', true)}
+      {renderStacks(stackPositions.east.x, stackPositions.east.y, counts.e, active === 'e', true)}
+      {renderStacks(stackPositions.north.x, stackPositions.north.y, counts.n, active === 'n', false)}
+      {renderStacks(stackPositions.west.x, stackPositions.west.y, counts.w, active === 'w', true)}
+      {renderStacks(stackPositions.south.x, stackPositions.south.y, counts.s, active === 's', false)}
 
-      {/* Labels */}
-      <PLabel x={160} y={304} text="South" fontSize={9} />
-      <PLabel x={160} y={20} text="North" fontSize={9} />
-      <PLabel x={310} y={160} text="East" highlight fontSize={7.5} />
-      <PLabel x={14} y={160} text="West" fontSize={9} />
+      {/* Labels — East=bottom, West=top, North=right, South=left */}
+      <PLabel x={160} y={304} text="East (Dealer)" highlight fontSize={7.5} />
+      <PLabel x={160} y={20} text="West" fontSize={9} />
+      <PLabel x={310} y={160} text="North" fontSize={9} />
+      <PLabel x={14} y={160} text="South" fontSize={9} />
 
       {/* Step indicator */}
       <rect x={115} y={145} width={90} height={22} rx={6} fill="rgba(0,0,0,0.3)" />
@@ -413,27 +411,28 @@ export function DiagramWallContinuation() {
       <Rack x={16} y={60} w={12} h={200} />
       <Rack x={292} y={60} w={12} h={200} />
 
-      {/* East wall — depleted */}
-      <rect x={268} y={60} width={6} height={60} rx={1} fill={TILE_BACK} opacity={0.15} />
-      <text x={280} y={100} textAnchor="middle" fill={C.cerulean} fontSize={5.5}
+      {/* East wall (bottom) — depleted */}
+      <rect x={60} y={264} width={60} height={6} rx={1} fill={TILE_BACK} opacity={0.15} />
+      <text x={90} y={258} textAnchor="middle" fill={C.cerulean} fontSize={5.5}
         fontFamily="'Outfit', sans-serif" opacity={0.6}>empty</text>
 
-      {/* South wall — being broken now */}
-      <rect x={60} y={250} width={120} height={7} rx={1} fill={TILE_BACK} opacity={0.5} />
-      <rect x={185} y={250} width={75} height={7} rx={1} fill={TILE_BACK} opacity={0.2} />
+      {/* South wall (left) — being broken now */}
+      <rect x={42} y={60} width={7} height={120} rx={1} fill={TILE_BACK} opacity={0.5} />
+      <rect x={42} y={185} width={7} height={75} rx={1} fill={TILE_BACK} opacity={0.2} />
 
-      {/* Arrow from east wall area curving to south wall */}
-      <path d="M 270 200 Q 260 240 195 250" fill="none" stroke={C.cherry}
+      {/* Arrow from east (bottom) wall curving to south (left) wall */}
+      <path d="M 65 262 Q 50 240 46 195" fill="none" stroke={C.cherry}
         strokeWidth={1.5} strokeLinecap="round" markerEnd="url(#arrowhead)" opacity={0.7} />
 
       {/* Other walls simplified */}
-      <rect x={60} y={60} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} />
-      <rect x={42} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} />
+      <rect x={60} y={60} width={200} height={6} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* West/top */}
+      <rect x={268} y={60} width={6} height={200} rx={1} fill={TILE_BACK} opacity={0.2} /> {/* North/right */}
 
-      <PLabel x={160} y={304} text="South" fontSize={9} />
-      <PLabel x={160} y={20} text="North" fontSize={9} />
-      <PLabel x={310} y={160} text="East" highlight fontSize={7.5} />
-      <PLabel x={14} y={160} text="West" fontSize={9} />
+      {/* Labels — East=bottom, West=top, North=right, South=left */}
+      <PLabel x={160} y={304} text="East (Dealer)" highlight fontSize={7.5} />
+      <PLabel x={160} y={20} text="West" fontSize={9} />
+      <PLabel x={310} y={160} text="North" fontSize={9} />
+      <PLabel x={14} y={160} text="South" fontSize={9} />
 
       <text x={160} y={145} textAnchor="middle" fill={LABEL_COLOR} fontSize={6.5}
         fontFamily="'Outfit', sans-serif" opacity={0.6}>
