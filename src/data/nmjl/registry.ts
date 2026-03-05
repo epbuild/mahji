@@ -13,17 +13,25 @@ const cardModules: Record<number, () => Promise<{ NMJL_2024?: NMJLCard; NMJL_202
 /** Cache of loaded cards */
 const loadedCards = new Map<number, NMJLCard>();
 
-/** Get a card by year (async, lazy-loaded) */
+/** Get a card by year (async, lazy-loaded). Retries once on chunk load failure. */
 export async function getCard(year: number): Promise<NMJLCard | null> {
   if (loadedCards.has(year)) return loadedCards.get(year)!;
   const loader = cardModules[year];
   if (!loader) return null;
-  const mod = await loader();
-  const key = `NMJL_${year}`;
-  const card = (mod as Record<string, NMJLCard>)[key];
-  if (!card) return null;
-  loadedCards.set(year, card);
-  return card;
+  try {
+    const mod = await loader();
+    const key = `NMJL_${year}`;
+    const card = (mod as Record<string, NMJLCard>)[key];
+    if (!card) return null;
+    loadedCards.set(year, card);
+    return card;
+  } catch (err) {
+    // Dynamic import failed — likely stale cached chunks after a deploy.
+    // Force a page reload to pick up the new assets.
+    console.error(`[Mahji] Failed to load card data for ${year}. Reloading...`, err);
+    window.location.reload();
+    return null;
+  }
 }
 
 /** Get card synchronously (must be pre-loaded via getCard or registerCard) */
