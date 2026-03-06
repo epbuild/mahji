@@ -29,6 +29,9 @@ src/
       JokerTile.tsx        # Joker SVG art
       TileBack.tsx         # Face-down tile back
     ui/                    # Shared UI components (Icons, etc.)
+  audio/
+    sounds.ts              # Web Audio API sound effects (click, ping, whoosh, etc.)
+    voice.ts               # Voice clip playback (TTS fallback + future ElevenLabs MP3s)
   constants/
     colors.ts              # Color system (C object, getThemeColors)
     ThemeContext.tsx        # Light/dark theme provider
@@ -196,6 +199,35 @@ This is controlled by the `isHome` check in `DesktopHeader` and the `isHome` pro
 - Mat colors (`MATS` array) are separate from the app theme - they style the game board area only
 - **Dark mode text contrast (CRITICAL):** In dark mode, all body text must be white or near-white (`rgba(255,255,255,0.9)` for primary, `rgba(255,255,255,0.55)` for secondary). Never use dark purple text (e.g., `C.dark`, `C.mid` from the light palette) in dark mode — it will be invisible against the dark background. For emphasis/bold text that uses `C.dark` in light mode, switch to `C.cerulean` (or `t.cerulean`) in dark mode instead of dark purple. Always verify text contrast in both themes.
 - **Rule of thumb:** If you use `color: C.dark` or `color: C.mid` anywhere, it MUST be swapped to `t.textMain` / `t.textMid` (theme-aware) or explicitly checked for dark mode. Hardcoded dark colors are only safe inside components that have their own dark background (e.g., mat areas).
+
+### Sound System
+- **Engine:** Web Audio API for SFX (`src/audio/sounds.ts`), browser TTS fallback for voice (`src/audio/voice.ts`)
+- **Toggle:** `localStorage.getItem('mahji_sound')` — `'on'` (default) or `'off'`
+- **Dev preview:** `#/sounds` route (`src/pages/SoundPreview.tsx`) — remove before production
+
+#### Chosen Sounds
+| Action | Function | Description |
+|---|---|---|
+| Tile select | `playClick()` | Percussive tap (800→400Hz, 0.08s) |
+| Tile deselect | `playDeselect()` | Softer inverse click |
+| Tile receive / draw | `playPingE()` | Glass tap — single clear tone (2200→1800Hz, 0.15s) |
+| Pass animation | `playWhoosh()` | Filtered noise sweep (0.35s) |
+| Invalid action | `playError()` | Low buzz (150Hz square wave) |
+| Tile placed in pass box | `playPlace()` | Soft thud (300→150Hz, 0.1s) |
+| Charleston complete | `playCelebration()` | Ascending arpeggio (C5-E5-G5-C6-E6) |
+
+#### Voice Announcements
+- Phase changes: `playVoice("first-charleston")`, `playVoice("second-charleston")`, `playVoice("courtesy-pass")`
+- Currently uses browser TTS as fallback; will switch to ElevenLabs MP3s in `public/audio/voice/`
+- Clip naming: `{number}-{suit}` for tiles (e.g., `3-bam`, `north`, `red-dragon`)
+
+#### Sound Integration Points (Charleston Drill)
+- `toggleTile()` — `playClick()` on select, `playDeselect()` on deselect, `playError()` on joker attempt
+- `executePass()` — `playWhoosh()` on pass start, `playPingE()` on tile receipt
+- Drop to pass box — `playPlace()` on drag-and-drop into pass box
+- Blind pass B button — `playClick()` on press, `playDeselect()` on remove
+- Phase transitions — voice announcements for first/second charleston, courtesy pass
+- Completion — `playCelebration()` when charleston finishes
 
 ### Git Workflow
 1. Work on `claude/cranky-clarke` worktree

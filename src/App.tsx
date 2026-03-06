@@ -7,6 +7,7 @@ import PlayPage from "./pages/PlayPage";
 import StatsPage from "./pages/StatsPage";
 import BamPage from "./pages/BamPage";
 import ProfilePage from "./pages/ProfilePage";
+import SoundPreview from "./pages/SoundPreview";
 import { C, getThemeColors } from "./constants/colors";
 import { ThemeProvider, useTheme } from "./constants/ThemeContext";
 
@@ -45,6 +46,11 @@ function AppInner() {
   const [entrancePlayed, setEntrancePlayed] = useState(false);
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
+
+  // Dev: check hash for special pages like #/sounds
+  useEffect(() => {
+    if (window.location.hash === '#/sounds') setPage('sounds');
+  }, []);
 
   // navKey forces remount of section pages (resets sub-views to homepage)
   const [navKey, setNavKey] = useState(0);
@@ -97,6 +103,7 @@ function AppInner() {
         {page === "stats" && <StatsPage key={navKey} />}
         {page === "bam" && <BamPage />}
         {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
+        {page === "sounds" && <SoundPreview />}
 
         <MobileNav active={page === "home" || page === "profile" ? null : page} onNav={onNav} />
       </div>

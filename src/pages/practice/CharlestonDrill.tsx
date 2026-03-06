@@ -19,6 +19,8 @@ import {
   SECTION_LABELS,
 } from "../../data/nmjl";
 import type { NMJLCard, PartialMatchResult, ColorAssignment, HandDefinition, HandPattern, CardColor } from "../../data/nmjl";
+import { playClick, playDeselect, playPingE, playWhoosh, playError, playCelebration, playPlace } from "../../audio/sounds";
+import { playVoice } from "../../audio/voice";
 
 // ─── TYPES ────────────────────────────────────────────────────
 
@@ -431,6 +433,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const resetCharlestonState = useCallback((hands: GameTile[][]) => {
     setPlayers([0,1,2,3].map(s => ({ seat: s, name: ["You (East)","South","West","North"][s], hand: [...hands[s]], selectedForPass: [], isHuman: s === 0 })));
     setPhase("charleston"); setStepIdx(0); setSelectedIds(new Set()); setBotsReady(false); setCourtesyCount(null);
+    playVoice("first-charleston");
     setAnimating(false); setBlindSlotCount(0); setMessage("Select 3 tiles to pass"); setShowStopPrompt(false); setStoppedEarly(false);
     setShowROL(true); setReceivedTileIds(new Set()); setTouchedTileIds(new Set()); setLevelLocked(false);
     setTimer(0); setPassCount(0); setTotalPassed(0); setShowSetup(false);
@@ -634,8 +637,9 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
   const toggleTile = (tile: GameTile) => {
     if (animating) return; if (!levelLocked) setLevelLocked(true);
     if (receivedTileIds.has(tile.instanceId)) setTouchedTileIds(prev => new Set([...prev, tile.instanceId]));
-    if (isJoker(tile)) { setMessage("⚠ Jokers cannot be passed in the Charleston"); setTimeout(() => setMessage(getMsg()), 2500); return; }
+    if (isJoker(tile)) { playError(); setMessage("⚠ Jokers cannot be passed in the Charleston"); setTimeout(() => setMessage(getMsg()), 2500); return; }
     if (selectedIds.has(tile.instanceId)) {
+      playDeselect();
       setSelectedIds(prev => { const next = new Set(prev); next.delete(tile.instanceId); return next; });
     } else {
       const max = reqCount !== null ? reqCount : 3;
@@ -644,6 +648,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
         if (isBlind && blindSlotCount > 0) { setBlindSlotCount(c => c - 1); }
         else return;
       }
+      playClick();
       setSelectedIds(prev => { const next = new Set(prev); next.add(tile.instanceId); return next; });
     }
   };
@@ -691,16 +696,17 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
-      if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); }
+      if (newReceivedIds.size > 0) playPingE();
+      if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
       else { setPhase("courtesy_prompt"); setMessage(""); }
     };
-    setPassDir(s.dir); setTimeout(doResolve, 600);
+    playWhoosh(); setPassDir(s.dir); setTimeout(doResolve, 600);
   };
 
-  const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); } };
-  const handleCourtesyChoice = (count: number) => { setCourtesyCount(count); if (count === 0) { setPhase("complete"); setMessage("Charleston complete!"); } else { setPhase("courtesy"); setSelectedIds(new Set()); setMessage(`Select ${count} tile${count !== 1 ? "s" : ""} to pass across`); } };
+  const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); playVoice("second-charleston"); } };
+  const handleCourtesyChoice = (count: number) => { setCourtesyCount(count); if (count === 0) { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); } else { setPhase("courtesy"); setSelectedIds(new Set()); setMessage(`Select ${count} tile${count !== 1 ? "s" : ""} to pass across`); playVoice("courtesy-pass"); } };
 
   useEffect(() => { if (phase === "charleston" && !showStopPrompt) setMessage(getMsg()); }, [stepIdx, phase, showStopPrompt]);
 
@@ -945,6 +951,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                     else { tile = humanHand.find(t => t.instanceId === data) || visibleHand.find(t => t.instanceId === data); }
                     if (!tile && !isNaN(idx)) { tile = visibleHand[idx]; }
                     if (tile && !selectedIds.has(tile.instanceId) && !isJoker(tile)) {
+                      playPlace();
                       toggleTile(tile);
                     }
                     setDragIdx(null); setDragOverIdx(null);
@@ -967,13 +974,13 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
                           const blindIdx = i - selectedTiles.length;
                           if (blindIdx >= 0 && blindIdx < blindSlotCount) {
                             return (
-                              <div key={`pass-blind-${i}`} onClick={() => !animating && setBlindSlotCount(c => c - 1)} style={{ cursor: "pointer", opacity: 0.85, transition: "opacity 0.15s" }}>
+                              <div key={`pass-blind-${i}`} onClick={() => { if (!animating) { playDeselect(); setBlindSlotCount(c => c - 1); } }} style={{ cursor: "pointer", opacity: 0.85, transition: "opacity 0.15s" }}>
                                 <MahjiTile faceDown size="md" />
                               </div>
                             );
                           }
                           return (
-                            <div key={`pass-b-${i}`} onClick={() => { if (!animating && selectedIds.size + blindSlotCount < 3) setBlindSlotCount(c => c + 1); }} style={{ width: 72, height: 98, borderRadius: 10, border: "2px dashed rgba(224,48,80,0.25)", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.15s ease" }}>
+                            <div key={`pass-b-${i}`} onClick={() => { if (!animating && selectedIds.size + blindSlotCount < 3) { playClick(); setBlindSlotCount(c => c + 1); } }} style={{ width: 72, height: 98, borderRadius: 10, border: "2px dashed rgba(224,48,80,0.25)", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.15s ease" }}>
                               <span style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 24, fontWeight: 700, color: "rgba(224,48,80,0.35)" }}>B</span>
                             </div>
                           );
@@ -1155,7 +1162,7 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
           if (source === "passbox" && instanceId) {
             // Remove from pass selection (deselect)
             const tile = humanHand.find(t => t.instanceId === instanceId);
-            if (tile) { setSelectedIds(prev => { const next = new Set(prev); next.delete(tile.instanceId); return next; }); }
+            if (tile) { playDeselect(); setSelectedIds(prev => { const next = new Set(prev); next.delete(tile.instanceId); return next; }); }
           }
           setDragIdx(null); setDragOverIdx(null);
         }}
