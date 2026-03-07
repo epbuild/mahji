@@ -700,12 +700,12 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
-      else { setPhase("courtesy_prompt"); setMessage(""); }
+      else { setPhase("courtesy_prompt"); setMessage(""); playVoice("courtesy-pass"); }
     };
     playCharlestonReceive(); setPassDir(s.dir); setTimeout(doResolve, 600);
   };
 
-  const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); playVoice("second-charleston"); } };
+  const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { playVoice("stop"); setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); playVoice("second-charleston"); } };
   const handleCourtesyChoice = (count: number) => { setCourtesyCount(count); if (count === 0) { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); } else { setPhase("courtesy"); setSelectedIds(new Set()); setMessage(`Select ${count} tile${count !== 1 ? "s" : ""} to pass across`); playVoice("courtesy-pass"); } };
 
   useEffect(() => { if (phase === "charleston" && !showStopPrompt) setMessage(getMsg()); }, [stepIdx, phase, showStopPrompt]);

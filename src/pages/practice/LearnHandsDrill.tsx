@@ -20,6 +20,8 @@ import {
 import type {
   NMJLCard, HandDefinition, HandPattern, ColorAssignment, TileGroup, CardColor,
 } from "../../data/nmjl";
+import { playCelebration, playPlace, playDeselect, playError } from "../../audio/sounds";
+import { playVoice } from "../../audio/voice";
 
 // ─── COLORED PATTERN ─────────────────────────────────────────
 
@@ -397,6 +399,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
     if (result.matched && result.hand?.id === targetHand?.id) {
       setPhase("success");
       setStreak(s => s + 1);
+      playCelebration();
     } else {
       // Mark wrong tiles
       const correctIds = new Set(resolvedTiles.map(t => t.id));
@@ -412,12 +415,14 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
         if (placedIds === correctSorted) {
           setPhase("success");
           setStreak(s => s + 1);
+          playCelebration();
           return;
         }
       }
       setWrongSlots(wrong);
       setPhase("wrong");
       setStreak(0);
+      playVoice('invalid');
     }
   }, [buildSlots, card, targetHand, resolvedTiles]);
 
@@ -527,6 +532,11 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
         </div>
       </div>
 
+      {/* Drill title */}
+      <div style={{ textAlign: "center", padding: "2px 12px 4px" }}>
+        <div style={{ fontFamily: "'Bodoni Moda',serif", fontSize: 15, fontWeight: 600, color: U.cherry, letterSpacing: 1.5, textTransform: "uppercase" }}>Form a Winning Line</div>
+      </div>
+
       <div style={{ padding: "0 12px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
 
         {/* Target hand display */}
@@ -585,7 +595,7 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
                         <TileCard
                           tile={slot}
                           selected={false}
-                          onTap={() => removeTile(i)}
+                          onTap={() => { removeTile(i); playDeselect(); }}
                           disabled={phase === "success"}
                           cherry={U.cherry}
                           isWrong={wrongSlots.has(i)}
@@ -711,11 +721,13 @@ export default function LearnHandsDrill({ onBack }: LearnHandsDrillProps) {
                 onTap={() => {
                   if (selectedBankTile === tile.instanceId) {
                     setSelectedBankTile(null);
+                    playDeselect();
                   } else {
                     setSelectedBankTile(tile.instanceId);
                     const emptyIdx = buildSlots.findIndex(s => s === null);
                     if (emptyIdx >= 0) {
                       placeTile(tile.instanceId);
+                      playPlace();
                     }
                   }
                 }}

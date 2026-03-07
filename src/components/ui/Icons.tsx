@@ -63,6 +63,23 @@ export const DecoLine = ({ t = null }) => {
   );
 };
 
+/** Minimal decorative line — straight lines with a center diamond, no swirls */
+export const DecoLineSimple = ({ t = null }) => {
+  const lineColor = t ? t.decoSwirl1 : C.lavender;
+  const diamond = t ? t.decoDiamond : C.lavMid;
+  const isDark = t && t.decoSwirl3;
+  const lO = isDark ? 0.35 : 0.4;
+  const dO = isDark ? 0.5 : 0.55;
+
+  return (
+    <svg width="210" height="16" viewBox="0 0 210 16" fill="none" style={{ display: "block", margin: "0 auto 8px" }}>
+      <line x1="10" y1="8" x2="95" y2="8" stroke={lineColor} strokeWidth="0.6" strokeLinecap="round" opacity={lO}/>
+      <rect x="100" y="3.5" width="6" height="6" rx="0.8" transform="rotate(45 103 6.5)" stroke={diamond} strokeWidth="0.7" fill="none" opacity={dO}/>
+      <line x1="115" y1="8" x2="200" y2="8" stroke={lineColor} strokeWidth="0.6" strokeLinecap="round" opacity={lO}/>
+    </svg>
+  );
+};
+
 export const TileIconBold = ({ t = null }) => {
   const s1 = t ? t.tileStroke1 : C.lavDeep;
   const s2 = t ? t.tileStroke2 : C.cherry;

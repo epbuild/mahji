@@ -193,7 +193,7 @@ function generatePlayerId(): string {
 }
 
 /* ── MAIN COMPONENT ── */
-function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
+function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn, onNav = (_p: string) => {} }) {
   const { isDark, toggle: toggleTheme } = useTheme();
   const t = getThemeColors(isDark);
 
@@ -769,6 +769,10 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: 20, marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 6 }}>
+          <span onClick={() => onNav("terms")} style={{ fontSize: 10, color: t.textDim, cursor: "pointer", fontFamily: FONT_SANS, textDecoration: "underline", textUnderlineOffset: 2 }}>Terms of Use</span>
+          <span onClick={() => onNav("privacy")} style={{ fontSize: 10, color: t.textDim, cursor: "pointer", fontFamily: FONT_SANS, textDecoration: "underline", textUnderlineOffset: 2 }}>Privacy Policy</span>
+        </div>
         <div style={{ fontSize: 10, color: t.textDim, letterSpacing: 1, fontFamily: FONT_SANS }}>MAHJI v1.0</div>
       </div>
     </Cnt>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "../constants/ThemeContext";
 import { C, getThemeColors } from "../constants/colors";
-import { DecoLine, FooterDeco, BirdIcon } from "../components/ui/Icons";
+import { DecoLineSimple, FooterDeco, BirdIcon } from "../components/ui/Icons";
 import { Cnt, BamFloat } from "../components/Layout";
 
 const FONT_SERIF = "'Bodoni Moda', serif";
@@ -151,7 +151,7 @@ function HomePage({ onNav, signedIn }) {
           color: t.heroTitleColor,
           textShadow: isDark ? "0 1px 12px rgba(168,216,238,0.08)" : "0 1px 6px rgba(224,48,80,0.06)",
         }}>MAHJI</h1>
-        <DecoLine t={t} />
+        <DecoLineSimple t={t} />
         {isNewUser && (
           <p style={{
             fontSize: 11, fontStyle: "italic", marginTop: 2,
@@ -199,6 +199,10 @@ function HomePage({ onNav, signedIn }) {
 
           <div className="app-footer home-entrance-item">
             <FooterDeco t={t} />
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 4 }}>
+              <span onClick={() => onNav("terms")} style={{ fontSize: 9, color: t.textDim, cursor: "pointer", fontFamily: FONT_SANS, textDecoration: "underline", textUnderlineOffset: 2 }}>Terms of Use</span>
+              <span onClick={() => onNav("privacy")} style={{ fontSize: 9, color: t.textDim, cursor: "pointer", fontFamily: FONT_SANS, textDecoration: "underline", textUnderlineOffset: 2 }}>Privacy Policy</span>
+            </div>
             <p className="app-footer-copyright">© Mahji LLC</p>
           </div>
         </div>

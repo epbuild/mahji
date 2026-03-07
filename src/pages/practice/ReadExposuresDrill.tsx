@@ -20,6 +20,7 @@ import type {
   NMJLCard, HandDefinition, HandPattern, TileGroup,
   ColorAssignment, CardSection, CardColor,
 } from "../../data/nmjl";
+import { playCelebration } from "../../audio/sounds";
 
 // ─── TYPES ────────────────────────────────────────────────────
 
@@ -392,6 +393,7 @@ export default function ReadExposuresDrill({ onBack }: Props) {
     const result = computeScore(selectedHandIds, puzzle.correctHandIds);
     setScoreResult(result);
     setPhase("results");
+    if (result.score === 100) playCelebration();
   }, [puzzle, selectedHandIds]);
 
   // Sections that have at least one exposable hand

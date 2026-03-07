@@ -7,7 +7,8 @@ import PlayPage from "./pages/PlayPage";
 import StatsPage from "./pages/StatsPage";
 import BamPage from "./pages/BamPage";
 import ProfilePage from "./pages/ProfilePage";
-
+import DecoCompare from "./pages/DecoCompare";
+import { TermsOfUse, PrivacyPolicy } from "./pages/LegalPages";
 
 import { C, getThemeColors } from "./constants/colors";
 import { ThemeProvider, useTheme } from "./constants/ThemeContext";
@@ -38,15 +39,16 @@ function SplashScreen({ onDone }) {
 }
 
 function AppInner() {
-  const [page, setPage] = useState("home");
+  // Dev-only hash routes skip splash
+  const isDevRoute = window.location.hash === '#/deco-compare';
+  const [page, setPage] = useState(() => isDevRoute ? 'deco-compare' : 'home');
   const [prevPage, setPrevPage] = useState("home");
   const [showChat, setShowChat] = useState(false);
   const [signedIn, setSignedIn] = useState(true);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(!isDevRoute);
 
-
-  const [splashDone, setSplashDone] = useState(false);
-  const [entrancePlayed, setEntrancePlayed] = useState(false);
+  const [splashDone, setSplashDone] = useState(isDevRoute);
+  const [entrancePlayed, setEntrancePlayed] = useState(isDevRoute);
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
 
@@ -101,8 +103,10 @@ function AppInner() {
         {page === "play" && <PlayPage />}
         {page === "stats" && <StatsPage key={navKey} />}
         {page === "bam" && <BamPage />}
-        {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
-
+        {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} onNav={onNav} />}
+        {page === "deco-compare" && <DecoCompare />}
+        {page === "terms" && <TermsOfUse onBack={() => setPage(prevPage)} />}
+        {page === "privacy" && <PrivacyPolicy onBack={() => setPage(prevPage)} />}
 
         <MobileNav active={page === "home" || page === "profile" ? null : page} onNav={onNav} />
       </div>

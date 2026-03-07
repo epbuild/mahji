@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { C, getThemeColors, FONT_SERIF, FONT_SANS } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { BirdIcon, I, Logo, TileIconBold, FooterDeco, SunIcon, MoonIcon } from './ui/Icons';
+import { isSoundOn, toggleSound } from '../audio/sounds';
 
 /* ═══ SUN/MOON THEME TOGGLE ═══ */
 export const ModeToggle = () => {
@@ -19,6 +20,29 @@ export const ModeToggle = () => {
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%",
         background: isDark ? "rgba(168,216,238,0.15)" : "transparent",
         color: isDark ? "#A8D8EE" : "rgba(126,100,164,0.3)", transition: "all 0.35s" }}><MoonIcon size={13} color="currentColor" /></span>
+    </button>
+  );
+};
+
+/* ═══ SOUND TOGGLE ═══ */
+export const SoundToggle = () => {
+  const { isDark } = useTheme();
+  const [on, setOn] = useState(() => isSoundOn());
+  return (
+    <button onClick={() => { const next = toggleSound(); setOn(next); }} aria-label="Toggle sound" style={{
+      background: isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)",
+      border: `1px solid ${isDark ? "rgba(168,216,238,0.12)" : "rgba(126,100,164,0.1)"}`,
+      borderRadius: 20, cursor: "pointer", padding: "4px 8px",
+      display: "flex", alignItems: "center", justifyContent: "center", height: 28, width: 28, transition: "all 0.35s",
+    }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? (on ? "#A8D8EE" : "rgba(255,255,255,0.25)") : (on ? "#7E64A4" : "rgba(126,100,164,0.3)")} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "all 0.35s" }}>
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+        {on ? (
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+        ) : (
+          <><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></>
+        )}
+      </svg>
     </button>
   );
 };
@@ -77,6 +101,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <SoundToggle />
           <ModeToggle />
           <ProfileCircle size={30} onClick={onProfile} />
         </div>
@@ -92,7 +117,8 @@ export const MobileHeader = ({ onHome, onProfile, isHome, cartCount = 0, onCart 
   return (
     <div className="mobile-header">
       <Logo onClick={onHome} showText={!isHome} isDark={isDark && !isHome} />
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <SoundToggle />
         <ModeToggle />
         <ProfileCircle size={34} onClick={onProfile} />
       </div>
