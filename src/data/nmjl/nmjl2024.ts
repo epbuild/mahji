@@ -65,7 +65,7 @@ const hands: HandDefinition[] = [
     section: 'year',
     displayPattern: 'FFFF 2222 0000 24',
     patterns: check14([{
-      groups: [kong(fl, 'blue'), kong(s(2), 'green'), kong(zero, 'green'), single(s(2), 'red'), single(s(4), 'red')],
+      groups: [kong(fl, 'blue'), kong(s(2), 'green'), kong(zero, 'blue'), mixed([s(2), s(4)], 'red')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 2 Suits',
@@ -77,8 +77,8 @@ const hands: HandDefinition[] = [
     patterns: check14([{
       groups: [
         pair(fl, 'blue'),
-        mixed([s(2), zero, s(2), s(4)], 'red'),
-        kong(s(2), 'green'),
+        mixed([s(2), zero, s(2), s(4)], 'green'),
+        kong(s(2), 'red'),
         kong(s(2), 'blue'),
       ],
     }]),
@@ -92,7 +92,7 @@ const hands: HandDefinition[] = [
     patterns: check14([{
       groups: [
         pair(wN, 'blue'), pung(wE, 'blue'),
-        mixed([s(2), zero, s(2), s(4)], 'green'),
+        mixed([s(2), zero, s(2), s(4)], 'blue'),
         pung(wW, 'blue'), pair(wS, 'blue'),
       ],
     }]),
@@ -107,8 +107,8 @@ const hands: HandDefinition[] = [
     section: '2468',
     displayPattern: '222 444 6666 8888 -or- 222 444 6666 8888',
     patterns: check14([
-      { groups: [pung(s(2), 'green'), pung(s(4), 'green'), kong(s(6), 'green'), kong(s(8), 'green')] },
-      { groups: [pung(s(2), 'green'), pung(s(4), 'red'), kong(s(6), 'red'), kong(s(8), 'red')] },
+      { groups: [pung(s(2), 'blue'), pung(s(4), 'blue'), kong(s(6), 'blue'), kong(s(8), 'blue')] },
+      { groups: [pung(s(2), 'green'), pung(s(4), 'green'), kong(s(6), 'red'), kong(s(8), 'red')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 or 2 Suits',
@@ -128,7 +128,7 @@ const hands: HandDefinition[] = [
     section: '2468',
     displayPattern: '22 44 666 888 DDDD',
     patterns: check14([{
-      groups: [pair(s(2), 'green'), pair(s(4), 'green'), pung(s(6), 'green'), pung(s(8), 'green'), kong(dMatch, 'green')],
+      groups: [pair(s(2), 'blue'), pair(s(4), 'blue'), pung(s(6), 'blue'), pung(s(8), 'blue'), kong(dMatch, 'blue')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit w Matching Dragons',
@@ -149,8 +149,8 @@ const hands: HandDefinition[] = [
     section: '2468',
     displayPattern: 'FF 2222 44 66 8888 -or- FF 2222 44 66 8888',
     patterns: check14([
-      { groups: [pair(fl, 'blue'), kong(s(2), 'green'), pair(s(4), 'green'), pair(s(6), 'green'), kong(s(8), 'green')] },
-      { groups: [pair(fl, 'blue'), kong(s(2), 'green'), pair(s(4), 'red'), pair(s(6), 'red'), kong(s(8), 'red')] },
+      { groups: [pair(fl, 'blue'), kong(s(2), 'blue'), pair(s(4), 'blue'), pair(s(6), 'blue'), kong(s(8), 'blue')] },
+      { groups: [pair(fl, 'blue'), kong(s(2), 'green'), pair(s(4), 'red'), pair(s(6), 'red'), kong(s(8), 'green')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 or 2 Suits',
@@ -173,7 +173,7 @@ const hands: HandDefinition[] = [
     section: 'any_like_numbers',
     displayPattern: 'FFFF 111 1111 111',
     patterns: check14([{
-      groups: [kong(fl, 'blue'), pung(s(1), 'green'), kong(s(1), 'red'), pung(s(1), 'green')],
+      groups: [kong(fl, 'blue'), pung(s(1), 'green'), kong(s(1), 'red'), pung(s(1), 'blue')],
       numberConstraint: { type: 'any_like', positions: [1, 2, 3] },
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
@@ -209,7 +209,7 @@ const hands: HandDefinition[] = [
     section: 'addition',
     displayPattern: 'FF 1111 + 6666 = 7777',
     patterns: check14([{
-      groups: [pair(fl, 'blue'), kong(s(1), 'green'), kong(s(6), 'green'), kong(s(7), 'green')],
+      groups: [pair(fl, 'blue'), kong(s(1), 'blue'), kong(s(6), 'blue'), kong(s(7), 'blue')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit',
@@ -219,7 +219,7 @@ const hands: HandDefinition[] = [
     section: 'addition',
     displayPattern: 'FF 2222 + 5555 = 7777',
     patterns: check14([{
-      groups: [pair(fl, 'blue'), kong(s(2), 'green'), kong(s(5), 'green'), kong(s(7), 'green')],
+      groups: [pair(fl, 'blue'), kong(s(2), 'blue'), kong(s(5), 'blue'), kong(s(7), 'blue')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit',
@@ -229,7 +229,7 @@ const hands: HandDefinition[] = [
     section: 'addition',
     displayPattern: 'FF 3333 + 4444 = 7777',
     patterns: check14([{
-      groups: [pair(fl, 'blue'), kong(s(3), 'green'), kong(s(4), 'green'), kong(s(7), 'green')],
+      groups: [pair(fl, 'blue'), kong(s(3), 'blue'), kong(s(4), 'blue'), kong(s(7), 'blue')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit',
@@ -242,7 +242,7 @@ const hands: HandDefinition[] = [
     section: 'quints',
     displayPattern: 'FF 11111 22 33333',
     patterns: check14([{
-      groups: [pair(fl, 'blue'), quint(s(1), 'green'), pair(s(2), 'green'), quint(s(3), 'green')],
+      groups: [pair(fl, 'blue'), quint(s(1), 'blue'), pair(s(2), 'blue'), quint(s(3), 'blue')],
       numberConstraint: { type: 'any_run', length: 3 },
     }]),
     points: 40, exposure: 'X', jokerPolicy: 'quints_required',
@@ -275,7 +275,7 @@ const hands: HandDefinition[] = [
     section: 'quints',
     displayPattern: 'FFFFF DDDD 11111',
     patterns: check14([{
-      groups: [quint(fl, 'blue'), kong(dMatch, 'green'), quint(s(1), 'green')],
+      groups: [quint(fl, 'blue'), kong(dMatch, 'green'), quint(s(1), 'red')],
       numberConstraint: { type: 'any_number' },
     }]),
     points: 40, exposure: 'X', jokerPolicy: 'quints_required',
@@ -289,8 +289,8 @@ const hands: HandDefinition[] = [
     section: 'consecutive_run',
     displayPattern: '111 22 3333 44 555 -or- 555 66 7777 88 999',
     patterns: check14([
-      { groups: [pung(s(1), 'green'), pair(s(2), 'green'), kong(s(3), 'green'), pair(s(4), 'green'), pung(s(5), 'green')] },
-      { groups: [pung(s(5), 'green'), pair(s(6), 'green'), kong(s(7), 'green'), pair(s(8), 'green'), pung(s(9), 'green')] },
+      { groups: [pung(s(1), 'blue'), pair(s(2), 'blue'), kong(s(3), 'blue'), pair(s(4), 'blue'), pung(s(5), 'blue')] },
+      { groups: [pung(s(5), 'blue'), pair(s(6), 'blue'), kong(s(7), 'blue'), pair(s(8), 'blue'), pung(s(9), 'blue')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'These Nos. Only',
@@ -311,8 +311,8 @@ const hands: HandDefinition[] = [
     section: 'consecutive_run',
     displayPattern: 'FF 1111 2222 3333 -or- FF 1111 2222 3333',
     patterns: check14([
-      { groups: [pair(fl, 'blue'), kong(s(1), 'green'), kong(s(2), 'green'), kong(s(3), 'green')], numberConstraint: { type: 'any_run', length: 3 } },
-      { groups: [pair(fl, 'blue'), kong(s(1), 'red'), kong(s(2), 'green'), kong(s(3), 'red')], numberConstraint: { type: 'any_run', length: 3 } },
+      { groups: [pair(fl, 'blue'), kong(s(1), 'blue'), kong(s(2), 'blue'), kong(s(3), 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
+      { groups: [pair(fl, 'blue'), kong(s(1), 'green'), kong(s(2), 'red'), kong(s(3), 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 or 3 Suits, Any 3 Consec. Nos.',
@@ -333,7 +333,7 @@ const hands: HandDefinition[] = [
     section: 'consecutive_run',
     displayPattern: '11 22 333 444 DDDD',
     patterns: check14([{
-      groups: [pair(s(1), 'green'), pair(s(2), 'green'), pung(s(3), 'green'), pung(s(4), 'green'), kong(dMatch, 'green')],
+      groups: [pair(s(1), 'blue'), pair(s(2), 'blue'), pung(s(3), 'blue'), pung(s(4), 'blue'), kong(dMatch, 'blue')],
       numberConstraint: { type: 'any_run', length: 4 },
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
@@ -355,8 +355,8 @@ const hands: HandDefinition[] = [
     section: 'consecutive_run',
     displayPattern: '111 222 3333 4444 -or- 111 222 3333 4444',
     patterns: check14([
-      { groups: [pung(s(1), 'green'), pung(s(2), 'green'), kong(s(3), 'green'), kong(s(4), 'green')], numberConstraint: { type: 'any_run', length: 4 } },
-      { groups: [pung(s(1), 'green'), pung(s(2), 'red'), kong(s(3), 'green'), kong(s(4), 'red')], numberConstraint: { type: 'any_run', length: 4 } },
+      { groups: [pung(s(1), 'blue'), pung(s(2), 'blue'), kong(s(3), 'blue'), kong(s(4), 'blue')], numberConstraint: { type: 'any_run', length: 4 } },
+      { groups: [pung(s(1), 'green'), pung(s(2), 'green'), kong(s(3), 'red'), kong(s(4), 'red')], numberConstraint: { type: 'any_run', length: 4 } },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 or 2 Suits, Any 4 Consec. Nos.',
@@ -380,8 +380,8 @@ const hands: HandDefinition[] = [
     section: '13579',
     displayPattern: '111 33 5555 77 999 -or- 111 33 5555 77 999',
     patterns: check14([
-      { groups: [pung(s(1), 'green'), pair(s(3), 'green'), kong(s(5), 'green'), pair(s(7), 'green'), pung(s(9), 'green')] },
-      { groups: [pung(s(1), 'red'), pair(s(3), 'red'), kong(s(5), 'red'), pair(s(7), 'red'), pung(s(9), 'red')] },
+      { groups: [pung(s(1), 'blue'), pair(s(3), 'blue'), kong(s(5), 'blue'), pair(s(7), 'blue'), pung(s(9), 'blue')] },
+      { groups: [pung(s(1), 'green'), pair(s(3), 'green'), kong(s(5), 'red'), pair(s(7), 'blue'), pung(s(9), 'blue')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 or 3 Suits',
@@ -391,8 +391,8 @@ const hands: HandDefinition[] = [
     section: '13579',
     displayPattern: '111 333 3333 5555 -or- 555 777 7777 9999',
     patterns: check14([
-      { groups: [pung(s(1), 'green'), pung(s(3), 'red'), kong(s(3), 'red'), kong(s(5), 'red')] },
-      { groups: [pung(s(5), 'green'), pung(s(7), 'red'), kong(s(7), 'red'), kong(s(9), 'red')] },
+      { groups: [pung(s(1), 'green'), pung(s(3), 'green'), kong(s(3), 'red'), kong(s(5), 'red')] },
+      { groups: [pung(s(5), 'green'), pung(s(7), 'green'), kong(s(7), 'red'), kong(s(9), 'red')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 2 Suits',
@@ -402,8 +402,8 @@ const hands: HandDefinition[] = [
     section: '13579',
     displayPattern: 'FF 11 333 5555 DDD -or- FF 55 777 9999 DDD',
     patterns: check14([
-      { groups: [pair(fl, 'blue'), pair(s(1), 'green'), pung(s(3), 'green'), kong(s(5), 'green'), pung(dMatch, 'green')] },
-      { groups: [pair(fl, 'blue'), pair(s(5), 'green'), pung(s(7), 'green'), kong(s(9), 'green'), pung(dMatch, 'green')] },
+      { groups: [pair(fl, 'blue'), pair(s(1), 'blue'), pung(s(3), 'blue'), kong(s(5), 'blue'), pung(dMatch, 'blue')] },
+      { groups: [pair(fl, 'blue'), pair(s(5), 'blue'), pung(s(7), 'blue'), kong(s(9), 'blue'), pung(dMatch, 'blue')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit w Matching Dragons',
@@ -499,8 +499,8 @@ const hands: HandDefinition[] = [
     section: 'winds_dragons',
     displayPattern: 'NNNN 11 22 33 SSSS -or- EEEE 11 22 33 WWWW',
     patterns: check14([
-      { groups: [kong(wN, 'blue'), pair(s(1), 'green'), pair(s(2), 'green'), pair(s(3), 'green'), kong(wS, 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
-      { groups: [kong(wE, 'blue'), pair(s(1), 'green'), pair(s(2), 'green'), pair(s(3), 'green'), kong(wW, 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
+      { groups: [kong(wN, 'blue'), pair(s(1), 'blue'), pair(s(2), 'blue'), pair(s(3), 'blue'), kong(wS, 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
+      { groups: [kong(wE, 'blue'), pair(s(1), 'blue'), pair(s(2), 'blue'), pair(s(3), 'blue'), kong(wW, 'blue')], numberConstraint: { type: 'any_run', length: 3 } },
     ]),
     points: 30, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit, Any 3 Consec. Nos.',
@@ -510,7 +510,7 @@ const hands: HandDefinition[] = [
     section: 'winds_dragons',
     displayPattern: 'FF DDDD NEWS DDDD',
     patterns: check14([{
-      groups: [pair(fl, 'blue'), kong(dR, 'red'), mixed([wN, wE, wW, wS], 'blue'), kong(dG, 'green')],
+      groups: [pair(fl, 'blue'), kong(dR, 'green'), mixed([wN, wE, wW, wS], 'blue'), kong(dG, 'red')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 2 Dragons',
@@ -534,8 +534,8 @@ const hands: HandDefinition[] = [
     section: '369',
     displayPattern: '333 666 6666 9999 -or- 333 666 6666 9999',
     patterns: check14([
-      { groups: [pung(s(3), 'green'), pung(s(6), 'green'), kong(s(6), 'green'), kong(s(9), 'green')] },
-      { groups: [pung(s(3), 'green'), pung(s(6), 'red'), kong(s(6), 'red'), kong(s(9), 'red')] },
+      { groups: [pung(s(3), 'green'), pung(s(6), 'green'), kong(s(6), 'red'), kong(s(9), 'red')] },
+      { groups: [pung(s(3), 'green'), pung(s(6), 'red'), kong(s(6), 'red'), kong(s(9), 'blue')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 2 or 3 Suits',
@@ -560,8 +560,8 @@ const hands: HandDefinition[] = [
     section: '369',
     displayPattern: 'FF 3333 6666 9999 -or- FF 3333 6666 9999',
     patterns: check14([
-      { groups: [pair(fl, 'blue'), kong(s(3), 'green'), kong(s(6), 'green'), kong(s(9), 'green')] },
-      { groups: [pair(fl, 'blue'), kong(s(3), 'red'), kong(s(6), 'green'), kong(s(9), 'red')] },
+      { groups: [pair(fl, 'blue'), kong(s(3), 'blue'), kong(s(6), 'blue'), kong(s(9), 'blue')] },
+      { groups: [pair(fl, 'blue'), kong(s(3), 'green'), kong(s(6), 'red'), kong(s(9), 'blue')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 or 3 Suits',
@@ -581,7 +581,7 @@ const hands: HandDefinition[] = [
     section: '369',
     displayPattern: '3333 66 66 66 9999',
     patterns: check14([{
-      groups: [kong(s(3), 'green'), pair(s(6), 'green'), pair(s(6), 'red'), pair(s(6), 'blue'), kong(s(9), 'green')],
+      groups: [kong(s(3), 'green'), pair(s(6), 'red'), pair(s(6), 'green'), pair(s(6), 'blue'), kong(s(9), 'green')],
     }]),
     points: 30, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 3 Suits, 3s and 9s Match',

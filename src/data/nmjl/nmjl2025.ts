@@ -119,7 +119,7 @@ const hands: HandDefinition[] = [
     section: '2468',
     displayPattern: '22 444 66 888 DDDD',
     patterns: check14([{
-      groups: [pair(s(2), 'green'), pung(s(4), 'green'), pair(s(6), 'green'), pung(s(8), 'green'), kong(dMatch, 'green')],
+      groups: [pair(s(2), 'blue'), pung(s(4), 'blue'), pair(s(6), 'blue'), pung(s(8), 'blue'), kong(dMatch, 'blue')],
     }]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit',
@@ -257,8 +257,8 @@ const hands: HandDefinition[] = [
     section: 'consecutive_run',
     displayPattern: '11 222 3333 444 55 -or- 55 666 7777 888 99',
     patterns: check14([
-      { groups: [pair(s(1), 'green'), pung(s(2), 'green'), kong(s(3), 'green'), pung(s(4), 'green'), pair(s(5), 'green')] },
-      { groups: [pair(s(5), 'green'), pung(s(6), 'green'), kong(s(7), 'green'), pung(s(8), 'green'), pair(s(9), 'green')] },
+      { groups: [pair(s(1), 'blue'), pung(s(2), 'blue'), kong(s(3), 'blue'), pung(s(4), 'blue'), pair(s(5), 'blue')] },
+      { groups: [pair(s(5), 'blue'), pung(s(6), 'blue'), kong(s(7), 'blue'), pung(s(8), 'blue'), pair(s(9), 'blue')] },
     ]),
     points: 25, exposure: 'X', jokerPolicy: 'standard',
     description: 'Any 1 Suit, These Nos. Only',
