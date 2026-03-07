@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { C, matsList, matB } from '../constants/colors';
 import { PT, SH, Cnt, CardSel } from '../components/Layout';
+import { getAvailableYears, getCurrentYear } from '../data/nmjl';
 
 /* Seat badge backgrounds per mat — seafoam on coffee, brown on lighter mats */
 const SEAT_BG: Record<string, string> = {
@@ -11,8 +12,9 @@ const SEAT_BG: Record<string, string> = {
 };
 
 function PlayPage() {
+  const currentYear = getCurrentYear();
   const [diff, setDiff] = useState("Intermediate");
-  const [card, setCard] = useState("2025");
+  const [card, setCard] = useState(String(currentYear));
   const [mat, setMat] = useState("brn");
   const mb = matB[mat];
   const seatBg = SEAT_BG[mat];
@@ -54,7 +56,14 @@ function PlayPage() {
       ))}
     </div>
     <SH style={{ marginTop: 4 }}>Select Card</SH>
-    <CardSel items={[{ id: "2025", name: "NMJL 2025", sub: "Current year" }, { id: "2024", name: "NMJL 2024", sub: "Last year" }, { id: "big", name: "Big Card", sub: "Mahjong Line" }]} active={card} onSelect={setCard} />
+    <CardSel items={[
+      ...getAvailableYears().reverse().map((y, i) => ({
+        id: String(y),
+        name: `NMJL ${y}`,
+        sub: i === 0 ? 'Current year' : '',
+      })),
+      { id: "big", name: "Big Card", sub: "Mahjong Line" },
+    ]} active={card} onSelect={setCard} />
     <SH>Select Your Game Mat</SH>
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
       <div style={{ display: "flex", gap: 10, flex: 1, minWidth: 0 }}>

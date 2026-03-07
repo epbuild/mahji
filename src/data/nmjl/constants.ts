@@ -38,6 +38,20 @@ export const SECTION_LABELS: Record<CardSection, string> = {
   singles_pairs: 'Singles & Pairs',
 };
 
+/** Section descriptions for educational content (ReadTheCard, tooltips, etc.) */
+export const SECTION_DESCRIPTIONS: Record<CardSection, { desc: string; example: string }> = {
+  year: { desc: 'Hands using digits of the current year', example: 'Year digits, 20, 25, etc.' },
+  '2468': { desc: 'Even numbers only', example: 'Pairs, pungs, kongs of 2, 4, 6, 8' },
+  any_like_numbers: { desc: 'Pick a number, repeat it', example: '111 111 1111 1111' },
+  addition: { desc: 'Equations that add up', example: '1111 + 6666 = 7777' },
+  quints: { desc: 'Hands with 5-of-a-kind groups', example: 'Requires jokers!' },
+  consecutive_run: { desc: 'Sequential numbers in a row', example: '1-2-3, 3-4-5-6, etc.' },
+  '13579': { desc: 'Odd numbers only', example: 'Pairs, pungs, kongs of 1, 3, 5, 7, 9' },
+  winds_dragons: { desc: 'Emphasis on honor tiles', example: 'N, E, W, S, and dragons' },
+  '369': { desc: 'Multiples of three', example: '3s, 6s, and 9s' },
+  singles_pairs: { desc: 'No group larger than a pair', example: 'No jokers allowed!' },
+};
+
 /** Dragon type that "matches" each suit */
 export const DRAGON_SUIT_MAP: Record<SuitedTileSuit, 'red' | 'green' | 'white'> = {
   characters: 'red',

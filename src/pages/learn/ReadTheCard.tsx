@@ -5,6 +5,7 @@ import { PT, Cnt } from '../../components/Layout';
 import {
   MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker,
 } from '../../components/TileComponents';
+import { SECTION_ORDER, SECTION_LABELS, SECTION_DESCRIPTIONS } from '../../data/nmjl';
 
 /* ─────────────────────────────────────────────────
    REUSABLE BUILDING BLOCKS
@@ -452,18 +453,8 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
             </P>
 
             <div style={{ marginBottom: 14 }}>
-              {[
-                { name: 'Year', desc: 'Hands using digits of the current year', ex: '2025, 20, 25' },
-                { name: '2468', desc: 'Even numbers only', ex: 'Pairs, pungs, kongs of 2, 4, 6, 8' },
-                { name: 'Any Like Numbers', desc: 'Pick a number, repeat it', ex: '111 111 1111 1111' },
-                { name: 'Quints', desc: 'Hands with 5-of-a-kind groups', ex: 'Requires jokers!' },
-                { name: 'Consecutive Run', desc: 'Sequential numbers in a row', ex: '1-2-3, 3-4-5-6, etc.' },
-                { name: '13579', desc: 'Odd numbers only', ex: 'Pairs, pungs, kongs of 1, 3, 5, 7, 9' },
-                { name: 'Winds & Dragons', desc: 'Emphasis on honor tiles', ex: 'N, E, W, S, and dragons' },
-                { name: '369', desc: 'Multiples of three', ex: '3s, 6s, and 9s' },
-                { name: 'Singles & Pairs', desc: 'No group larger than a pair', ex: 'No jokers allowed!' },
-              ].map((sec, i) => (
-                <div key={i} style={{
+              {SECTION_ORDER.map((key, i) => (
+                <div key={key} style={{
                   display: 'flex', gap: 10, marginBottom: 6, padding: '6px 10px',
                   background: i % 2 === 0 ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(243,239,250,0.4)') : 'transparent',
                   borderRadius: 8,
@@ -471,10 +462,10 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
                   <div style={{
                     fontFamily: "'Bodoni Moda',serif", fontSize: 11.5, fontWeight: 600,
                     color: C.cherry, minWidth: 100, flexShrink: 0,
-                  }}>{sec.name}</div>
+                  }}>{SECTION_LABELS[key]}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 11.5, color: t.dark, fontWeight: 500 }}>{sec.desc}</div>
-                    <div style={{ fontSize: 10, color: t.light, fontStyle: 'italic' }}>{sec.ex}</div>
+                    <div style={{ fontSize: 11.5, color: t.dark, fontWeight: 500 }}>{SECTION_DESCRIPTIONS[key].desc}</div>
+                    <div style={{ fontSize: 10, color: t.light, fontStyle: 'italic' }}>{SECTION_DESCRIPTIONS[key].example}</div>
                   </div>
                 </div>
               ))}
