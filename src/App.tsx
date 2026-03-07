@@ -8,6 +8,7 @@ import StatsPage from "./pages/StatsPage";
 import BamPage from "./pages/BamPage";
 import ProfilePage from "./pages/ProfilePage";
 
+
 import { C, getThemeColors } from "./constants/colors";
 import { ThemeProvider, useTheme } from "./constants/ThemeContext";
 
@@ -42,6 +43,7 @@ function AppInner() {
   const [showChat, setShowChat] = useState(false);
   const [signedIn, setSignedIn] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
+
 
   const [splashDone, setSplashDone] = useState(false);
   const [entrancePlayed, setEntrancePlayed] = useState(false);
@@ -100,6 +102,7 @@ function AppInner() {
         {page === "stats" && <StatsPage key={navKey} />}
         {page === "bam" && <BamPage />}
         {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
+
 
         <MobileNav active={page === "home" || page === "profile" ? null : page} onNav={onNav} />
       </div>

@@ -51,7 +51,7 @@ function cacheKey(pack: VoicePack, clip: VoiceClip): string {
 export type VoiceClip =
   /* Game phases */
   | 'first-charleston' | 'second-charleston' | 'courtesy-pass'
-  | 'joker-swap' | 'mahjong' | 'call' | 'wall'
+  | 'joker-swap' | 'mahjong' | 'call'
   | 'stop' | 'draw' | 'invalid' | 'dead-hand'
   /* Bams */
   | '1-bam' | '2-bam' | '3-bam' | '4-bam' | '5-bam'
@@ -77,7 +77,6 @@ const SPOKEN_TEXT: Record<VoiceClip, string> = {
   'joker-swap': 'Joker Swap',
   'mahjong': 'Mahjong!',
   'call': 'Call!',
-  'wall': 'Wall!',
   'stop': 'Stop',
   'draw': "It's a draw!",
   'invalid': 'Invalid',

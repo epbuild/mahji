@@ -718,25 +718,32 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
       <Row icon={isDark ? <MoonIcon size={14} color="currentColor"/> : <SunIcon size={14} color="currentColor"/>} label="Dark Mode" right={<Toggle on={isDark} onToggle={toggleTheme}/>}/>
       <Row icon={I.volume} label="Sound Effects" right={<Toggle on={soundOn} onToggle={() => { const next = toggleSound(); setSoundOn(next); }}/>}/>
 
-      {/* Voice Narrator selector — only visible when sound is on */}
+      {/* Narrator selector — only visible when sound is on */}
       {soundOn && (
         <div style={{
-          padding: "12px 16px", background: t.btnBg,
+          padding: "14px 16px", background: t.btnBg,
           border: `1px solid ${t.btnBorder}`, borderRadius: 14,
           marginBottom: 8, marginTop: -4
         }}>
-          <div style={{ fontSize: 12, color: t.textDim, fontWeight: 600, fontFamily: FONT_SANS, marginBottom: 8, letterSpacing: 0.5 }}>Narrator</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ width: 18, height: 18, stroke: t.lavDeep, strokeWidth: 1.3, fill: "none", display: "flex", flexShrink: 0 }}>
+              <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: t.textMain, fontFamily: FONT_SANS }}>Narrator</div>
+          </div>
           <div style={{ display: "flex", gap: 6 }}>
             {VOICE_PACKS.map(vp => (
               <div key={vp.id} onClick={() => {
                 setVoicePack(vp.id);
                 setVoicePackState(vp.id);
-                playVoice('mahjong');
+                playVoice('first-charleston');
               }} style={{
                 flex: 1, padding: "7px 0", borderRadius: 16, textAlign: "center",
                 fontSize: 11, fontWeight: voicePackState === vp.id ? 600 : 400,
                 cursor: "pointer", transition: "all 0.3s", fontFamily: FONT_SANS,
-                background: voicePackState === vp.id ? C.cherry : "transparent",
+                background: voicePackState === vp.id ? t.seafoam : "transparent",
                 color: voicePackState === vp.id ? "#fff" : t.textMid,
                 border: voicePackState === vp.id ? "none" : `1px solid ${t.btnBorder}`,
               }}>{vp.label}</div>

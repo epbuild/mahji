@@ -5,32 +5,37 @@
 import { C, getThemeColors } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { PT, Cnt } from '../components/Layout';
-import { playClick, playDeselect, playWhoosh, playPing, playPingB, playPingC, playPingD, playPingE, playPingF, playPingG, playPingH, playError, playCelebration, playPlace } from '../audio/sounds';
+import { playDeselect, playWhoosh, playError, playCelebration, playPlace, playTileReceive, playCharlestonReceive, playMahjongCheer, playWinSequence } from '../audio/sounds';
 import { playVoice, VoiceClip } from '../audio/voice';
 
 const SFX_GROUPS: { title: string; items: { label: string; fn: () => void }[] }[] = [
   {
-    title: 'Ping Options (tile receive / draw)',
+    title: 'Tile Actions',
     items: [
-      { label: 'Ping A — bright', fn: playPing },
-      { label: 'Ping B — low bell', fn: playPingB },
-      { label: 'Ping C — high ding', fn: playPingC },
-      { label: 'Ping D — triangle tap', fn: playPingD },
-      { label: 'Ping E — glass tap', fn: playPingE },
-      { label: 'Ping F — short chime', fn: playPingF },
-      { label: 'Ping G — metallic chime', fn: playPingG },
-      { label: 'Ping H — tile clack', fn: playPingH },
+      { label: 'Place (tile to pass box)', fn: playPlace },
+      { label: 'Deselect', fn: playDeselect },
     ],
   },
   {
-    title: 'Other Effects',
+    title: 'MP3 Sound Effects',
     items: [
-      { label: 'Click (tile select)', fn: playClick },
-      { label: 'Deselect', fn: playDeselect },
-      { label: 'Whoosh (pass)', fn: playWhoosh },
+      { label: 'Tile Receive (draw)', fn: playTileReceive },
+      { label: 'Charleston Receive (pass)', fn: playCharlestonReceive },
+      { label: 'Mahjong Cheer', fn: playMahjongCheer },
+    ],
+  },
+  {
+    title: 'Other',
+    items: [
+      { label: 'Whoosh (backup)', fn: playWhoosh },
       { label: 'Error (invalid)', fn: playError },
-      { label: 'Place (snap)', fn: playPlace },
-      { label: 'Celebration', fn: playCelebration },
+      { label: 'Celebration chime', fn: playCelebration },
+    ],
+  },
+  {
+    title: 'Win Sequence (chime + voice + cheer)',
+    items: [
+      { label: 'Play Full Win Sequence', fn: playWinSequence },
     ],
   },
 ];
@@ -45,7 +50,10 @@ const VOICE_GROUPS: { title: string; clips: { label: string; clip: VoiceClip }[]
       { label: 'Joker Swap', clip: 'joker-swap' },
       { label: 'Mahjong!', clip: 'mahjong' },
       { label: 'Call!', clip: 'call' },
-      { label: 'Wall!', clip: 'wall' },
+      { label: 'Stop', clip: 'stop' },
+      { label: "Draw", clip: 'draw' },
+      { label: 'Invalid', clip: 'invalid' },
+      { label: 'Dead Hand', clip: 'dead-hand' },
     ],
   },
   {
@@ -108,8 +116,7 @@ export default function SoundPreview() {
       <PT>Sound Preview</PT>
       <Cnt>
         <p style={{ fontSize: 12, color: t.mid, lineHeight: 1.5, marginBottom: 16, fontFamily: "'Outfit',sans-serif" }}>
-          Tap any button to hear the sound. SFX are generated via Web Audio API.
-          Voice clips will use browser TTS as a fallback until ElevenLabs MP3s are added to <code style={{ fontSize: 11, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', padding: '2px 5px', borderRadius: 4 }}>public/audio/voice/</code>.
+          Tap any button to hear the sound. Voice clips use the currently selected narrator (Profile &gt; App Settings).
         </p>
 
         {/* Sound Effects */}
@@ -117,45 +124,55 @@ export default function SoundPreview() {
           fontFamily: "'Bodoni Moda',serif", fontSize: 16, fontWeight: 600,
           color: C.cherry, letterSpacing: 0.5, marginBottom: 10,
         }}>Sound Effects</div>
-        {SFX_GROUPS.map(group => (
-          <div key={group.title} style={{ marginBottom: 16 }}>
-            <div style={{
-              fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 600,
-              color: isDark ? t.cerulean : C.dark, letterSpacing: 0.3, marginBottom: 6,
-            }}>{group.title}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {group.items.map(s => (
-                <button key={s.label} onClick={s.fn} style={btnStyle(C.cherry)}>
-                  {s.label}
-                </button>
-              ))}
+        {SFX_GROUPS.map((group, i) => (
+          <div key={group.title}>
+            {i > 0 && <div style={{ height: 1, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(45,27,78,0.06)', margin: '12px 0' }} />}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{
+                fontFamily: "'Bodoni Moda',serif", fontSize: 13, fontWeight: 600,
+                color: isDark ? t.cerulean : C.dark, letterSpacing: 0.3, marginBottom: 6,
+              }}>{group.title}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {group.items.map(s => (
+                  <button key={s.label} onClick={s.fn} style={btnStyle(C.cherry)}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ))}
-        <div style={{ marginBottom: 8 }} />
+        <div style={{ height: 2, background: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(45,27,78,0.12)', borderRadius: 1, margin: '20px 0 16px' }} />
 
         {/* Voice Clips */}
-        {VOICE_GROUPS.map(group => (
-          <div key={group.title} style={{ marginBottom: 20 }}>
-            <div style={{
-              fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600,
-              color: isDark ? t.cerulean : C.dark, letterSpacing: 0.3, marginBottom: 8,
-            }}>{group.title}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {group.clips.map(v => (
-                <button
-                  key={v.clip}
-                  onClick={() => playVoice(v.clip)}
-                  style={btnStyle(isDark ? 'rgba(107,63,160,0.7)' : C.lavDeep)}
-                >
-                  {v.label}
-                </button>
-              ))}
+        <div style={{
+          fontFamily: "'Bodoni Moda',serif", fontSize: 16, fontWeight: 600,
+          color: C.cherry, letterSpacing: 0.5, marginBottom: 10,
+        }}>Voice Clips</div>
+        {VOICE_GROUPS.map((group, i) => (
+          <div key={group.title}>
+            {i > 0 && <div style={{ height: 1, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(45,27,78,0.06)', margin: '14px 0' }} />}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                fontFamily: "'Bodoni Moda',serif", fontSize: 14, fontWeight: 600,
+                color: isDark ? t.cerulean : C.dark, letterSpacing: 0.3, marginBottom: 8,
+              }}>{group.title}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {group.clips.map(v => (
+                  <button
+                    key={v.clip}
+                    onClick={() => playVoice(v.clip)}
+                    style={btnStyle(isDark ? 'rgba(107,63,160,0.7)' : C.lavDeep)}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ))}
 
-        <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${t.lavBorder}, transparent)`, margin: '16px 0' }} />
+        <div style={{ height: 2, background: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(45,27,78,0.12)', borderRadius: 1, margin: '20px 0 12px' }} />
         <p style={{ fontSize: 10, color: t.light, fontStyle: 'italic', fontFamily: "'Outfit',sans-serif" }}>
           Dev-only page. Remove before production.
         </p>
