@@ -42,6 +42,7 @@ function AppInner() {
   const [showChat, setShowChat] = useState(false);
   const [signedIn, setSignedIn] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
+
   const [splashDone, setSplashDone] = useState(false);
   const [entrancePlayed, setEntrancePlayed] = useState(false);
   const { isDark } = useTheme();
@@ -99,7 +100,6 @@ function AppInner() {
         {page === "stats" && <StatsPage key={navKey} />}
         {page === "bam" && <BamPage />}
         {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} />}
-
 
         <MobileNav active={page === "home" || page === "profile" ? null : page} onNav={onNav} />
       </div>

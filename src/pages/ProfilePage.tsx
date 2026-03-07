@@ -3,6 +3,9 @@ import { C, getThemeColors, FONT_SERIF, FONT_SANS } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { I, BirdIcon, SunIcon, MoonIcon } from '../components/ui/Icons';
 import { Cnt, SH, PT } from '../components/Layout';
+import { isSoundOn, toggleSound } from '../audio/sounds';
+import { getVoicePack, setVoicePack, playVoice, VOICE_PACKS } from '../audio/voice';
+import type { VoicePack } from '../audio/voice';
 
 /* ── US STATES ── */
 const US_STATES = [
@@ -219,7 +222,8 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
 
   // App controls
   const [notificationsOn, setNotificationsOn] = useState(true);
-  const [soundOn, setSoundOn] = useState(true);
+  const [soundOn, setSoundOn] = useState(() => isSoundOn());
+  const [voicePackState, setVoicePackState] = useState<VoicePack>(() => getVoicePack());
 
   // Invite
   const referralCode = 'MAHJI-' + screenName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6);
@@ -708,11 +712,38 @@ function ProfilePage({ onBack, onHome, signedIn, onSignOut, onSignIn }) {
       <SH>Subscription</SH>
       <Row icon={I.creditCard} label="Billing & Plan" subText="Free plan" onClick={() => setSub('billing')}/>
 
-      {/* App Controls */}
-      <SH>App Controls</SH>
+      {/* App Settings */}
+      <SH>App Settings</SH>
       <Row icon={I.bell} label="Notifications" right={<Toggle on={notificationsOn} onToggle={() => setNotificationsOn(!notificationsOn)}/>}/>
       <Row icon={isDark ? <MoonIcon size={14} color="currentColor"/> : <SunIcon size={14} color="currentColor"/>} label="Dark Mode" right={<Toggle on={isDark} onToggle={toggleTheme}/>}/>
-      <Row icon={I.volume} label="Sound Effects" right={<Toggle on={soundOn} onToggle={() => setSoundOn(!soundOn)}/>}/>
+      <Row icon={I.volume} label="Sound Effects" right={<Toggle on={soundOn} onToggle={() => { const next = toggleSound(); setSoundOn(next); }}/>}/>
+
+      {/* Voice Narrator selector — only visible when sound is on */}
+      {soundOn && (
+        <div style={{
+          padding: "12px 16px", background: t.btnBg,
+          border: `1px solid ${t.btnBorder}`, borderRadius: 14,
+          marginBottom: 8, marginTop: -4
+        }}>
+          <div style={{ fontSize: 12, color: t.textDim, fontWeight: 600, fontFamily: FONT_SANS, marginBottom: 8, letterSpacing: 0.5 }}>Narrator</div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {VOICE_PACKS.map(vp => (
+              <div key={vp.id} onClick={() => {
+                setVoicePack(vp.id);
+                setVoicePackState(vp.id);
+                playVoice('mahjong');
+              }} style={{
+                flex: 1, padding: "7px 0", borderRadius: 16, textAlign: "center",
+                fontSize: 11, fontWeight: voicePackState === vp.id ? 600 : 400,
+                cursor: "pointer", transition: "all 0.3s", fontFamily: FONT_SANS,
+                background: voicePackState === vp.id ? C.cherry : "transparent",
+                color: voicePackState === vp.id ? "#fff" : t.textMid,
+                border: voicePackState === vp.id ? "none" : `1px solid ${t.btnBorder}`,
+              }}>{vp.label}</div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Data & Privacy */}
       <SH>Data & Privacy</SH>
