@@ -604,6 +604,11 @@ export function PlayerHand({
   // Reserve space for button so tiles don't go behind it
   const BTN_RESERVE = showBtn ? 58 : 0;
 
+  // Tile sizing constants (md = 72w × 98h)
+  const TILE_MD_W = 72;
+  const TILE_GAP = 3;
+  const REF_HAND_SIZE = 13; // Always scale as if 13 tiles so size stays consistent
+
   const recalcScale = useCallback(() => {
     const outer = outerRef.current;
     const inner = innerRef.current;
@@ -612,11 +617,12 @@ export function PlayerHand({
     inner.style.transform = "scale(1)";
     const availW = outer.offsetWidth - BTN_RESERVE;
     const naturalW = inner.scrollWidth;
-    const s = naturalW <= availW ? 1 : Math.max(0.3, availW / naturalW);
-    // Cap at 0.85 so tiles are never oversized on short hands
-    const capped = Math.min(s, 0.85);
-    setTileScale(capped);
-    inner.style.transform = `scale(${capped})`;
+    // Use 13-tile reference width as floor so tiles never grow bigger with fewer tiles
+    const refNaturalW = REF_HAND_SIZE * TILE_MD_W + (REF_HAND_SIZE - 1) * TILE_GAP + 8;
+    const effectiveW = Math.max(naturalW, refNaturalW);
+    const s = effectiveW <= availW ? 1 : Math.max(0.3, availW / effectiveW);
+    setTileScale(s);
+    inner.style.transform = `scale(${s})`;
   }, [BTN_RESERVE]);
 
   useLayoutEffect(() => {

@@ -66,8 +66,10 @@ export default function GameBoardDemo() {
   const calledTile = deck.slice(36, 37)[0];
   const winningHand = deck.slice(37, 51);    // 14 tiles
 
-  // 7-tile hand (after 6 exposed)
+  // 7-tile hand (after 6 exposed: 13 - 6 = 7)
   const eastShortHand = deck.slice(0, 7);
+  // 8-tile hand (after 6 exposed + 1 drawn: 13 - 6 + 1 = 8)
+  const eastHandWith8 = deck.slice(0, 8);
 
   // State for call flow demo
   const [showCallOptions, setShowCallOptions] = useState(false);
@@ -108,9 +110,9 @@ export default function GameBoardDemo() {
             <GameBoard
               mat={mat}
               players={[
-                { seat: "east", name: "East (Dealer)", rackCount: 13, exposures: [exposureGroup1, exposureGroup2] },
-                { seat: "north", name: "North", rackCount: 13, exposures: [northExposure] },
-                { seat: "west", name: "West", rackCount: 13, exposures: [westExposure] },
+                { seat: "east", name: "East (Dealer)", rackCount: 7, exposures: [exposureGroup1, exposureGroup2] },
+                { seat: "north", name: "North", rackCount: 9, exposures: [northExposure] },
+                { seat: "west", name: "West", rackCount: 9, exposures: [westExposure] },
                 { seat: "south", name: "South", rackCount: 13 },
               ]}
               discards={discardTiles}
@@ -125,9 +127,9 @@ export default function GameBoardDemo() {
             <GameBoard
               mat={mat}
               players={[
-                { seat: "east", name: "East (Dealer)", rackCount: 13, exposures: [exposureGroup1, exposureGroup2] },
+                { seat: "east", name: "East (Dealer)", rackCount: 7, exposures: [exposureGroup1, exposureGroup2] },
                 { seat: "north", name: "North", rackCount: 13, halo: "gold" },
-                { seat: "west", name: "West", rackCount: 13, exposures: [westExposure] },
+                { seat: "west", name: "West", rackCount: 9, exposures: [westExposure] },
                 { seat: "south", name: "South", rackCount: 13 },
               ]}
               discards={discardTiles.slice(0, 4)}
@@ -174,9 +176,9 @@ export default function GameBoardDemo() {
             <GameBoard
               mat={mat}
               players={[
-                { seat: "east", name: "East (Dealer)", rackCount: 13, exposures: [exposureGroup1, exposureGroup2] },
+                { seat: "east", name: "East (Dealer)", rackCount: 7, exposures: [exposureGroup1, exposureGroup2] },
                 { seat: "north", name: "North", rackCount: 13, halo: "gold" },
-                { seat: "west", name: "West", rackCount: 13, exposures: [westExposure] },
+                { seat: "west", name: "West", rackCount: 9, exposures: [westExposure] },
                 { seat: "south", name: "South", rackCount: 13 },
               ]}
               discards={discardTiles}
@@ -192,25 +194,25 @@ export default function GameBoardDemo() {
             <PlayerHand hand={eastShortHand} showSortButtons showMahjongButton cherry={C.cherry} />
           </>
         );
-      case 5: // Draw a Tile
+      case 5: // Draw a Tile (East has 6 exposed, drew 1 → 8 tiles in hand)
         return (
           <>
             <GameBoard
               mat={mat}
               players={[
-                { seat: "east", name: "East (Dealer)", rackCount: 13, halo: "gold", exposures: [exposureGroup1, exposureGroup2] },
+                { seat: "east", name: "East (Dealer)", rackCount: 8, halo: "gold", exposures: [exposureGroup1, exposureGroup2] },
                 { seat: "north", name: "North", rackCount: 13 },
-                { seat: "west", name: "West", rackCount: 13, exposures: [westExposure] },
+                { seat: "west", name: "West", rackCount: 9, exposures: [westExposure] },
                 { seat: "south", name: "South", rackCount: 13 },
               ]}
               discards={discardTiles}
               tilesRemaining={118}
             />
             <PlayerHand
-              hand={eastHandWith14}
+              hand={eastHandWith8}
               showSortButtons
               showMahjongButton
-              newTileIds={new Set([eastHandWith14[13]?.instanceId])}
+              newTileIds={new Set([eastHandWith8[7]?.instanceId])}
               touchedTileIds={new Set()}
               helperText="Please drag or double tap to discard."
               helperColor={C.cherry}
@@ -224,7 +226,7 @@ export default function GameBoardDemo() {
             <GameBoard
               mat={mat}
               players={[
-                { seat: "east", name: "East (Dealer)", rackCount: 13, exposures: [exposureGroup1, exposureGroup2] },
+                { seat: "east", name: "East (Dealer)", rackCount: 7, exposures: [exposureGroup1, exposureGroup2] },
                 { seat: "north", name: "North", rackCount: 0, halo: "yellow", points: "+40 points" },
                 { seat: "west", name: "West", rackCount: 13, points: "\u201310 points" },
                 { seat: "south", name: "South", rackCount: 13, points: "\u201310 points" },
@@ -241,7 +243,7 @@ export default function GameBoardDemo() {
                 />
               }
             />
-            <PlayerHand hand={eastHand} showSortButtons showMahjongButton={false} cherry={C.cherry} disabled />
+            <PlayerHand hand={eastShortHand} showSortButtons showMahjongButton={false} cherry={C.cherry} disabled />
           </>
         );
       case 7: // Invalid Hand
