@@ -147,6 +147,25 @@ export function playCelebration(): void {
   });
 }
 
+/* ── Ping E (Glass Tap) ──────────────────────────────────────── *
+ * Clear glass tone — tile received in charleston                 */
+export function playPingE(): void {
+  if (!isSoundOn()) return;
+  const c = ctx();
+  const t = c.currentTime;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  osc.type = 'sine';
+  osc.connect(gain);
+  gain.connect(c.destination);
+  osc.frequency.setValueAtTime(2200, t);
+  osc.frequency.exponentialRampToValueAtTime(1800, t + 0.15);
+  gain.gain.setValueAtTime(0.2, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  osc.start(t);
+  osc.stop(t + 0.15);
+}
+
 /* ── Place / Snap ─────────────────────────────────────────────── *
  * Soft thud — tile placed into a slot                            */
 export function playPlace(): void {

@@ -8,6 +8,7 @@ import StatsPage from "./pages/StatsPage";
 import BamPage from "./pages/BamPage";
 import ProfilePage from "./pages/ProfilePage";
 import DecoCompare from "./pages/DecoCompare";
+import GameBoardDemo from "./pages/GameBoardDemo";
 import { TermsOfUse, PrivacyPolicy } from "./pages/LegalPages";
 
 import { C, getThemeColors } from "./constants/colors";
@@ -40,8 +41,10 @@ function SplashScreen({ onDone }) {
 
 function AppInner() {
   // Dev-only hash routes skip splash
-  const isDevRoute = window.location.hash === '#/deco-compare';
-  const [page, setPage] = useState(() => isDevRoute ? 'deco-compare' : 'home');
+  const hash = window.location.hash;
+  const devRoutes: Record<string, string> = { '#/deco-compare': 'deco-compare', '#/board-demo': 'board-demo' };
+  const isDevRoute = hash in devRoutes;
+  const [page, setPage] = useState(() => isDevRoute ? devRoutes[hash] : 'home');
   const [prevPage, setPrevPage] = useState("home");
   const [showChat, setShowChat] = useState(false);
   const [signedIn, setSignedIn] = useState(true);
@@ -105,6 +108,7 @@ function AppInner() {
         {page === "bam" && <BamPage />}
         {page === "profile" && <ProfilePage onBack={() => setPage(prevPage)} onHome={onHome} signedIn={signedIn} onSignOut={onSignOut} onSignIn={onSignIn} onNav={onNav} />}
         {page === "deco-compare" && <DecoCompare />}
+        {page === "board-demo" && <GameBoardDemo />}
         {page === "terms" && <TermsOfUse onBack={() => setPage(prevPage)} />}
         {page === "privacy" && <PrivacyPolicy onBack={() => setPage(prevPage)} />}
 

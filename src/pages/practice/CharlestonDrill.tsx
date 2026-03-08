@@ -9,7 +9,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { MahjiTile } from "../../components/tiles/MahjiTile";
 import { GameTile, getFullDeck, shuffleDeck } from "../../data/tileData";
-import { C, getThemeColors } from "../../constants/colors";
+import { C, getThemeColors, GAME_MATS } from "../../constants/colors";
+import { SeatLabel as SharedSeatLabel } from "../../components/GameBoard";
 import { useTheme } from "../../constants/ThemeContext";
 import { BirdIcon } from "../../components/ui/Icons";
 import {
@@ -19,7 +20,7 @@ import {
   SECTION_LABELS,
 } from "../../data/nmjl";
 import type { NMJLCard, PartialMatchResult, ColorAssignment, HandDefinition, HandPattern, CardColor } from "../../data/nmjl";
-import { playDeselect, playTileReceive, playCharlestonReceive, playError, playCelebration, playPlace } from "../../audio/sounds";
+import { playDeselect, playPingE, playWhoosh, playError, playCelebration, playPlace } from "../../audio/sounds";
 import { playVoice } from "../../audio/voice";
 
 // ─── TYPES ────────────────────────────────────────────────────
@@ -38,12 +39,13 @@ interface PlayerData {
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 
-const MATS = [
-  { id: "coffee", name: "Coffee", bg: "linear-gradient(145deg,#4A3D32,#3E3228,#352A20)", text: "rgba(158,202,189,0.6)", accent: "rgba(158,202,189,0.18)", readyBg: "rgba(109,191,168,0.7)", readyText: "#fff", seatBg: "rgba(109,191,168,0.6)", readyColor: "#6DBFA8" },
-  { id: "seafoam", name: "Seafoam", bg: "linear-gradient(145deg,#8FBFB2,#7AAD9F,#6B9E90)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.65)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)", readyColor: "#4A3D32" },
-  { id: "lavender", name: "Lavender", bg: "linear-gradient(145deg,#B5A8C8,#A496B8,#9688AA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.6)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)", readyColor: "#4A3D32" },
-  { id: "cerulean", name: "Cerulean", bg: "linear-gradient(145deg,#A0C4D6,#8FB5C8,#80A6BA)", text: "rgba(58,46,36,0.5)", accent: "rgba(58,46,36,0.2)", readyBg: "rgba(74,61,50,0.6)", readyText: "#fff", seatBg: "rgba(58,46,36,0.55)", readyColor: "#4A3D32" },
-];
+// Derive MATS from shared GAME_MATS, adding Charleston-specific fields (readyBg, readyText)
+const MATS = GAME_MATS.map(m => ({
+  ...m,
+  text: m.text,
+  readyBg: m.id === "coffee" ? "rgba(109,191,168,0.7)" : "rgba(74,61,50,0.65)",
+  readyText: "#fff",
+}));
 
 const uiThemes = {
   light: { bg: "#F8F5FB", chrome: "#FFFFFF", cBorder: "rgba(107,63,160,0.1)", text: "#2D1B4E", textMid: "#6B5A82", textLight: "#9688AA", cherry: "#E03050", lavDeep: "#6B3FA0", seafoam: "#6DBFA8", btnBg: "rgba(107,63,160,0.06)", btnBorder: "rgba(107,63,160,0.12)", btnText: "#6B3FA0" },
@@ -320,13 +322,9 @@ function ROLIndicator({ stepIdx, phase, showStopPrompt, stoppedEarly, cherry, te
   );
 }
 
+// Use shared SeatLabel from GameBoard.tsx
 function SeatLabel({ name, isReady, showReady, seatBg, readyColor }: { name: string; isReady: boolean; showReady: boolean; seatBg: string; readyColor: string }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: seatBg, padding: "2px 8px", borderRadius: 6 }}>{name}</span>
-      {isReady && showReady && <div style={{ marginTop: 2 }}><span style={{ fontSize: 7, fontWeight: 600, color: readyColor }}>Ready</span></div>}
-    </div>
-  );
+  return <SharedSeatLabel name={name} isReady={isReady} showReady={showReady} seatBg={seatBg} readyColor={readyColor} />;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -696,17 +694,17 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
-      if (newReceivedIds.size > 0) playTileReceive();
+      if (newReceivedIds.size > 0) playPingE();
       if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
       else { setPhase("courtesy_prompt"); setMessage(""); playVoice("courtesy-pass"); }
     };
-    playCharlestonReceive(); setPassDir(s.dir); setTimeout(doResolve, 600);
+    playWhoosh(); setPassDir(s.dir); setTimeout(doResolve, 600);
   };
 
   const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { playVoice("stop"); setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); playVoice("second-charleston"); } };
-  const handleCourtesyChoice = (count: number) => { setCourtesyCount(count); if (count === 0) { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); } else { setPhase("courtesy"); setSelectedIds(new Set()); setMessage(`Select ${count} tile${count !== 1 ? "s" : ""} to pass across`); playVoice("courtesy-pass"); } };
+  const handleCourtesyChoice = (count: number) => { setCourtesyCount(count); if (count === 0) { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); } else { setPhase("courtesy"); setSelectedIds(new Set()); setMessage(`Select ${count} tile${count !== 1 ? "s" : ""} to pass across`); } };
 
   useEffect(() => { if (phase === "charleston" && !showStopPrompt) setMessage(getMsg()); }, [stepIdx, phase, showStopPrompt]);
 

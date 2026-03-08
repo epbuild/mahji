@@ -17,9 +17,9 @@ import { isSoundOn } from './sounds';
 export type VoicePack = 'melina' | 'abby' | 'robotic';
 
 export const VOICE_PACKS: { id: VoicePack; label: string }[] = [
-  { id: 'melina', label: 'American' },
-  { id: 'abby', label: 'British' },
-  { id: 'robotic', label: 'Robotic' },
+  { id: 'melina', label: 'Molly' },
+  { id: 'abby', label: 'Penny' },
+  { id: 'robotic', label: 'Rosie' },
 ];
 
 const LS_KEY = 'mahji_voice_pack';
