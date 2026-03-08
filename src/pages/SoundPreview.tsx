@@ -5,7 +5,7 @@
 import { C, getThemeColors } from '../constants/colors';
 import { useTheme } from '../constants/ThemeContext';
 import { PT, Cnt } from '../components/Layout';
-import { playDeselect, playWhoosh, playError, playCelebration, playPlace, playTileReceive, playCharlestonReceive, playMahjongCheer, playWinSequence } from '../audio/sounds';
+import { playDeselect, playWhoosh, playError, playCelebration, playPlace, playPingE, playTileReceive, playCharlestonReceive, playMahjongCheer, playWinSequence } from '../audio/sounds';
 import { playVoice, VoiceClip } from '../audio/voice';
 
 const SFX_GROUPS: { title: string; items: { label: string; fn: () => void }[] }[] = [
@@ -27,6 +27,7 @@ const SFX_GROUPS: { title: string; items: { label: string; fn: () => void }[] }[
   {
     title: 'Other',
     items: [
+      { label: 'Ping E (glass tap)', fn: playPingE },
       { label: 'Whoosh (backup)', fn: playWhoosh },
       { label: 'Error (invalid)', fn: playError },
       { label: 'Celebration chime', fn: playCelebration },
