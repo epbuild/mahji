@@ -1,84 +1,111 @@
-import { C, getThemeColors } from '../../constants/colors';
+import { useState } from 'react';
+import { C, GAME_MATS, FONT_SERIF, FONT_SANS, getThemeColors } from '../../constants/colors';
 import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
-import {
-  DiagramShuffledTiles,
-  DiagramWallsBuilt,
-  DiagramDiceRoll,
-  DiagramWallBreak,
-  DiagramDealing,
-  DiagramWallContinuation,
-  DiagramFinalTiles,
-  DiagramFinalCount,
-  DiagramRacking,
-} from './TableDiagram';
+import { DealBoard, FinalTilesBoard } from '../DealMockup';
+import type { GameMat } from '../../constants/colors';
 
-const FONT_SANS = "'Outfit', sans-serif";
-const FONT_SERIF = "'Bodoni Moda', serif";
+/* ─── Step data ─── */
+const STEPS: { title: string; description: string }[] = [
+  {
+    title: "Build the Walls",
+    description: "Each player builds a wall of 19 face-down tiles, stacked 2 high, against their rack. The walls form a closed square in the center of the table.",
+  },
+  {
+    title: "Break the Wall (Curtsy)",
+    description: "East rolls the dice to get a number and counts that many stacks from the right side of her wall. Let's say that number is 5. Those 5 stacks stay put (shown in blue). The rest of the wall curtsies diagonally — the left end stays near the rack, the right end angles toward the center of the table.",
+  },
+  {
+    title: "Dealing — Round 1",
+    description: "East deals from the curtsied wall, starting from the right end (closest to center). Each player gets 2 stacks (4 tiles) in order: East first, then North, West, South. White squares show dealt tiles.",
+  },
+  {
+    title: "Dealing — Round 2",
+    description: "Round 2: East deals another 2 stacks to each player. East, North, and West each get theirs, but the curtsied wall runs out before South can be dealt. Time to curtsy the next wall!",
+  },
+  {
+    title: "Curtsy the Next Wall",
+    description: "East's wall is depleted! She curtsies South's entire wall (the wall to her left). The tile closest to West stays at the rack, the tile closest to East swings toward center. Dealing continues from South's curtsied wall, starting from the East end.",
+  },
+  {
+    title: "Finish Dealing (3 Rounds)",
+    description: "Dealing continues from South's curtsied wall (East end first). 2 more stacks to South to finish Round 2, then a full Round 3 (2 stacks to each player). Everyone now has 6 stacks — that's 12 tiles each.",
+  },
+  {
+    title: "Final Tiles",
+    description: "Almost done! From the remaining wall, East takes the 1st and 3rd tiles from the top row. Then North gets the 1st tile from the bottom row. West gets the 2nd tile from the top. South gets the 2nd from the bottom. East ends up with 14 tiles, everyone else has 13.",
+  },
+];
 
-/* ─── Step component ─── */
-const Step = ({ num, title, children, diagram }: {
-  num: number; title?: string; children: React.ReactNode; diagram?: React.ReactNode;
-}) => {
-  const { isDark } = useTheme();
-  const t = getThemeColors(isDark);
-  return (
-    <div style={{ marginBottom: 28 }}>
-      {/* Step number badge + optional title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{
-          width: 24, height: 24, borderRadius: '50%', background: C.cherry,
-          color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex',
-          alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          boxShadow: '0 2px 6px rgba(224,48,80,0.2)',
-        }}>
-          {num}
-        </div>
-        {title && (
-          <div style={{
-            fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 600,
-            color: isDark ? t.cerulean : C.dark, letterSpacing: 0.3,
-          }}>
-            {title}
-          </div>
-        )}
-      </div>
-      {/* Body text */}
-      <div style={{
-        fontFamily: FONT_SANS, fontSize: 12.5, color: t.mid,
-        lineHeight: 1.65, marginBottom: diagram ? 12 : 0,
-      }}>
-        {children}
-      </div>
-      {/* Diagram */}
-      {diagram && (
-        <div style={{
-          borderRadius: 12, overflow: 'hidden',
-          border: `1px solid ${t.lavBorder}`, marginTop: 8,
-        }}>
-          {diagram}
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ─── Section divider ─── */
-const Divider = () => {
-  const { isDark } = useTheme();
-  const t = getThemeColors(isDark);
-  return (
-    <div style={{
-      height: 1,
-      background: `linear-gradient(90deg, transparent, ${t.lavBorder}, transparent)`,
-      margin: '4px 0 24px',
-    }} />
-  );
-};
+/* ─── Render the board for each step ─── */
+function renderBoard(step: number, mat: GameMat) {
+  switch (step) {
+    case 0:
+      return (
+        <DealBoard mat={mat}
+          eastWall={19} westWall={19} southWall={19} northWall={19}
+          centerLabel="All walls built — 19 tiles × 2 high"
+        />
+      );
+    case 1:
+      return (
+        <DealBoard mat={mat}
+          eastCurtsy eastCurtsyCount={14} eastKept={5}
+          westWall={19} southWall={19} northWall={19}
+          centerLabel="East counts 5 from right, curtsies the rest toward center"
+        />
+      );
+    case 2:
+      return (
+        <DealBoard mat={mat}
+          eastCurtsy eastCurtsyCount={6} eastKept={5}
+          westWall={19} southWall={19} northWall={19}
+          dealt={{ east: 2, north: 2, west: 2, south: 2, active: "south" }}
+          centerLabel="Round 1 done — 8 stacks dealt, 6 remain"
+        />
+      );
+    case 3:
+      return (
+        <DealBoard mat={mat}
+          eastCurtsy eastCurtsyCount={0} eastKept={5}
+          westWall={19} southWall={19} northWall={19}
+          dealt={{ east: 4, north: 4, west: 4, south: 2, active: "west" }}
+          centerLabel="East's curtsied wall depleted"
+        />
+      );
+    case 4:
+      return (
+        <DealBoard mat={mat}
+          eastCurtsy eastCurtsyCount={0} eastKept={5}
+          westWall={19} northWall={19}
+          southCurtsy southCurtsyCount={19}
+          dealt={{ east: 4, north: 4, west: 4, south: 2, active: "south" }}
+          centerLabel="South's wall curtsied"
+        />
+      );
+    case 5:
+      return (
+        <DealBoard mat={mat}
+          eastCurtsy eastCurtsyCount={0} eastKept={5}
+          westWall={19} northWall={19}
+          southCurtsy southCurtsyCount={9}
+          dealt={{ east: 6, north: 6, west: 6, south: 6 }}
+          centerLabel="12 tiles each — 3 rounds done"
+        />
+      );
+    case 6:
+      return <FinalTilesBoard mat={mat} />;
+    default:
+      return null;
+  }
+}
 
 export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; onNavigate: (lesson: string) => void }) {
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
+  const [matIdx, setMatIdx] = useState(0);
+  const mat = GAME_MATS[matIdx];
+
   return (
     <>
       <div style={{ padding: '6px 22px 0', display: 'flex', alignItems: 'center' }}>
@@ -89,169 +116,96 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
       </div>
       <PT>How to Deal</PT>
       <Cnt>
-        <p className="body-text" style={{ color: t.mid, marginBottom: 20, lineHeight: 1.65 }}>
-          Dealing in American Mahjong follows a specific ritual. It may seem like a lot at first, but after a few games it becomes second nature. Follow these steps and you'll be dealing like a pro.
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
+          Dealing in American Mahjong follows a specific ritual. It may seem like a lot at first, but after a few games it becomes second nature.
         </p>
 
-        {/* ─── SHUFFLE & BUILD ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 16, fontWeight: 600,
-          color: C.cherry, letterSpacing: 0.5, marginBottom: 16,
-        }}>
-          Shuffle &amp; Build
+        {/* ── Mat color picker ── */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          {GAME_MATS.map((m, i) => (
+            <div key={m.id} onClick={() => setMatIdx(i)} style={{ textAlign: "center", cursor: "pointer" }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: m.swatch,
+                border: matIdx === i ? `2px solid ${C.cherry}` : "2px solid transparent",
+                boxShadow: matIdx === i ? "0 2px 8px rgba(224,48,80,0.15)" : "none",
+              }} />
+              <div style={{ fontSize: 7, color: t.textDim, marginTop: 2, fontFamily: FONT_SANS }}>{m.name}</div>
+            </div>
+          ))}
         </div>
 
-        <Step num={1} title="Shuffle the Tiles" diagram={<DiagramShuffledTiles />}>
-          Shuffle all the tiles and turn them over (face down) in the middle of the table.
-        </Step>
+        {/* ── Vertical step-by-step ── */}
+        {STEPS.map((s, i) => (
+          <div key={i} style={{ marginBottom: i < STEPS.length - 1 ? 32 : 20 }}>
+            {/* Step number + title */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              marginBottom: 10,
+            }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: "50%",
+                background: C.cherry, color: "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, fontWeight: 700, fontFamily: FONT_SANS,
+                flexShrink: 0,
+              }}>
+                {i + 1}
+              </div>
+              <div style={{
+                fontFamily: FONT_SERIF, fontSize: 15, fontWeight: 700,
+                color: t.textMain, letterSpacing: 0.3,
+              }}>
+                {s.title}
+              </div>
+            </div>
 
-        <Step num={2} title="Build Your Walls" diagram={<DiagramWallsBuilt />}>
-          Everyone builds their walls against their racks. Tiles are face down. 19 tiles across, 2 tiles high (unless you play with blanks, in which case 20 tiles across, 2 tiles high!).
-        </Step>
+            {/* Board diagram */}
+            <div style={{ borderRadius: 14, overflow: "hidden", marginBottom: 10 }}>
+              {renderBoard(i, mat)}
+            </div>
 
-        <Divider />
+            {/* A Closer Look — description */}
+            <div style={{
+              padding: "12px 16px",
+              background: isDark ? "rgba(255,255,255,0.04)" : "rgba(107,63,160,0.04)",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(107,63,160,0.08)"}`,
+              borderRadius: 10,
+            }}>
+              <div style={{
+                fontFamily: FONT_SERIF, fontSize: 11, fontWeight: 600,
+                color: C.cherry, marginBottom: 4, letterSpacing: 0.3,
+              }}>
+                A Closer Look
+              </div>
+              <div style={{
+                fontFamily: FONT_SANS, fontSize: 12, color: t.textMid, lineHeight: 1.65,
+              }}>
+                {s.description}
+              </div>
+            </div>
 
-        {/* ─── DETERMINE EAST ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 16, fontWeight: 600,
-          color: C.cherry, letterSpacing: 0.5, marginBottom: 16,
-        }}>
-          Determine East
-        </div>
+            {/* Connector line between steps */}
+            {i < STEPS.length - 1 && (
+              <div style={{
+                display: "flex", justifyContent: "center", marginTop: 16,
+              }}>
+                <div style={{
+                  width: 2, height: 20,
+                  background: isDark
+                    ? "linear-gradient(to bottom, rgba(224,48,80,0.3), rgba(224,48,80,0.08))"
+                    : "linear-gradient(to bottom, rgba(224,48,80,0.2), rgba(224,48,80,0.05))",
+                  borderRadius: 1,
+                }} />
+              </div>
+            )}
+          </div>
+        ))}
 
-        <Step num={3} title="Roll for East" diagram={<DiagramDiceRoll />}>
-          Everyone rolls the dice to determine who is East (the dealer!). The player with the highest roll becomes East.
-        </Step>
-
-        <Step num={4} title="East Deals and Goes First">
-          East deals AND goes first. Being East is a privilege and a responsibility!
-        </Step>
-
-        <Step num={5} title="Break the Wall" diagram={<DiagramWallBreak />}>
-          East rolls the dice again. Let's say she gets 5. She counts from the right of her tiles 1, 2, 3, 4, 5. At the 6th tile, she pushes the remaining wall out towards the center of the mat. The original 5 stacks that she counted are kept against her wall and are not touched during the deal.
-        </Step>
-
-        <Divider />
-
-        {/* ─── THE DEAL ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 16, fontWeight: 600,
-          color: C.cherry, letterSpacing: 0.5, marginBottom: 16,
-        }}>
-          The Deal
-        </div>
-
-        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65, fontSize: 12.5 }}>
-          East deals from the pushed-out wall in a specific order. Each "deal" is 2 stacks (4 tiles total). The deal goes around the table three times.
-        </p>
-
-        {/* ─── Round 1 ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600,
-          color: t.lavDeep, letterSpacing: 0.3, marginBottom: 12,
-        }}>
-          Round 1
-        </div>
-
-        <Step num={6} diagram={<DiagramDealing step="6A" desc="East gets 2 stacks" />}>
-          East begins the deal with 2 stacks (4 tiles total) to herself.
-        </Step>
-
-        <Step num={7} diagram={<DiagramDealing step="6B" desc="North gets 2 stacks" />}>
-          Then 2 stacks to the right to North.
-        </Step>
-
-        <Step num={8} diagram={<DiagramDealing step="6C" desc="West gets 2 stacks" />}>
-          Then 2 stacks across to West.
-        </Step>
-
-        <Step num={9} diagram={<DiagramDealing step="6D" desc="South gets 2 stacks" />}>
-          Then 2 stacks to the left to South.
-        </Step>
-
-        <Divider />
-
-        {/* ─── Round 2 ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600,
-          color: t.lavDeep, letterSpacing: 0.3, marginBottom: 12,
-        }}>
-          Round 2
-        </div>
-
-        <Step num={10} diagram={<DiagramDealing step="6E" desc="East gets 2 more stacks" />}>
-          Then 2 stacks to herself (East).
-        </Step>
-
-        <Step num={11} diagram={<DiagramDealing step="6F" desc="North gets 2 more stacks" />}>
-          Then 2 stacks to the right to North.
-        </Step>
-
-        <Step num={12} diagram={<DiagramDealing step="6G" desc="West gets 2 more stacks" />}>
-          Then 2 stacks across to West.
-        </Step>
-
-        {/* ─── Wall continuation note ─── */}
-        <Step num={13} title="Ran Out of Wall?" diagram={<DiagramWallContinuation />}>
-          If the dealer runs out of tiles from her pushed-out wall, she pushes the wall to her LEFT and continues the deal from there. This is totally normal!
-        </Step>
-
-        <Divider />
-
-        {/* ─── Round 3 ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600,
-          color: t.lavDeep, letterSpacing: 0.3, marginBottom: 12,
-        }}>
-          Round 3
-        </div>
-
-        <Step num={14} diagram={<DiagramDealing step="8A" desc="South gets 2 more stacks" />}>
-          Then 2 stacks to the left to South.
-        </Step>
-
-        <Step num={15} diagram={<DiagramDealing step="8B" desc="East gets 2 more stacks" />}>
-          Then 2 stacks to herself (East).
-        </Step>
-
-        <Step num={16} diagram={<DiagramDealing step="8C" desc="North gets 2 more stacks" />}>
-          Then 2 stacks to the right to North.
-        </Step>
-
-        <Step num={17} diagram={<DiagramDealing step="8D" desc="West gets 2 more stacks" />}>
-          Then 2 stacks across to West.
-        </Step>
-
-        <Step num={18} diagram={<DiagramDealing step="8E" desc="South gets 2 more stacks" />}>
-          Then 2 stacks to the left to South.
-        </Step>
-
-        <Divider />
-
-        {/* ─── FINAL TILES ─── */}
-        <div style={{
-          fontFamily: FONT_SERIF, fontSize: 16, fontWeight: 600,
-          color: C.cherry, letterSpacing: 0.5, marginBottom: 16,
-        }}>
-          Final Tiles
-        </div>
-
-        <Step num={19} title="Top Layer Distribution" diagram={<DiagramFinalTiles />}>
-          For the final tiles, it can be tricky! From the TOP layer of the pushed-out wall, tiles are distributed. East (the dealer) gets the 1st and 3rd top tiles. The other players each get one tile in order: South, West, North.
-        </Step>
-
-        <Step num={20} title="Check Your Count" diagram={<DiagramFinalCount />}>
-          South, West, and North should each have 3 stacks of 4 (12 tiles) + 1 extra tile, for a total of 13 tiles. East (the dealer) has 3 stacks of 4 (12 tiles) + a half stack of 2 tiles, for a total of 14 tiles.
-        </Step>
-
-        <Step num={21} title="Rack and Evaluate" diagram={<DiagramRacking />}>
-          The players then rack their tiles and begin evaluating their hand before kicking off the Charleston!
-        </Step>
-
-        {/* ─── Encouragement block ─── */}
+        {/* ── Encouragement block ── */}
         <div style={{
           background: t.lavCard, border: `1px solid ${t.lavBorder}`,
-          borderRadius: 14, padding: '18px 20px', marginBottom: 24, marginTop: 8,
+          borderRadius: 14, padding: '18px 20px', marginBottom: 24,
         }}>
           <div style={{
             fontFamily: FONT_SERIF, fontSize: 14, fontWeight: 600,
@@ -266,7 +220,7 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
           </div>
         </div>
 
-        {/* Next lesson button */}
+        {/* ── Next lesson button ── */}
         <div
           onClick={() => onNavigate("Gameplay: Turns, Calls & Exposures")}
           style={{
