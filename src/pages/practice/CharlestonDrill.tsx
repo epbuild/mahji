@@ -20,7 +20,7 @@ import {
   SECTION_LABELS,
 } from "../../data/nmjl";
 import type { NMJLCard, PartialMatchResult, ColorAssignment, HandDefinition, HandPattern, CardColor } from "../../data/nmjl";
-import { playDeselect, playPingE, playWhoosh, playError, playCelebration, playPlace, playTileReceive, playCharlestonReceive } from "../../audio/sounds";
+import { playDeselect, playPingE, playWhoosh, playError, playCelebration, playPlace, playCharlestonReceive } from "../../audio/sounds";
 import { playVoice } from "../../audio/voice";
 
 // ─── TYPES ────────────────────────────────────────────────────
@@ -694,13 +694,13 @@ export default function CharlestonDrill({ onBack }: CharlestonDrillProps) {
       const kept = nh[0].filter(t => oldIds.has(t.instanceId)); const received = nh[0].filter(t => newReceivedIds.has(t.instanceId));
       setPlayers(prev => prev!.map((p, i) => ({ ...p, hand: i === 0 ? [...kept, ...received] : nh[i], selectedForPass: [] })));
       setSelectedIds(new Set()); setAnimating(false); setReceivedTileIds(newReceivedIds); setTouchedTileIds(new Set()); setBamAdvice(null);
-      if (newReceivedIds.size > 0) playTileReceive();
+      if (newReceivedIds.size > 0) playCharlestonReceive();
       if (phase === "courtesy") { setPhase("complete"); setMessage("Charleston complete!"); playCelebration(); }
       else if (stepIdx === 2) { setShowStopPrompt(true); }
       else if (stepIdx < STEPS.length - 1) { setStepIdx(s => s + 1); }
       else { setPhase("courtesy_prompt"); setMessage(""); playVoice("courtesy-pass"); }
     };
-    playCharlestonReceive(); setPassDir(s.dir); setTimeout(doResolve, 600);
+    playWhoosh(); setPassDir(s.dir); setTimeout(doResolve, 600);
   };
 
   const handleStopChoice = (stop: boolean) => { setShowStopPrompt(false); if (stop) { playVoice("stop"); setStoppedEarly(true); setPhase("courtesy_prompt"); setMessage(""); } else { setStepIdx(3); playVoice("second-charleston"); } };
