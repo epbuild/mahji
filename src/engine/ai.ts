@@ -9,6 +9,7 @@
 import type { GameTile } from '../data/tileData';
 import type { Difficulty, GameState, Seat, CallDeclaration } from './types';
 import { isJoker } from './state';
+import { canCallPung, canCallKong, canCallQuint, checkMahjongWithDiscard } from './rules';
 
 // ═══════════════════════════════════════════════════════════════
 // CHARLESTON — TILE SELECTION FOR PASS
@@ -148,17 +149,71 @@ function aiDiscardAdvanced(hand: GameTile[]): string {
 
 /**
  * AI decides whether to call a discarded tile.
- * For MVP, AI only calls for mahjong (simple strategy).
+ * Checks for mahjong first, then quint, kong, pung.
  * Returns a CallDeclaration or 'pass'.
  */
 export function aiDecideCall(
-  _state: GameState,
-  _seat: Seat,
-  _discardTile: GameTile,
+  state: GameState,
+  seat: Seat,
+  discardTile: GameTile,
 ): CallDeclaration | 'pass' {
-  // MVP: AI always passes (no calling).
-  // Phase 4 will add pung/kong/quint detection.
-  // Phase 5 will add mahjong detection.
+  const player = state.players[seat];
+  const hand = player.hand;
+
+  // 1. Check for mahjong (highest priority)
+  const mahjongResult = checkMahjongWithDiscard(player, discardTile, state.card);
+  if (mahjongResult.matched) {
+    return {
+      seat,
+      callType: 'mahjong',
+      tilesFromHand: [], // mahjong uses the whole hand
+    };
+  }
+
+  // 2. Check for quint (5 of a kind)
+  const quint = canCallQuint(hand, discardTile);
+  if (quint.canCall) {
+    return { seat, callType: 'quint', tilesFromHand: quint.tilesFromHand };
+  }
+
+  // 3. Check for kong (4 of a kind)
+  const kong = canCallKong(hand, discardTile);
+  if (kong.canCall) {
+    // Advanced AI: only call kong if it helps their hand
+    // Novice/intermediate: always call kong if possible
+    if (state.difficulty === 'advanced') {
+      // Only call if we have 3+ naturals matching (strong kong)
+      const naturalCount = kong.tilesFromHand.filter(t => !isJoker(t)).length;
+      if (naturalCount >= 2) {
+        return { seat, callType: 'kong', tilesFromHand: kong.tilesFromHand };
+      }
+    } else {
+      return { seat, callType: 'kong', tilesFromHand: kong.tilesFromHand };
+    }
+  }
+
+  // 4. Check for pung (3 of a kind)
+  const pung = canCallPung(hand, discardTile);
+  if (pung.canCall) {
+    if (state.difficulty === 'advanced') {
+      // Only call pung with at least 1 natural matching
+      const naturalCount = pung.tilesFromHand.filter(t => !isJoker(t)).length;
+      if (naturalCount >= 1) {
+        return { seat, callType: 'pung', tilesFromHand: pung.tilesFromHand };
+      }
+    } else if (state.difficulty === 'intermediate') {
+      // 50% chance to call pung
+      if (Math.random() > 0.5) {
+        return { seat, callType: 'pung', tilesFromHand: pung.tilesFromHand };
+      }
+    } else {
+      // Novice: 30% chance to call pung
+      if (Math.random() > 0.7) {
+        return { seat, callType: 'pung', tilesFromHand: pung.tilesFromHand };
+      }
+    }
+  }
+
   return 'pass';
 }
 

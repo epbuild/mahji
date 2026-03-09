@@ -76,5 +76,16 @@ export {
   aiDecideCourtesyCount,
 } from './ai';
 
-// ── Rules (Phase 3+) ──
-// export { canDiscard, canCall, canSwapJoker, canDeclareMahjong } from './rules';
+// ── Rules ──
+export {
+  checkMahjong,
+  checkMahjongWithDiscard,
+  canDeclareMahjong,
+  findWinningHands,
+  canCallPung,
+  canCallKong,
+  canCallQuint,
+  getAvailableCalls,
+  canSwapJoker,
+  isDeadHand,
+} from './rules';

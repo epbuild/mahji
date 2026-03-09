@@ -121,10 +121,10 @@ function getGameplayMessage(subPhase: GameplaySubPhase, currentTurn: Seat, isHum
   }
   const name = currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1);
   switch (subPhase) {
-    case 'draw':             return `${name} is drawing...`;
-    case 'discard':          return `${name} is thinking...`;
-    case 'call_window':      return 'Waiting for calls...';
-    case 'exposure_discard': return `${name} is discarding after a call...`;
+    case 'draw':             return `${name}'s turn`;
+    case 'discard':          return `${name}'s turn`;
+    case 'call_window':      return `${name} discarded a tile`;
+    case 'exposure_discard': return `${name} called a tile`;
     default:                 return '';
   }
 }
