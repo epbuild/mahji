@@ -68,7 +68,7 @@ function PracticePage({ showChat, setShowChat }) {
         <div key={lv} onClick={() => setLevel(lv)} style={{
           padding:"6px 14px", borderRadius:20, fontSize:11,
           fontWeight: level===lv ? 600 : 400, cursor:"pointer",
-          background: level===lv ? C.seafoam : "transparent",
+          background: level===lv ? C.cherry : "transparent",
           color: level===lv ? C.white : C.mid,
           border: level===lv ? "none" : `1px solid ${C.lavBorder}`,
           transition:"all 0.3s"

@@ -5,9 +5,10 @@ import { BirdIcon, I } from '../components/ui/Icons';
 import { PT, SH, Tag, Card, Cnt, BamFloat } from '../components/Layout';
 import { MiniDot, MiniBam, MiniCrak, MiniWind, MiniDragon, MiniFlower, MiniJoker, WIND_CFG } from '../components/TileComponents';
 import ReadTheCard from './learn/ReadTheCard';
-import WhatIsMahji from './learn/WhatIsMahji';
+// WhatIsMahji moved to HomePage
 import WhatIsAmericanMahjong from './learn/WhatIsAmericanMahjong';
-import SettingTheTable from './learn/SettingTheTable';
+import ReadingOpponentsDefense from './learn/ReadingOpponentsDefense';
+import ScoringPayment from './learn/ScoringPayment';
 import Glossary from './learn/Glossary';
 import HowToDeal from './learn/HowToDeal';
 import TableRulesAndTerms from './learn/TableRulesAndTerms';
@@ -113,20 +114,16 @@ function MeetTheTiles({ onBack, onNavigate, format }) {
 
 const learnData = [
   { s: "Getting Started", items: [
-    { t: "What is Mahji?", d: "Your place to master American Mahjong", lvl: "First Timer" },
     { t: "What is American Mahjong?", d: "A strategic tile game for four players", lvl: "First Timer" },
     { t: "Meet the Tiles", d: "Dots, Bams, Craks, Honors, Flowers & Jokers", lvl: "First Timer" },
     { t: "Read the Game Card", d: "Decoding patterns, symbols & hand values", lvl: "First Timer" },
   ]},
   { s: "Setup & Flow", items: [
-    { t: "Setting the Table", d: "Building the wall and getting ready to play", lvl: "First Timer" },
-    { t: "How to Deal", d: "Breaking the wall, dealing tiles, and getting started", lvl: "First Timer" },
+    { t: "How to Deal", d: "Setting the table, building walls & dealing tiles", lvl: "First Timer" },
     { t: "Gameplay: Turns, Calls & Exposures", d: "Draw, discard, calling tiles, and Mahjong", lvl: "Novice" },
   ]},
   { s: "Strategy", items: [
-    { t: "Hand Selection & Commitment", d: "Narrowing sections, locking in, and pivoting", lvl: "Intermediate" },
-    { t: "Maximizing the Charleston", d: "R-O-L passing, blind passes & tile strategy", lvl: "Intermediate" },
-    { t: "Reading Opponents & Defense", d: "Exposure analysis, hand reading & dogging", lvl: "Advanced" },
+    { t: "Reading Opponents & Defense", d: "Exposure analysis, hand reading & defensive play", lvl: "Advanced" },
     { t: "Scoring & Payment Systems", d: "NMJL scoring, self-picks, jokerless bonuses", lvl: "Advanced" },
   ]},
   { s: "Table Talk", items: [
@@ -144,12 +141,12 @@ function LearnPage({ showChat, setShowChat }) {
   const [lesson, setLesson] = useState(null);
   const [level, setLevel] = useState("All");
   const [format, setFormat] = useState("Text");
-  if (lesson === "What is Mahji?") return <WhatIsMahji onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "What is American Mahjong?") return <WhatIsAmericanMahjong onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "Meet the Tiles") return <MeetTheTiles onBack={() => setLesson(null)} onNavigate={setLesson} format={format}/>;
   if (lesson === "Read the Game Card") return <ReadTheCard onBack={() => setLesson(null)} onNavigate={setLesson} />;
-  if (lesson === "Setting the Table") return <SettingTheTable onBack={() => setLesson(null)} onNavigate={setLesson} />;
   if (lesson === "How to Deal") return <HowToDeal onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Reading Opponents & Defense") return <ReadingOpponentsDefense onBack={() => setLesson(null)} onNavigate={setLesson} />;
+  if (lesson === "Scoring & Payment Systems") return <ScoringPayment onBack={() => setLesson(null)} />;
   if (lesson === "Etiquette") return <TableRulesAndTerms onBack={() => setLesson(null)} />;
   if (lesson === "Game Glossary") return <Glossary onBack={() => setLesson(null)} />;
   if (lesson === "History") return (<>
@@ -172,7 +169,7 @@ function LearnPage({ showChat, setShowChat }) {
     <PT>Learn</PT>
     <Cnt>
     <div style={{ display:"flex", gap:5, marginBottom:12, flexWrap:"nowrap", overflowX:"auto" }}>
-      {levels.map(lv => (<div key={lv} onClick={() => setLevel(lv)} style={{ padding:"6px 12px", borderRadius:20, fontSize:11, fontWeight: level===lv ? 600 : 400, cursor:"pointer", background: level===lv ? C.seafoam : "transparent", color: level===lv ? C.white : t.mid, border: level===lv ? "none" : `1px solid ${t.lavBorder}`, transition:"all 0.3s", whiteSpace:"nowrap", flexShrink:0 }}>{lv === "All" ? "See All" : lv}</div>))}
+      {levels.map(lv => (<div key={lv} onClick={() => setLevel(lv)} style={{ padding:"6px 12px", borderRadius:20, fontSize:11, fontWeight: level===lv ? 600 : 400, cursor:"pointer", background: level===lv ? C.cherry : "transparent", color: level===lv ? C.white : t.mid, border: level===lv ? "none" : `1px solid ${t.lavBorder}`, transition:"all 0.3s", whiteSpace:"nowrap", flexShrink:0 }}>{lv === "All" ? "See All" : lv}</div>))}
     </div>
     {filtered.map((sec, si) => <div key={sec.s}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -182,7 +179,7 @@ function LearnPage({ showChat, setShowChat }) {
             {f === "Video" ? "📹" : "📖"} {f}</div>))}
         </div>}
       </div>
-      {sec.items.map((it) => { num++; const clickable = ["What is Mahji?", "What is American Mahjong?", "Meet the Tiles", "Read the Game Card", "Setting the Table", "How to Deal", "Etiquette", "Game Glossary"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
+      {sec.items.map((it) => { num++; const clickable = ["What is American Mahjong?", "Meet the Tiles", "Read the Game Card", "How to Deal", "Reading Opponents & Defense", "Scoring & Payment Systems", "Etiquette", "Game Glossary"].includes(it.t); return <Card key={it.t} title={it.t} desc={it.d} num={num} tags={[{t:lt[it.lvl]||"b",l:it.lvl}]} onClick={clickable ? () => setLesson(it.t) : undefined}/>; })}
     </div>)}
     {showChat && <BamOverlay onClose={() => setShowChat(false)} context="Learn"/>}
     {!showChat && <BamFloat onClick={() => setShowChat(true)}/>}

@@ -73,7 +73,7 @@ function SetupScreen({ onStart }: {
           <div key={d} onClick={() => setDiff(d)} style={{
             padding: '6px 14px', borderRadius: 20, fontSize: 11,
             fontWeight: diff === d ? 600 : 400, cursor: 'pointer',
-            background: diff === d ? C.seafoam : 'transparent',
+            background: diff === d ? C.cherry : 'transparent',
             color: diff === d ? C.white : C.mid,
             border: diff === d ? 'none' : `1px solid ${C.lavBorder}`,
             transition: 'all 0.3s', textTransform: 'capitalize',
@@ -113,8 +113,7 @@ function SetupScreen({ onStart }: {
             padding: '10px 16px', border: 'none', borderRadius: 12,
             fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 600, letterSpacing: 1,
             color: C.white, cursor: 'pointer',
-            background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`,
-            boxShadow: '0 4px 14px rgba(224,48,80,0.18)',
+            background: C.cherry,
             display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
           }}
         >

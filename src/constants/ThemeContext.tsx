@@ -9,35 +9,33 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dark',
-  isDark: true,
+  theme: 'light',
+  isDark: false,
   toggle: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
+/*
+ * DARK MODE — PRESERVED BUT DISABLED
+ * To re-enable dark mode:
+ * 1. Restore the useState default to read from localStorage (see below)
+ * 2. Restore the toggle function to actually switch themes
+ * 3. Re-add <ModeToggle /> to DesktopHeader and MobileHeader in Layout.tsx
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      return (localStorage.getItem('mahji-theme-v2') as Theme) || 'dark';
-    } catch {
-      return 'dark';
-    }
-  });
+  // Force light mode — dark mode infrastructure preserved in colors.ts
+  // Original: (localStorage.getItem('mahji-theme-v2') as Theme) || 'dark'
+  const [theme] = useState<Theme>('light');
 
-  const isDark = theme === 'dark';
+  const isDark = false; // hardcoded light
 
-  const toggle = () => {
-    setTheme(prev => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      try { localStorage.setItem('mahji-theme-v2', next); } catch {}
-      return next;
-    });
-  };
+  // Toggle is a no-op while dark mode is disabled
+  const toggle = () => {};
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, isDark, toggle }}>

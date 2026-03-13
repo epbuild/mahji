@@ -446,7 +446,7 @@ function CardSectionBlock({
           <div key={hand.id} style={{
             display: "flex", alignItems: "center" as const, justifyContent: "space-between" as const,
             padding: "4px 0",
-            borderBottom: hi < hands.length - 1 ? `0.5px solid ${isDark ? "rgba(255,255,255,0.02)" : "rgba(126,100,164,0.03)"}` : "none",
+            borderBottom: hi < hands.length - 1 ? `0.5px solid ${isDark ? "rgba(255,255,255,0.02)" : "rgba(45,27,78,0.04)"}` : "none",
             opacity: isWon ? 1 : 0.35,
           }}>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -459,7 +459,7 @@ function CardSectionBlock({
                 padding: "1px 3px", borderRadius: 3,
                 background: hand.exposure === 'C'
                   ? (isDark ? "rgba(133,212,188,0.1)" : "rgba(74,158,136,0.08)")
-                  : (isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.04)"),
+                  : (isDark ? "rgba(255,255,255,0.03)" : "rgba(45,27,78,0.05)"),
               }}>
                 {hand.exposure === 'C' ? 'C' : 'X'}
               </span>
@@ -584,31 +584,29 @@ export default function StatsPage() {
   // ── Style helpers ────────────────────────────────────────
 
   const glassCard = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-    background: t.cardBg,
-    border: `0.5px solid ${t.cardBorder}`,
-    borderRadius: 16,
+    background: isDark ? t.cardBg : "transparent",
+    border: isDark ? `0.5px solid ${t.cardBorder}` : "none",
+    borderBottom: isDark ? undefined : `1px solid ${t.cardBorder}`,
+    borderRadius: isDark ? 16 : 0,
     padding: "18px 20px",
-    boxShadow: t.cardShadow,
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
     position: "relative" as const,
     overflow: "hidden" as const,
     ...extra,
   });
 
-  const gloss = <div style={{ position: "absolute" as const, top: 0, left: 0, right: 0, height: "55%", background: `linear-gradient(165deg, ${isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.9)"} 0%, ${isDark ? "rgba(255,255,255,0.005)" : "rgba(255,255,255,0.2)"} 35%, transparent 60%)`, pointerEvents: "none" as const, borderRadius: 16 }} />;
+  const gloss = null;
 
   const sectionLabel = (text: string) => (
     <div style={{ fontFamily: FONT_SANS, fontSize: 9, fontWeight: 600, letterSpacing: 1.5, textTransform: "uppercase" as const, color: t.textDim, marginBottom: 12 }}>{text}</div>
   );
 
-  const divider = isDark ? "rgba(255,255,255,0.04)" : "rgba(126,100,164,0.06)";
-  const trackBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(126,100,164,0.04)";
+  const divider = isDark ? "rgba(255,255,255,0.04)" : "rgba(45,27,78,0.08)";
+  const trackBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(45,27,78,0.04)";
 
   const cherry = isDark ? "rgba(224,48,80,0.7)" : "#E03050";
   const seafoam = isDark ? "#85D4BC" : "#4A9E88";
   const cerulean = isDark ? "#A8D8EE" : "#4A96B8";
-  const lavender = isDark ? "#D4C8E8" : "#7E64A4";
+  const lavender = isDark ? "#D4C8E8" : "#4A3660";
   const gold = isDark ? "#F0C060" : "#B08D3A";
 
   // ── Filters ─────────────────────────────────────────────
@@ -717,7 +715,7 @@ export default function StatsPage() {
           </div>
           {/* Pills row */}
           <div style={{ display: "flex", justifyContent: "space-between" as const, alignItems: "center" }}>
-            <div style={{ display: "flex", gap: 3, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
+            <div style={{ display: "flex", gap: 3, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(45,27,78,0.04)", borderRadius: 20, padding: 3 }}>
               {PERIODS.map(p => {
                 const isActive = period === p.id;
                 return (
@@ -733,7 +731,7 @@ export default function StatsPage() {
                 );
               })}
             </div>
-            <div style={{ display: "flex", gap: 3, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.03)", borderRadius: 20, padding: 3 }}>
+            <div style={{ display: "flex", gap: 3, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(45,27,78,0.04)", borderRadius: 20, padding: 3 }}>
               {availableYears.map(yr => {
                 const isActive = cardYear === yr;
                 return (
@@ -873,10 +871,10 @@ export default function StatsPage() {
                 cursor: "pointer", padding: "5px 12px",
                 borderRadius: 12,
                 background: winLinesView === 'ranked'
-                  ? (isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)")
+                  ? (isDark ? "rgba(168,216,238,0.08)" : "rgba(45,27,78,0.06)")
                   : (isDark ? cerulean : "#E03050"),
                 border: `1px solid ${winLinesView === 'ranked'
-                  ? (isDark ? "rgba(168,216,238,0.15)" : "rgba(126,100,164,0.12)")
+                  ? (isDark ? "rgba(168,216,238,0.15)" : "rgba(45,27,78,0.12)")
                   : "transparent"}`,
                 transition: "all 0.2s",
               }}
@@ -937,7 +935,7 @@ export default function StatsPage() {
                           <div key={li} style={{
                             display: "flex", justifyContent: "space-between" as const, alignItems: "center" as const,
                             padding: "5px 0",
-                            borderBottom: li < sec.lines.length - 1 ? `0.5px solid ${isDark ? "rgba(255,255,255,0.02)" : "rgba(126,100,164,0.03)"}` : "none",
+                            borderBottom: li < sec.lines.length - 1 ? `0.5px solid ${isDark ? "rgba(255,255,255,0.02)" : "rgba(45,27,78,0.04)"}` : "none",
                           }}>
                             <div>
                               <div style={{ fontFamily: FONT_SANS, fontSize: 11, fontWeight: 600, color: t.textMain, letterSpacing: 0.5 }}>
@@ -1059,7 +1057,7 @@ export default function StatsPage() {
                       background: games < 0
                         ? "transparent"
                         : games === 0
-                          ? (isDark ? "rgba(255,255,255,0.03)" : "rgba(126,100,164,0.04)")
+                          ? (isDark ? "rgba(255,255,255,0.03)" : "rgba(45,27,78,0.05)")
                           : `rgba(${calColor[0]},${calColor[1]},${calColor[2]},${opacity})`,
                     }} />
                   );

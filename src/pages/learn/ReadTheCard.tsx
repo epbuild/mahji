@@ -877,7 +877,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
           {/* Next lesson button */}
           {onNavigate && (
             <div
-              onClick={() => onNavigate("Setting the Table")}
+              onClick={() => onNavigate("How to Deal")}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '14px 24px', borderRadius: 14,
@@ -889,7 +889,7 @@ export default function ReadTheCard({ onBack, onNavigate }: { onBack: () => void
               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(224,48,80,0.25)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
             >
-              Ready? Set the Table and Deal!
+              Deal Me In!
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           )}

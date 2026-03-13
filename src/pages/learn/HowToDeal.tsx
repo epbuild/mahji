@@ -3,6 +3,7 @@ import { C, GAME_MATS, FONT_SERIF, FONT_SANS, getThemeColors } from '../../const
 import { useTheme } from '../../constants/ThemeContext';
 import { PT, Cnt } from '../../components/Layout';
 import { DealBoard, FinalTilesBoard } from '../DealMockup';
+import { DiagramEmptyTable, DiagramWallsBuilt } from './TableDiagram';
 import type { GameMat } from '../../constants/colors';
 
 /* ─── Step data ─── */
@@ -116,8 +117,48 @@ export default function HowToDeal({ onBack, onNavigate }: { onBack: () => void; 
       </div>
       <PT>How to Deal</PT>
       <Cnt>
+        {/* ── Setting the Table intro ── */}
         <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
-          Dealing in American Mahjong follows a specific ritual. It may seem like a lot at first, but after a few games it becomes second nature.
+          Every game of mahjong begins the same way. Before the first tile is drawn, the table has to be set and the hands must be dealt.
+        </p>
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
+          You'll need four players, one on each side of the table. Most players use a game mat to protect the surface, soften the sound of the tiles, and make the whole experience feel that much more intentional. In front of each player sits a rack, which holds your tiles upright and facing you, keeping your hand completely hidden from the rest of the table.
+        </p>
+
+        {/* Empty table diagram */}
+        <div style={{
+          borderRadius: 12, overflow: 'hidden',
+          border: `1px solid ${t.lavBorder}`, marginBottom: 8,
+        }}>
+          <DiagramEmptyTable />
+        </div>
+        <div style={{
+          fontFamily: FONT_SANS, fontSize: 10.5, color: t.textDim,
+          textAlign: 'center', marginBottom: 20, fontStyle: 'italic',
+        }}>
+          Four players, four racks, one mat
+        </div>
+
+        <p className="body-text" style={{ color: t.mid, marginBottom: 16, lineHeight: 1.65 }}>
+          To begin, each player builds a wall which is a neat row of tiles placed face-down in front of their rack (toward the center of the table). The wall should be 19 tiles wide and 2 tiles high. (Playing with blanks? Make it 20 wide.) Once all four walls are built, you have your complete playing field.
+        </p>
+
+        {/* Walls built diagram */}
+        <div style={{
+          borderRadius: 12, overflow: 'hidden',
+          border: `1px solid ${t.lavBorder}`, marginBottom: 8,
+        }}>
+          <DiagramWallsBuilt />
+        </div>
+        <div style={{
+          fontFamily: FONT_SANS, fontSize: 10.5, color: t.textDim,
+          textAlign: 'center', marginBottom: 20, fontStyle: 'italic',
+        }}>
+          Each wall: 19 tiles wide, 2 tiles high
+        </div>
+
+        <p className="body-text" style={{ color: t.mid, marginBottom: 24, lineHeight: 1.65 }}>
+          Now you're ready to deal. Dealing in American Mahjong follows a specific ritual. It may seem like a lot at first, but after a few games it becomes second nature.
         </p>
 
         {/* ── Mat color picker ── */}

@@ -9,17 +9,17 @@ export const ModeToggle = () => {
   const { isDark, toggle } = useTheme();
   return (
     <button onClick={toggle} aria-label="Toggle theme" style={{
-      background: isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)",
-      border: `1px solid ${isDark ? "rgba(168,216,238,0.12)" : "rgba(126,100,164,0.1)"}`,
+      background: isDark ? "rgba(255,255,255,0.05)" : "rgba(45,27,78,0.04)",
+      border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(45,27,78,0.08)"}`,
       borderRadius: 20, cursor: "pointer", padding: "4px 6px",
       display: "flex", alignItems: "center", gap: 4, height: 28, transition: "all 0.35s",
     }}>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%",
-        background: !isDark ? "rgba(126,100,164,0.12)" : "transparent",
-        color: !isDark ? "#7E64A4" : "rgba(255,255,255,0.25)", transition: "all 0.35s" }}><SunIcon size={13} color="currentColor" /></span>
+        background: !isDark ? "rgba(45,27,78,0.08)" : "transparent",
+        color: !isDark ? "#4A3660" : "rgba(255,255,255,0.25)", transition: "all 0.35s" }}><SunIcon size={13} color="currentColor" /></span>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: "50%",
-        background: isDark ? "rgba(168,216,238,0.15)" : "transparent",
-        color: isDark ? "#A8D8EE" : "rgba(126,100,164,0.3)", transition: "all 0.35s" }}><MoonIcon size={13} color="currentColor" /></span>
+        background: isDark ? "rgba(255,255,255,0.12)" : "transparent",
+        color: isDark ? "rgba(255,255,255,0.7)" : "rgba(45,27,78,0.2)", transition: "all 0.35s" }}><MoonIcon size={13} color="currentColor" /></span>
     </button>
   );
 };
@@ -30,12 +30,12 @@ export const SoundToggle = () => {
   const [on, setOn] = useState(() => isSoundOn());
   return (
     <button onClick={() => { const next = toggleSound(); setOn(next); }} aria-label="Toggle sound" style={{
-      background: isDark ? "rgba(168,216,238,0.08)" : "rgba(126,100,164,0.06)",
-      border: `1px solid ${isDark ? "rgba(168,216,238,0.12)" : "rgba(126,100,164,0.1)"}`,
+      background: isDark ? "rgba(255,255,255,0.05)" : "rgba(45,27,78,0.04)",
+      border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(45,27,78,0.08)"}`,
       borderRadius: 20, cursor: "pointer", padding: "4px 8px",
       display: "flex", alignItems: "center", justifyContent: "center", height: 28, width: 28, transition: "all 0.35s",
     }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? (on ? "#A8D8EE" : "rgba(255,255,255,0.25)") : (on ? "#7E64A4" : "rgba(126,100,164,0.3)")} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "all 0.35s" }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? (on ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.25)") : (on ? "#4A3660" : "rgba(45,27,78,0.2)")} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "all 0.35s" }}>
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
         {on ? (
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
@@ -57,8 +57,8 @@ const ProfileCircle = ({ size = 28, onClick }) => {
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
   return (
-    <div onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", background: t.profileBg, border: `1.5px solid ${t.profileBorder}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-      <div style={{ width: size * 0.4, height: size * 0.4, stroke: t.lavDeep, strokeWidth: 1.3, fill: "none", display: "flex" }}>{I.user}</div>
+    <div onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.05)" : "rgba(45,27,78,0.04)", border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(45,27,78,0.1)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+      <div style={{ width: size * 0.4, height: size * 0.4, stroke: isDark ? "rgba(255,255,255,0.5)" : "#4A3660", strokeWidth: 1.3, fill: "none", display: "flex" }}>{I.user}</div>
     </div>
   );
 };
@@ -102,7 +102,7 @@ export const DesktopHeader = ({ page, onNav, onHome, onProfile, cartCount = 0, o
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <SoundToggle />
-          <ModeToggle />
+          {/* ModeToggle removed — dark mode disabled. Re-add <ModeToggle /> here to restore. */}
           <ProfileCircle size={30} onClick={onProfile} />
         </div>
       </div>
@@ -119,7 +119,7 @@ export const MobileHeader = ({ onHome, onProfile, isHome, cartCount = 0, onCart 
       <Logo onClick={onHome} showText={!isHome} isDark={isDark && !isHome} />
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <SoundToggle />
-        <ModeToggle />
+        {/* ModeToggle removed — dark mode disabled. Re-add <ModeToggle /> here to restore. */}
         <ProfileCircle size={34} onClick={onProfile} />
       </div>
     </div>
@@ -160,9 +160,8 @@ export const MobileNav = ({ active, onNav }) => {
         { id: "stats", icon: I.stats, label: "stats" },
       ].map(it => it.isPlay ? (
         <div key="play" className="mobile-play-wrap" onClick={() => onNav("play")}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: `linear-gradient(135deg,${C.cherry},${C.cherryLt})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 14px rgba(178,34,52,0.2)`, border: `3px solid ${isDark ? 'rgba(26,16,40,0.8)' : 'rgba(255,255,255,0.8)'}`, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: t.lacquerReflection, borderRadius: "50% 50% 0 0", pointerEvents: "none" }} />
-            <div style={{ width: 14, height: 14, stroke: "white", strokeWidth: 2, fill: "none", marginLeft: 2, display: "flex", position: "relative" }}>{I.play}</div>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: C.cherry, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(224,48,80,0.2)", border: `3px solid ${isDark ? 'rgba(14,10,30,0.8)' : 'rgba(250,249,247,0.9)'}` }}>
+            <div style={{ width: 14, height: 14, stroke: "white", strokeWidth: 2, fill: "none", marginLeft: 2, display: "flex" }}>{I.play}</div>
           </div>
           <span className="mobile-nav-label" style={{ color: t.mobileNavActiveColor, fontWeight: 600, marginTop: 4 }}>play</span>
         </div>
@@ -178,7 +177,7 @@ export const PT = ({ children }) => (<div className="page-title-wrap"><h1 classN
 export const SH = ({ children, style = {} }) => (<div className="section-header" style={style}>{children}</div>);
 
 export const Tag = ({ type, children }) => {
-  const m = { b: { bg: "rgba(142,199,226,0.12)", c: "#4A96B8" }, n: { bg: "rgba(168,152,190,0.12)", c: C.lavDeep }, i: { bg: "rgba(176,141,58,0.1)", c: C.gold }, a: { bg: "rgba(178,34,52,0.06)", c: C.cherry } };
+  const m = { b: { bg: "rgba(45,27,78,0.06)", c: "#4A3660" }, n: { bg: "rgba(45,27,78,0.06)", c: "#4A3660" }, i: { bg: "rgba(45,27,78,0.06)", c: "#4A3660" }, a: { bg: "rgba(224,48,80,0.06)", c: C.cherry } };
   const s = m[type] || m.b;
   return <span style={{ display: "inline-block", fontFamily: FONT_SANS, fontSize: 8, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase", padding: "3px 8px", borderRadius: 6, marginRight: 4, marginTop: 5, background: s.bg, color: s.c }}>{children}</span>;
 };
@@ -187,11 +186,9 @@ export const Card = ({ title, desc, tags = [], num, onClick }) => {
   const { isDark } = useTheme();
   const t = getThemeColors(isDark);
   return (
-    <div onClick={onClick} style={{ background: t.btnBg, border: `0.5px solid ${t.btnBorder}`, borderRadius: 16, padding: "16px 18px 16px 20px", marginBottom: 10, cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden", transition: "all 0.35s", boxShadow: t.cardShadow || t.cardInnerBorder, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = isDark ? "0 6px 20px rgba(142,199,226,0.1), inset 0 0.5px 0 rgba(255,255,255,0.04)" : "0 6px 24px rgba(126,100,164,0.08), inset 0 1px 0 rgba(255,255,255,0.8)"; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = t.cardShadow || t.cardInnerBorder; }}>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: t.cardGloss || t.cardSheen, pointerEvents: "none", borderRadius: 16 }} />
-      <div style={{ position: "absolute", left: 0, top: 12, bottom: 12, width: 1, background: C.cherry, borderRadius: "0 1px 1px 0" }} />
+    <div onClick={onClick} style={{ borderBottom: `1px solid ${t.cardBorder}`, padding: "18px 2px", cursor: onClick ? "pointer" : "default", position: "relative", transition: "all 0.25s" }}
+      onMouseEnter={e => { e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.02)" : "rgba(45,27,78,0.015)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         {num != null && <div style={{ width: 24, height: 24, borderRadius: "50%", background: C.cherry, color: C.white, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(224,48,80,0.2), inset 0 1px 0 rgba(255,255,255,0.15)" }}>{num}</div>}
         <div style={{ flex: 1 }}>
@@ -222,10 +219,9 @@ export const CardSel = ({ items, active, onSelect }) => {
   const t = getThemeColors(isDark);
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-      {items.map(it => <div key={it.id} onClick={() => onSelect(it.id)} style={{ flex: 1, textAlign: "center", padding: "12px 6px", background: t.btnBg, border: `${active === it.id ? "1.5px" : "0.5px"} solid ${active === it.id ? t.seafoam : t.btnBorder}`, borderRadius: 14, cursor: "pointer", position: "relative", overflow: "hidden", boxShadow: t.cardShadow || "none", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: t.cardGloss || t.cardSheen, pointerEvents: "none" }} />
-        <h4 style={{ fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 500, color: active === it.id ? (isDark ? "#85D4BC" : "#4A9E88") : t.textMain, marginBottom: 1, position: "relative" }}>{it.name}</h4>
-        <p style={{ fontFamily: FONT_SANS, fontSize: 9, color: t.textDim, margin: 0, position: "relative" }}>{it.sub}</p>
+      {items.map(it => <div key={it.id} onClick={() => onSelect(it.id)} style={{ flex: 1, textAlign: "center", padding: "12px 6px", border: `1px solid ${active === it.id ? C.cherry : t.btnBorder}`, borderRadius: 10, cursor: "pointer", transition: "all 0.25s" }}>
+        <h4 style={{ fontFamily: FONT_SERIF, fontSize: 13, fontWeight: 500, color: active === it.id ? C.cherry : t.textMain, marginBottom: 1 }}>{it.name}</h4>
+        <p style={{ fontFamily: FONT_SANS, fontSize: 9, color: t.textDim, margin: 0 }}>{it.sub}</p>
       </div>)}
     </div>
   );
