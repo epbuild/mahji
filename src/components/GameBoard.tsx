@@ -601,8 +601,8 @@ export function PlayerHand({
 
   // Whether the Mahjong button is actually visible
   const showBtn = showMahjongButton && !hideMahjongButton;
-  // Reserve space for button so tiles don't go behind it
-  const BTN_RESERVE = showBtn ? 58 : 0;
+  // Button is now above tiles, no need to reserve horizontal space
+  const BTN_RESERVE = 0;
 
   // Tile sizing constants (md = 72w × 98h)
   const TILE_MD_W = 72;
@@ -675,7 +675,29 @@ export function PlayerHand({
         </div>
       )}
 
-      {/* Tile row with absolutely-positioned Mahjong button */}
+      {/* Mahjong! button — positioned above the tile row */}
+      {showBtn && (
+        <div style={{ display: "flex", justifyContent: "center", padding: "0 4px 4px" }}>
+          <button onClick={onMahjong} style={{
+            background: cherry,
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "5px 14px",
+            fontSize: 9,
+            fontWeight: 700,
+            fontFamily: FONT_SERIF,
+            letterSpacing: 0.5,
+            cursor: "pointer",
+            whiteSpace: "nowrap" as const,
+            boxShadow: "0 2px 8px rgba(224,48,80,0.25)",
+          }}>
+            Mahjong!
+          </button>
+        </div>
+      )}
+
+      {/* Tile row */}
       <div style={{ position: "relative", padding: "0 4px" }}>
         {/* Responsive scaled tile row */}
         <div ref={outerRef} style={{
@@ -733,31 +755,6 @@ export function PlayerHand({
             })}
           </div>
         </div>
-
-        {/* Mahjong! button — absolutely positioned center-right, inline with tiles */}
-        {showBtn && (
-          <button onClick={onMahjong} style={{
-            position: "absolute",
-            top: "50%",
-            transform: "translateY(-50%)",
-            right: 4,
-            background: `linear-gradient(135deg, ${cherry}, #C42844)`,
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 7px",
-            fontSize: 8,
-            fontWeight: 700,
-            fontFamily: FONT_SERIF,
-            letterSpacing: 0.5,
-            cursor: "pointer",
-            whiteSpace: "nowrap" as const,
-            boxShadow: "0 2px 6px rgba(224,48,80,0.3)",
-            zIndex: 2,
-          }}>
-            Mahjong!
-          </button>
-        )}
       </div>
     </div>
   );
